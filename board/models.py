@@ -17,6 +17,11 @@ class SoftDeleteModel(models.Model):
     objects = SoftDeleteManager()
     all_objects = models.Manager()  # For accessing all objects, including deleted ones
 
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.save(update_fields=['is_deleted', 'deleted_at'])
+        return self
+
     class Meta:
         abstract = True
 

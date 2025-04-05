@@ -1,5 +1,7 @@
-from django.shortcuts import render
-
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,6 +18,32 @@ from task_manager.logger import logger
 from django_filters.rest_framework import DjangoFilterBackend
 
 
+
+@login_required
+def board_view(request, board_id):
+    board = get_object_or_404(Board, pk=board_id)
+    return render(request, 'kanban/board.html', {'board': board})
+
+@login_required
+def load_column(request, board_id, column_id):
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    return render(request, 'kanban/components/column.html', {'column': column})
+
+@require_POST
+@login_required
+def create_task(request, board_id, column_id):
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    title = request.POST.get('title')
+    if title:
+        Task.objects.create(title=title, column=column, created_by=request.user)
+    return load_column(request, board_id, column_id)
+
+
+@login_required
+def delete_task(request, board_id, column_id, task_id):
+    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    task.delete()
+    return JsonResponse(data={},safe=False,status=204)  # Renders nothing for removal
 
 
 class BoardViewSet(viewsets.ModelViewSet):

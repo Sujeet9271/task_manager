@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <h1>{{ board.name }}</h1>
+    <div class="kanban-board">
+        {% for column in board.columns.all %}
+            <div 
+              class="kanban-column" 
+              hx-get="{% url 'board:load-column' board.id column.id %}" 
+              hx-trigger="load" 
+              hx-target="this" 
+              hx-swap="outerHTML">
+                Loading...
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
