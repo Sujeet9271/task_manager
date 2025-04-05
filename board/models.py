@@ -49,6 +49,9 @@ class Column(SoftDeleteModel):
 
     def __str__(self):
         return f"{self.name} ({self.board.name})"
+    
+    class Meta:
+        ordering = ['board','order']  # Order by the 'order' field
 
 
 class Task(SoftDeleteModel):

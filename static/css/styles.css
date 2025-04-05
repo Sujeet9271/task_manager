@@ -1,30 +1,98 @@
 .kanban-board {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .kanban-column {
-    background: #f0f0f0;
-    padding: 1rem;
-    border-radius: 5px;
-    width: 250px;
-    min-height: 300px;
+  background: #f0f0f0;
+  padding: 1rem;
+  border-radius: 5px;
+  width: 250px;
+  min-height: 300px;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.card-header {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .task-card {
-    background: white;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    border-radius: 3px;
-    position: relative;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  transition: box-shadow 0.3s ease; /* Smooth transition */
 }
 
-.task-card button {
-    position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
-    background: none;
-    border: none;
-    cursor: pointer;
+.task-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Hover effect */
+}
+
+.task-actions button {
+  background: none;
+  border: none;
+  padding: 5px;
+}
+
+.task-actions img {
+  width: 20px;
+  height: 20px;
+}
+
+#loader_div {
+  width: 100px;
+  height: 100px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+#loader img {
+  width: 60px;
+  /* Adjust the width as needed */
+  height: 60px;
+  /* Adjust the height as needed */
+}
+
+
+.gif_loader{
+    display: none;
+}
+
+.gif_loader.htmx-request{
+    display: block;
+}
+
+
+.checkbox-custom {
+    width: 12px !important;
+    height: 12px !important;
+    background-color: pink !important;
+    margin-right: 3px !important;
+    margin-top: 4px !important;
+}
+.checkbox-custom input{
+    width: 10px !important;
+}
+.form-check{
+    padding-left: 2px !important;
+}
+.selectall-btn{
+    display: block !important;
+}
+form input[type="checkbox"]{
+    width: 12px !important;
+    height: fit-content !important;
 }

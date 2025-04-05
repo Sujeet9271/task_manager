@@ -1,8 +1,0 @@
-
-<div class="task-card">
-    <p>{{ task.title }}</p>
-    <button 
-      hx-delete="{% url 'board:delete-task' board_id column.id task.id %}" 
-      hx-target="this" 
-      hx-swap="delete">🗑️</button>
-</div>

@@ -1,0 +1,162 @@
+
+{% load widget_tweaks %}
+{% for hidden_field in form.hidden_fields %}
+                {{ hidden_field }}
+{% endfor %}
+
+{% if form.non_field_errors %}
+    <div class="alert alert-danger" role="alert">
+{% for error in form.non_field_errors %}
+    {{ error }}
+{% endfor %}
+    </div>
+{% endif %}
+
+{% for field in form.visible_fields %}
+    {% if field.widget_type == 'checkbox' %}
+        {% if form.is_bound %}
+            {% if field.errors %}
+                <div class="form-check p-3" id="{{field.id_for_label}}_id">
+                    {% render_field field class="form-check-input is-invalid" %}
+                    <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                {% for error in field.errors %}
+                    <div class="text-danger" style="font-size:12px;">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div class="form-check p-3" id="{{field.id_for_label}}_id">
+                    {% if form.non_field_errors %}
+                        {% render_field field class="form-check-label" %}
+                    {% else %}
+                        {% render_field field class="form-check-label is-valid" %}
+                    {% endif %}
+                    <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+        <div class="form-check p-3" id="{{field.id_for_label}}_id">
+            {% render_field field class="" %}
+            <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+            {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% elif field.name == 'profile_pic' %}
+    <div id="profile_pic">
+        <div class="row justify-content-center pb-2">
+            <div class="col-md-6 avatar">
+                <img src="{{ form.instance.profile_pic_url }}" alt="{{ field.label }}" id="imageElement">
+                <label class="upload_image_btn" for="profile_pic_upoload">
+                    <i class="fa-regular fa-images"></i>
+                </label>
+                <input type="file" class="d-none" name="{{ field.name }}" name="profile_pic" id="profile_pic_upoload" style="width:200px" accept=".jpeg, .jpg,.png" onchange="previewProfileImg(this)">
+            </div>
+        </div>
+    </div>
+    {% elif field.widget_type == 'radioselect' %}
+    {% render_field field %}
+    {% elif field.widget_type == 'checkboxselectmultiple' %}
+        {% if form.is_bound %}
+            {% if field.errors %}
+            <div class="forFindClosestClass">
+                <div class="d-flex " style="justify-content : space-between; margin-bottom:10px" >
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{{ form.label_suffix }}</label>
+                    <label class="selectall-btn" data-label="{{ field.label }}" for="select_all{{ field.auto_id }}">
+                        <input type="checkbox" class="select_all" name="select_all" id="select_all{{ field.auto_id }}" onchange="toggleCheckboxes('{{ field.auto_id }}')"> &nbsp; Select All
+                    </label>
+                </div>
+                <div style="width:100%;" id="checkboxselectmultiple">
+                    <div class="d-flex select-boxes  mb-3" style="width:100%; background-color: rgb(247, 250, 254); padding:10px;border : 1px solid red; max-height: 200px;  overflow: auto; " id="{{ field.auto_id }}">
+                        {% render_field field class="form-check-label" %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                {% for error in field.errors %}
+                    <div class="text-danger" style="font-size:12px;">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="forFindClosestClass">
+                <div class="d-flex " style="justify-content : space-between; margin-bottom:10px">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{{ form.label_suffix }}</label>
+                    <label class="selectall-btn" data-label="{{ field.label }}" for="select_all{{ field.auto_id }}" for="select_all{{ field.auto_id }}">
+                        <input type="checkbox" class="select_all" name="select_all" id="select_all{{ field.auto_id }}" onchange="toggleCheckboxes('{{ field.auto_id }}')"> &nbsp; Select All
+                    </label>
+                </div>
+                <div style="width:100%;" id="checkboxselectmultiple">
+                    <div class=" d-flex select-boxes mb-3" style="width:100%; background-color: rgb(247, 250, 254); padding:10px;border : 1px solid green; max-height: 200px;   overflow: auto;" >
+                        {% if form.non_field_errors %}
+                            {% render_field field class="form-check-label" %}
+                        {% else %}
+                            {% render_field field class="form-check-label is-valid" %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+        <div class="forFindClosestClass">
+        <div class="d-flex " style="justify-content : space-between; margin-bottom:10px" for="select_all{{ field.auto_id }}">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{{ form.label_suffix }}</label>
+            <label class="selectall-btn" data-label="{{ field.label }}" for="select_all{{ field.auto_id }}" id="selectedall">
+                <input type="checkbox" class="select_all"  name="select_all" id="select_all{{ field.auto_id }}" onchange="toggleCheckboxes('{{ field.auto_id }}')"> 
+                &nbsp; Select All
+            </label>
+                    </div>
+                      <input type="text" name="searchInput" id="searchInput{{ field.auto_id }}" placeholder="Search"
+                      
+             style="width: 100%; padding: 4px; border-radius: 6px; margin-bottom: 10px; margin: 4px 0; margin-left: 4px; border: 1px solid black; outline:none;" oninput="initializeSearch(('{{ field.auto_id }}'))">
+             <div style="width:100%;" id="checkboxselectmultiple">
+            <div style="width:100%;background-color: rgb(247, 250, 254); border: 1px solid rgb(217, 225, 236); padding:10px" class="mb-3">
+                <div class="d-flex select-boxes" style="width:100%; max-height: 200px;  overflow: auto; " id="{{ field.auto_id }}">
+                    {% render_field field class="form-check-label" %}
+                </div>
+            </div>
+        </div>
+        </div>
+        {% endif %}
+        {% if field.help_text %}
+            <div class="form-text">{{ field.help_text }}</div>
+        {% endif %}
+    {% else %}
+        <div class="mb-3" id="{{field.id_for_label}}_id">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{{ form.label_suffix }}</label>
+            {% if form.is_bound %}
+                {% if field.errors %}
+                    {% render_field field class="form-control is-invalid" %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    {% if form.non_field_errors %}
+                        {% render_field field class="form-control" %}
+                    {% else %}
+                        {% render_field field class="form-control is-valid" %}
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                {% render_field field class="form-control" %}
+            {% endif %}
+
+            {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endfor %}

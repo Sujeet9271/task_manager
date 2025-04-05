@@ -1,0 +1,57 @@
+<div class="row gx-4 gy-4" id="columns">
+    {% for column in board.columns.all %}
+        <div class="col-md-3" id="column_{{ column.id }}">
+            <div class="card border-0 shadow-lg">
+                <!-- Column Header -->
+                <div class="card-header bg-primary text-white rounded-top px-3 py-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <strong>{{ column.name }}</strong>
+                        <button class="btn btn-light btn-sm" 
+                                hx-delete="{% url 'board:delete-column' column.board_id column.id %}" 
+                                hx-target="#column_{{ column.id }}" 
+                                hx-swap="delete" 
+                                hx-confirm="Are You Sure?">🗑️</button>
+                    </div>
+                    <form id="create_task_form_{{ column.id }}"
+                        class="d-flex mt-2"
+                        hx-post="{% url 'board:create-task' column.board_id column.id %}" 
+                        hx-target="#tasks_list_{{ column.id }}" 
+                        hx-swap="beforeend"
+                    >
+                        {% csrf_token %}
+                        <input type="text" name="title" placeholder="New task" class="form-control me-2" required>
+                        <button type="submit" class="btn btn-light fw-bold">Add</button>
+                    </form>
+
+                </div>
+
+                <!-- Task List -->
+                <div id="tasks_list_{{ column.id }}" 
+                     class="card-body bg-white" 
+                     hx-target="this" 
+                     hx-swap="innerHTML" 
+                     hx-trigger="load" 
+                     hx-get="{% url 'board:get_task_lists' board.id column.id %}">
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <button class="btn btn-primary"
+    data-bs-toggle="modal"
+    data-bs-target="#createColumnModal" 
+            >Add Column</button>
+</div>
+
+<div class="modal-body" id="create_column_modal" hx-swap-oob="true">
+    <form id="create_column_form" 
+          hx-post="{% url 'board:create-column' board.id %}" 
+          hx-target="#columns" 
+          hx-swap="beforeend">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="column_name" class="form-label">Column Name</label>
+            <input type="text" class="form-control" id="column_name" name="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Column</button>
+    </form>
+</div>

@@ -1,12 +1,15 @@
-from django.http import JsonResponse
+import json
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.decorators.http import require_POST
+from django.urls import reverse
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
+from board.forms import TaskCreateForm, TaskForm
 from board.models import Board, Column, Task, SubTask
 from board.permissions import IsBoardMemberOrReadOnly
 from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, SubTaskSerializer, BoardListSerializer
@@ -17,33 +20,83 @@ from task_manager.logger import logger
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-
+@login_required
+def index(request):
+    boards = Board.objects.filter(members=request.user).exclude(is_deleted=True)
+    return render(request, 'boards/index.html', {'boards': boards})
 
 @login_required
 def board_view(request, board_id):
     board = get_object_or_404(Board, pk=board_id)
-    return render(request, 'kanban/board.html', {'board': board})
+    return render(request, 'boards/components/board.html', {'board': board})
 
+@require_POST
 @login_required
-def load_column(request, board_id, column_id):
+def create_column(request, board_id):
+    board = get_object_or_404(Board, pk=board_id)
+    column = Column.objects.create(name=request.POST.get('name'), board=board, created_by=request.user)
+    response = JsonResponse({'id': column.id, 'name': column.name}, status=201, safe=False)
+    if request.htmx:
+        board_url = reverse('board:board-view',kwargs={'board_id':board_id}) 
+        response['HX-Trigger']=json.dumps({"reloadBoard":{"message":board_url,"level":"info"}})
+    return response
+
+@require_http_methods(['DELETE'])
+@login_required
+def delete_column(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id)
-    return render(request, 'kanban/components/column.html', {'column': column})
+    column.delete()    
+    return JsonResponse(data={'detail':'Column Deleted'},safe=False,status=200)  # Renders nothing for removal
+
+
+@require_GET
+@login_required
+def get_task_lists(request, board_id, column_id):
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    return render(request, 'boards/components/column.html', {'column': column})
+
 
 @require_POST
 @login_required
 def create_task(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id)
-    title = request.POST.get('title')
-    if title:
-        Task.objects.create(title=title, column=column, created_by=request.user)
-    return load_column(request, board_id, column_id)
+    form = TaskCreateForm(data=request.POST)
+    if form.is_valid():
+        instance:Task = form.save(commit=False)
+        instance.column = column
+        instance.created_by = request.user
+        instance.save()
+        instance.assigned_to.add(request.user)
+        response = render(request, 'boards/components/task_card.html', {'board_id': board_id, 'task': instance})
+        response['HX-Trigger'] = json.dumps({"taskCreated": {"message": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
+        return response
+    return render(request,'boards/components/create.html',{'board_id':board_id,'column_id':column_id, 'form':form})
 
 
+@require_http_methods(['GET','POST'])
+@login_required
+def edit_task(request, board_id, column_id, task_id):
+    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    form = TaskForm(instance=task, data=request.POST or None)
+    if request.method=='POST':
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.updated_by = request.user
+            task.save()
+            if request.htmx:
+                response = HttpResponse()
+                response['HX-Trigger'] = json.dumps({"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}})
+                return response
+    return render(request,'boards/components/edit.html',{'task':task,'board_id':board_id,'column_id':column_id, 'form':form})
+
+
+@require_http_methods(['DELETE'])
 @login_required
 def delete_task(request, board_id, column_id, task_id):
     task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
     task.delete()
-    return JsonResponse(data={},safe=False,status=204)  # Renders nothing for removal
+    return JsonResponse(data={'detail':'Task Deleted'},safe=False,status=200)  # Renders nothing for removal
+
 
 
 class BoardViewSet(viewsets.ModelViewSet):

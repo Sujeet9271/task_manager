@@ -1,0 +1,9 @@
+<form hx-post="{% url 'board:create-task' board_id=board_id column_id=column_id %}" >
+    {% csrf_token %}
+    {% include 'forms.html' with form=form %}
+
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Create</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Cancel</button>
+    </div>
+</form>

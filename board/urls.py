@@ -2,10 +2,13 @@ from django.urls import path, include
 from board import views
 
 urlpatterns = [
-
+    path('', views.index, name='index'),
     path('<int:board_id>/', views.board_view, name='board-view'),
-    path('<int:board_id>/columns/<int:column_id>/', views.load_column, name='load-column'),
+    path('<int:board_id>/create_column/', views.create_column, name='create-column'),
+    path('<int:board_id>/columns/<int:column_id>/', views.get_task_lists, name='get_task_lists'),
+    path('<int:board_id>/columns/<int:column_id>/delete/', views.delete_column, name='delete-column'),
     path('<int:board_id>/columns/<int:column_id>/tasks/create/', views.create_task, name='create-task'),
+    path('<int:board_id>/columns/<int:column_id>/tasks/<int:task_id>/edit/', views.edit_task, name='edit-task'),
     path('<int:board_id>/columns/<int:column_id>/tasks/<int:task_id>/delete/', views.delete_task, name='delete-task'),
 
 
