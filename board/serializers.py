@@ -9,6 +9,8 @@ class SubTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTask
         fields = '__all__'
+        read_only_fields = ('task', 'created_by', 'created_at')
+
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -17,7 +19,15 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
-        read_only_fields = ('column','created_by', 'created_at')
+        read_only_fields = ('column', 'created_by', 'created_at')
+
+
+class TaskListSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Task
+        fields = '__all__'
+        read_only_fields = ('column', 'created_by', 'created_at')
 
 
 class ColumnSerializer(serializers.ModelSerializer):
@@ -26,11 +36,19 @@ class ColumnSerializer(serializers.ModelSerializer):
     class Meta:
         model = Column
         fields = '__all__'
-        read_only_fields = ('board','created_by', 'created_at')
+        read_only_fields = ('board', 'created_by', 'created_at')
+
+class ColumnListSerializer(serializers.ModelSerializer):
+    tasks = TaskListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Column
+        fields = ['id', 'name', 'order', 'tasks','created_at','updated_at']
+        read_only_fields = ('board', 'created_by', 'created_at')
 
 
 class BoardSerializer(serializers.ModelSerializer):
-    columns = ColumnSerializer(many=True, read_only=True)
+    columns = ColumnListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Board
@@ -39,3 +57,9 @@ class BoardSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'members': {'required': False}
         }
+
+class BoardListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Board
+        fields = ['id', 'name', 'description', 'created_at','updated_at',]
