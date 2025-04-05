@@ -4,11 +4,11 @@ from .views import BoardViewSet, ColumnViewSet, TaskViewSet, SubTaskViewSet
 
 router = DefaultRouter()
 router.register('boards', BoardViewSet)
-router.register(r'boards/(?P<board_id>\d+)/columns', ColumnViewSet, basename='board-columns')
-router.register('tasks', TaskViewSet)
-router.register('subtasks', SubTaskViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('api/boards/<int:board_id>/columns/<int:column_id>/', ColumnViewSet.as_view({'get': 'retrieve'}), name='column-detail'),
+    path('api/boards/<int:board_id>/columns/', ColumnViewSet.as_view({'post': 'create','get':'get_columns'}), name='create_column'),
+    path('api/boards/<int:board_id>/columns/<int:pk>/', ColumnViewSet.as_view({'get': 'retrieve','delete': 'destroy','patch':'update'}), name='column_detail'),
+    path('api/boards/<int:board_id>/columns/<int:column_id>/tasks/', TaskViewSet.as_view({'post':'create'}), name='create_task'),
+    path('api/boards/<int:board_id>/columns/<int:column_id>/tasks/<int:pk>/', TaskViewSet.as_view({'get': 'retrieve','delete': 'destroy','patch':'update'}), name='task_detail'),
 ]

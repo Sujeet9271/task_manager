@@ -13,13 +13,11 @@ class SubTaskSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     subtasks = SubTaskSerializer(many=True, read_only=True)
-    assigned_to = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=User.objects.all()
-    )
-
+    
     class Meta:
         model = Task
         fields = '__all__'
+        read_only_fields = ('column','created_by', 'created_at')
 
 
 class ColumnSerializer(serializers.ModelSerializer):
@@ -33,9 +31,6 @@ class ColumnSerializer(serializers.ModelSerializer):
 
 class BoardSerializer(serializers.ModelSerializer):
     columns = ColumnSerializer(many=True, read_only=True)
-    members = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=User.objects.all()
-    )
 
     class Meta:
         model = Board
