@@ -2,13 +2,13 @@
 <div class="task-card" id="task_{{ task.id }}">
     <p>{{ task.title }}</p>
     <button class="task-actions"
-      hx-get="{% url 'board:edit-task' board_id=board_id column_id=task.column_id task_id=task.id %}" 
+      hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}" 
       hx-target="#edit_task_modal" 
       hx-swap="innerHTML"
       data-bs-toggle="modal"
       data-bs-target="#editTaskModal">✏️</button>
     <button class="task-actions"
-      hx-delete="{% url 'board:delete-task' board_id=board_id column_id=task.column_id task_id=task.id %}" 
+      hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}" 
       hx-target="#task_{{ task.id }}" 
       hx-swap="delete"
       hx-confirm="Are You Sure">🗑️</button>

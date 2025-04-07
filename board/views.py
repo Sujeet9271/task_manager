@@ -30,23 +30,28 @@ def board_view(request, board_id):
     board = get_object_or_404(Board, pk=board_id)
     return render(request, 'boards/components/board.html', {'board': board})
 
-@require_POST
+@require_http_methods(['GET', 'POST'])
 @login_required
 def create_column(request, board_id):
     board = get_object_or_404(Board, pk=board_id)
-    column = Column.objects.create(name=request.POST.get('name'), board=board, created_by=request.user)
-    response = JsonResponse({'id': column.id, 'name': column.name}, status=201, safe=False)
-    if request.htmx:
-        board_url = reverse('board:board-view',kwargs={'board_id':board_id}) 
-        response['HX-Trigger']=json.dumps({"reloadBoard":{"message":board_url,"level":"info"}})
-    return response
+    if request.method == 'POST':
+        column = Column.objects.create(name=request.POST.get('name'), board=board, created_by=request.user)
+        response = render(request,'boards/components/board_list_item.html',{'column':column,'board_id':board_id})
+        if request.htmx:
+            board_url = reverse('board:board-view',kwargs={'board_id':board_id}) 
+            response['HX-Trigger']=json.dumps({"reloadBoard":{"message":board_url,"level":"info"}})
+        return response
+    return render(request, 'boards/components/board_create.html', {'board': board,})
 
 @require_http_methods(['DELETE'])
 @login_required
 def delete_column(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id)
     column.delete()    
-    return JsonResponse(data={'detail':'Column Deleted'},safe=False,status=200)  # Renders nothing for removal
+    response = JsonResponse(data={'detail':'Column Deleted'},safe=False,status=200)  # Renders nothing for removal
+    if request.htmx:
+        response['HX-Trigger'] = json.dumps({"columnDeleted": {"level": "info", "board_list_item": f"board_{board_id}_column_{column_id}"}})
+    return response
 
 
 @require_GET
@@ -68,7 +73,7 @@ def create_task(request, board_id, column_id):
         instance.save()
         instance.assigned_to.add(request.user)
         response = render(request, 'boards/components/task_card.html', {'board_id': board_id, 'task': instance})
-        response['HX-Trigger'] = json.dumps({"taskCreated": {"message": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
+        response['HX-Trigger'] = json.dumps({"taskCreated": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
         return response
     return render(request,'boards/components/create.html',{'board_id':board_id,'column_id':column_id, 'form':form})
 

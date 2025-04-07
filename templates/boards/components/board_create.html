@@ -1,0 +1,16 @@
+    <form id="create_column_form" 
+            method="POST"
+            action="{% url 'board:column-create' board.id %}" 
+            hx-post="{% url 'board:column-create' board.id %}" 
+            hx-target="#columns-{{ board.id }}" 
+            hx-swap="beforeend">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="column_name" class="form-label">Column Name</label>
+            <input type="text" class="form-control" id="column_name" name="name" required>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_createColumnModal">Close</button>
+            <button type="submit" class="btn btn-primary">Create Column</button>
+        </div>
+    </form>

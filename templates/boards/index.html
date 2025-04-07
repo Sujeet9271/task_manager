@@ -1,60 +1,223 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Board Dashboard</title>
-    <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
-    <script src="{% static 'js/common.js' %}"></script>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>TaskMaster Home</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
+	<link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+	<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
+	<script src="{% static 'js/common.js' %}"></script>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: "Inter", sans-serif;
+			background: #f9fafb;
+		}
+
+		.navbar {
+			height: 60px;
+			background: #1f2937;
+			color: white;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 20px;
+		}
+
+		.navbar img {
+			height: 40px;
+		}
+
+		.navbar .user-info {
+			display: flex;
+			align-items: center;
+			gap: 15px;
+		}
+
+		.navbar .user-info span {
+			font-weight: 500;
+		}
+
+		.navbar .logout {
+			background: #ef4444;
+			color: white;
+			border: none;
+			padding: 6px 12px;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+
+		.custom-container {
+			display: flex;
+			height: calc(100vh - 60px);
+		}
+
+		.sidebar {
+			width: 280px;
+			background: #e5e7eb;
+			padding: 20px;
+			overflow-y: auto;
+		}
+
+		.board {
+			background: #f3f4f6;
+			margin-bottom: 20px;
+			padding: 10px;
+			border-radius: 10px;
+		}
+
+		.board h3 {
+			font-size: 16px;
+			color: #374151;
+			margin-bottom: 10px;
+		}
+
+		.board ul {
+			list-style: none;
+			padding-left: 20px;
+		}
+
+		.board li {
+			margin: 6px 0;
+			font-size: 14px;
+			color: #111827;
+			cursor: pointer;
+		}
+
+		.sidebar .add {
+			margin-top: 10px;
+			color: #2563eb;
+			font-weight: 600;
+			cursor: pointer;
+		}
+
+		.main-content {
+			flex-grow: 1;
+			padding: 20px;
+		}
+		.pointer {
+			cursor: pointer;
+		}
+		/* Horizontal scroll for column container */
+		.horizontal-scroll-wrapper {
+			overflow-x: auto;
+			padding-bottom: 1rem;
+			height: 100%;
+		}
+		
+		/* Prevent columns from wrapping */
+		#columns {
+			flex-wrap: nowrap !important;
+			height: 100%;
+		}
+		
+		/* Limit the height of each column and make it scrollable vertically */
+		#columns .card {
+			height: 100%;
+			max-height: 90vh;
+			display: flex;
+			flex-direction: column;
+		}
+
+		#columns .card-body {
+			overflow-y: auto;
+			flex-grow: 1;
+		}
+	</style>
 </head>
+
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
-    <div id="loader">
+	<div class="navbar">
+	  <img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo">
+	  <div class="user-info">
+		<span>Welcome, {{ user.username }}</span>
+		<form method="post" action="{% url 'accounts:logout-user' %}">
+		  {% csrf_token %}
+		  <button class="logout" type="submit">Logout</button>
+		</form>
+	  </div>
+	</div>
+
+	<div id="loader">
         <div id="loader_div">
         <img src="{% static 'gif/gif.gif' %}" alt="gif">
         </div>
     </div>
+  
+	<div class="custom-container">
+	  <div class="sidebar" id="boards-sidebar">
+		{% for board in boards %}
+		<div class="board" id="board-{{ board.id }}">
+			<div class="pointer"
+					hx-get="{% url 'board:board-view' board.id %}"
+					hx-target="#main-content"
+					hx-swap="innerHTML">
+				<h3>
+					{{ board.name }}
+				</h3>
+				<ul id="columns-{{ board.id }}">
+					{% for column in board.columns.all %}
+					{% include 'boards/components/board_list_item.html' with column=column %}
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="add" 
+				hx-get="{% url 'board:column-create' board.id %}"
+				hx-target="#modal-column-body"
+				hx-swap="innerHTML"
+				data-bs-toggle="modal" 
+				data-bs-target="#createColumnModal" 
+				data-board-id="{{ board.id }}">
+			+ Add New Column
+			</div>
+			{% comment %} <div class="add" 
+				hx-get="{% url 'board:column-create' board.id %}" 
+				hx-target="#board-{{ board.id }}" 
+				hx-swap="beforeend">
+				+ Add New Column
+			</div> {% endcomment %}
+		</div>
+		{% endfor %}
+  
+		<div class="add"
+			 hx-get="{% url 'board:board-create' %}"
+			 hx-target="#boards-sidebar"
+			 hx-swap="beforeend">
+		  + Add New Board
+		</div>
+	  </div>
+  
+	  <div class="main-content" id="main-content">
+		<h2>Welcome to TaskMaster</h2>
+		<p>Select a board to view its content.</p>
+	  </div>
+	</div>
 
-<!-- Top Bar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid justify-content-between">
-        <span class="navbar-text text-white">
-            Logged in as: {{ request.user.username }}
-        </span>
-        <a href="" class="btn btn-outline-light">Logout</a>
-    </div>
-</nav>
+	<div class="modal fade" id="createColumnModal" tabindex="-1" aria-labelledby="createColumnModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="createColumnModalLabel">Add New Column</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body" id="modal-column-body">
+					
+				</div>
+				
+			</div>
+		</div>
+	</div>
 
-<div class="container-fluid">
-    <div class="row">
-
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 bg-light p-3 border-end" style="height: 100vh;">
-            <h5>Boards</h5>
-            <ul class="nav flex-column">
-                {% for board in boards %}
-                <li class="nav-item">
-                    <a href="{% url 'board:board-view' board.id %}" 
-                       class="nav-link"
-                       hx-get="{% url 'board:board-view' board.id %}" 
-                       hx-target="#content" 
-                       hx-swap="innerHTML">
-                        {{ board.name }}
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 p-4" id="content">
-            <h4>Select a board to view its content.</h4>
-        </div>
-
-    </div>
-
-    <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+	<div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
@@ -66,49 +229,44 @@
           </div>
         </div>
     </div>
-
-    <div class="modal fade" id="createColumnModal" tabindex="-1" role="dialog" aria-labelledby="createColumnModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="createColumnModalLabel">Create Column</h5>
-              
-            </div>
-            <div class="modal-body" id="create_column_modal">
-                
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_createColumnModal">Close</button>
-            </div>
-          </div>
-        </div>
-    </div>
-
-</div>
-
+  </body>
 <script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-</body>
 <script>
-    const editTaskModal = document.getElementById('editTaskModal')
-    editTaskModal.addEventListener('hidden.bs.modal', event => {
-        event.target.querySelector('.modal-body').innerHTML = ''
-    })
+	const editTaskModal = document.getElementById("editTaskModal");
+	editTaskModal.addEventListener("hidden.bs.modal", (event) => {
+		event.target.querySelector(".modal-body").innerHTML = "";
+	});
 
-    htmx.on("reloadBoard",function(evt){
-        board_url = evt.detail.message
-        htmx.ajax('GET', board_url, {target:'#content', swap:'innerhTML'})
-        document.getElementById('close_createColumnModal').click()
-    })
-    htmx.on("taskEdited",function(evt){
-        board_url = evt.detail.message
-        htmx.ajax('GET', board_url, {target:'#content', swap:'innerhTML'})
-        document.getElementById('close_editTaskModal').click()
-    })
-    htmx.on("taskCreated",function(evt){
-        board_id = evt.detail.board_id
-        column_id = evt.detail.column_id
-        get_task_lists = evt.detail.message
-        document.getElementById(`create_task_form_${ column_id }`).reset()
-    })
+	htmx.on("columnDeleted", function (evt) {
+		board_list_item = evt.detail.board_list_item;
+		document.getElementById(board_list_item).remove();
+	});
+	htmx.on("reloadBoard", function (evt) {
+		board_url = evt.detail.message;
+		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
+		document.getElementById("close_createColumnModal").click();
+	});
+
+	htmx.on("taskEdited", function (evt) {
+		board_url = evt.detail.message;
+		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
+		document.getElementById("close_editTaskModal").click();
+	});
+
+	htmx.on("taskCreated", function (evt) {
+		document.getElementById(`create_task_form_${column_id}`).reset();
+		board_id = evt.detail.board_id;
+		column_id = evt.detail.column_id;
+		get_task_lists = evt.detail.get_task_lists;
+		
+		{% comment %} htmx.ajax("GET", get_task_lists, { target: `#tasks_list_${column_id}`, swap: "innerHTML" }); {% endcomment %}
+		
+		no_task = document.getElementById(`column_${column_id}_no_task`);
+		if (no_task) {
+			no_task.remove();
+		}
+		
+	});
 </script>
+
 </html>
