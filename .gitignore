@@ -42,7 +42,6 @@ venv2
 *.rdb
 
 .gitlab-ci.yml
-docker-compose.yml
 apache/certs/*
 Pipfile
 *.pem

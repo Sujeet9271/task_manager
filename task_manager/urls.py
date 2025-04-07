@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import path, include
 from django.contrib.auth.decorators import login_required
 from board import urls as board_urls
@@ -24,7 +24,7 @@ from accounts import urls as accounts_urls
 
 @login_required
 def index(request):
-    return render(request, 'index.html')
+    return redirect('board:index')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

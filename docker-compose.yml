@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  web:
+    container_name: task_manager
+    hostname: task_manager
+    build: .
+    restart: always
+    volumes:
+      - .:/var/www/html/app
+      - app_static:/var/www/html/app/staticfiles
+      - app_media:/var/www/html/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    networks:
+      - task_manager
+
+networks:
+  task_manager:
+    driver: bridge
+
+volumes:
+  app_static:
+  app_media:
