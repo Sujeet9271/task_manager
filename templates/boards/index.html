@@ -119,6 +119,24 @@
 	htmx.on("columnDeleted", function (evt) {
 		column_list_item = evt.detail.column_list_item;
 		document.getElementById(column_list_item).remove();
+		columns = document.getElementById("columns").children;
+		setTimeout(() => {
+			if (columns.length == 0) {
+				content = `<div class="col-md-12 text-center">
+								<p>No columns available. Please create a column.</p>
+								<button class="btn btn-primary" 
+								hx-get="${evt.detail.create_column_url}"
+								hx-target="#modal-column-body"
+								hx-swap="innerHTML"
+								data-bs-toggle="modal" 
+								data-bs-target="#createColumnModal" 
+								id="createColumnButton"
+								>Create Column</button>
+							</div>`
+				document.getElementById("columns").innerHTML = content;
+				htmx.process(document.getElementById("columns"));
+			}
+		}, 1000);
 	});
 
 	htmx.on("boardCreated", function (evt) {

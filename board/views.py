@@ -68,7 +68,7 @@ def delete_column(request, board_id, column_id):
     column.delete()    
     response = JsonResponse(data={'detail':'Column Deleted'},safe=False,status=200)  # Renders nothing for removal
     if request.htmx:
-        response['HX-Trigger'] = json.dumps({"columnDeleted": {"level": "info", "column_list_item": f"board_{board_id}_column_{column_id}"}})
+        response['HX-Trigger'] = json.dumps({"columnDeleted": {"level": "info","create_column_url":reverse('board:column-create',kwargs={'board_id':board_id}), "column_list_item": f"board_{board_id}_column_{column_id}"}})
     return response
 
 

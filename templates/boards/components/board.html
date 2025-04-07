@@ -1,5 +1,6 @@
 <div class="horizontal-scroll-wrapper auto-hide-scrollbar">
     <div class="row gx-4" id="columns">
+        {% if board.columns.exists %}
         {% for column in board.columns.all %}
             <div class="col-md-3" id="column_{{ column.id }}">
                 <div class="card border-0 shadow-lg">
@@ -36,5 +37,18 @@
                 </div>
             </div>
         {% endfor %}
+        {% else %}
+        <div class="col-md-12 text-center">
+            <p>No columns available. Please create a column.</p>
+            <button class="btn btn-primary" 
+            hx-get="{% url 'board:column-create' board.id %}"
+            hx-target="#modal-column-body"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal" 
+            data-bs-target="#createColumnModal" 
+            id="createColumnButton"
+            >Create Column</button>
+        </div>
+        {% endif %}
     </div>
 </div>
