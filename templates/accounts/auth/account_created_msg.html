@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification message sent successfully.</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/task_master.png' %}">
+    <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div class="main-container">
+        <nav class="header-nav">
+            <a href=""><img src="{% static 'images/task_master.png' %}" alt="TaskManager"></a>
+        </nav>
+        <div class="main-panel" style="margin-top:50px">
+            <div class="welcome">
+                <h1>Verification link sent successfully.</h1>
+            </div>
+            <div class="message">
+                <p>An email containing the verification link has been sent to the registered email address. Kindly
+                    expect its timely delivery to your inbox. If not found in your primary folder, please check your
+                    spam directory.</p>
+                <p>
+                    If you encounter any issue or do not receive the email, ensure the entered address is accurate and
+                    matches your registration details.
+                </p>
+                
+                <p>Thank you!</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'accounts:login-user' %}" class="primary-btn">Back To Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

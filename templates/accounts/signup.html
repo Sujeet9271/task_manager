@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up | TaskMaster</title>
+    <link rel="icon" href="{% static 'images/task_master.png' %}">
+    <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .signup-wrapper {
+            max-width: 420px;
+            margin: 5vh auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .signup-title {
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="signup-wrapper">
+    <h2 class="signup-title">Join TaskMaster 📝</h2>
+
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        {% include 'form.html' with form=form %}
+
+        <button type="submit" class="btn btn-primary w-100 fw-bold">Sign Up</button>
+    </form>
+
+    <p class="text-center mt-3">
+        Already have an account? <a href="{% url 'accounts:login-user' %}">Login</a>
+    </p>
+</div>
+
+</body>
+</html>

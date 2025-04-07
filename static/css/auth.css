@@ -1,0 +1,253 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    transition: .3s;
+    font-family:  'Lota Grotesque', ui-sans-serif, sans-serif;
+}
+/* Override Bootstrap Colors */
+:root {
+    --bs-blue: #0089FF;
+    --bs-indigo: #6610f2;
+    --bs-purple: #6f42c1;
+    --bs-pink: #d63384;
+    --bs-red: #dc3545;
+    --bs-orange: #fd7e14;
+    --bs-yellow: #ffc107;
+    --bs-green: #198754;
+    --bs-teal: #20c997;
+    --bs-cyan: #0dcaf0;
+    --bs-white: #fff;
+    --bs-gray: #6c757d;
+    --bs-gray-dark: #44484b;
+    --bs-primary: #0d6efd;
+    --bs-secondary: #6c757d;
+    --bs-success: #198754;
+    --bs-info: #0dcaf0;
+    --bs-warning: #ffc107;
+    --bs-danger: #dc3545;
+    --bs-light: #f8f9fa;
+    --bs-dark: #212529;
+} 
+.form-control {
+    background-color: transparent;
+    border-radius: 0;
+    border: 1px solid lightgray;
+    border-radius: 2px;
+}
+.form-control:focus {
+    color: #212529;
+    background-color: transparent;
+    border: 1px solid #86b7fe;
+    outline: 0;
+    box-shadow: none;
+}
+.main-container{
+    width: 100%;
+    /* height: 100vh; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.main-container .header-nav{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 12px 27px;
+    justify-content: space-between;
+}
+.main-container .header-nav span{
+   font-weight: 500;
+}
+.main-container .header-nav span a{
+   font-weight: 600;
+   text-decoration:none;
+}
+.main-container .header-nav img{
+    width: 40px;
+}
+.main-container .main-panel{
+    margin: 120px 0;
+    width: 550px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 70px 60px;
+    border-radius: 5px;
+    border: 1px solid #cee6ff;
+}
+.main-panel .message{
+    font-size: 14px;
+    color: gray;
+    text-align: justify;
+}
+.main-container .main-panel .welcome span{
+    width: 100%;
+    font-size: 12px;
+    font-weight: 500;
+    color: gray;
+}
+.main-container .main-panel .welcome h1{
+    width: 100%;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+.main-container .main-panel .button-lists{
+    width: 100%;
+   text-align: center;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   margin-top: 25px;
+}
+.main-container .main-panel .button-lists .devider{
+    position: relative;
+}
+.main-container .main-panel .button-lists .devider span{
+    font-weight: 600;
+    font-size: 14px;
+    color: #c3cddd;
+}
+.main-container .main-panel .button-lists .devider span::after{
+    content: "";
+    width: 45%;
+    right: 0;
+    top: 45%;
+    position: absolute;
+    color: #c3cddd;
+    height: 2px;
+    background-color: #c3cddd;
+    position: absolute;
+}
+.main-container .main-panel .button-lists .devider span::before{
+    content: "";
+    width: 45%;
+    left: 0;
+    top: 45%;
+    position: absolute;
+    color: #c3cddd;
+    height: 2px;
+    background-color: #c3cddd;
+    position: absolute;
+}
+.main-container .main-panel .button-lists .email-btn{
+    background-color: var(--bs-blue);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+.main-container .main-panel .button-lists .email-btn:hover{
+    background-color: var(--bs-primary);
+}
+.main-container .main-panel .button-lists .other-btn{
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    text-align: left;
+    font-weight: 600;
+    text-decoration: none;
+    color: #0089ff;
+    border: 1px solid #cee6ff;
+}
+.main-container .main-panel .button-lists .other-btn:hover{
+    background-color: #e2f1ff;
+}
+.main-container .main-panel .button-lists .other-btn .svg{
+    width: 20%;
+}
+
+/* login form */
+.main-container .main-panel .form-group{
+    width:100%;
+    margin:10px 0;
+}
+.main-container .main-panel label{
+    font-weight: 600 ;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+.main-container .main-panel .form-group .form-control{
+    font-size: 14px;
+}
+.main-container .main-panel .other-element{
+    font-size: 14px;
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+.main-container .main-panel .error-element{
+    font-size: 14px;
+    width: 100%;
+    background-color: rgb(222, 57, 57);
+    color: white;
+    margin: 10px 0;
+    border-radius: 2px;
+    padding: 7px;
+    text-align: center;
+}
+.main-container .main-panel .other-element a{
+    text-decoration: none;
+    font-weight: 600;
+}
+.main-container .main-panel .btn-group{
+    display:flex;
+    margin-top: 10px;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.main-container .main-panel .btn-group a{
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.back-btn{
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #0089ff;
+    border: 1px solid #cee6ff;
+}
+
+.back-btn:hover{
+    background-color: #e2f1ff;
+}
+.primary-btn{
+    background-color: var(--bs-blue);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 12px;
+    outline: none;
+    border: none;
+    font-size: 14px;
+    border-radius: 4px;
+
+}
+
+.primary-btn:hover{
+    color: #fff;
+    background-color: var(--bs-primary);
+}
+
+.custom-password-fiels{
+    position: relative;
+}
+.password-view{
+    right: 10px;
+    font-size: 14px;
+    color: gray;
+    bottom: 15%;
+    cursor: pointer;
+    position: absolute;
+}

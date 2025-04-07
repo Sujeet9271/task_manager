@@ -1,6 +1,6 @@
 <form hx-post="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=form.instance.id %}" >
     {% csrf_token %}
-    {% include 'forms.html' with form=form %}
+    {% include 'form.html' with form=form %}
 
     <div class="modal-footer">
         <button type="submit" class="btn btn-primary">Save Changes</button>
