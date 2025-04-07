@@ -2,184 +2,114 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="icon" type="image/x-icon" href="{% static 'images/task_master.png' %}">
-	<title>TaskMaster</title>
-	<link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
-	<link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}" />
-	<link rel="stylesheet" href="{% static 'css/styles.css' %}" />
-	<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
-	<script src="{% static 'js/common.js' %}"></script>
-</head>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" type="image/x-icon" href="{% static 'images/task_master.png' %}">
+		<title>TaskMaster</title>
+		<link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
+		<link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
+		<script src="{% static 'js/common.js' %}"></script>
+	</head>
 
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
-	<div class="navbar">
-		<div class="navbar-brand">
-			<a href="{% url 'board:index' %}">
-				<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo">
-			</a>
+	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
+		<div class="navbar">
+			<div class="navbar-brand">
+				<a href="{% url 'board:index' %}">
+					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo">
+				</a>
+			</div>
+			<div class="user-info">
+				<span>Welcome, {{ user.username }}</span>
+				<form method="post" action="{% url 'accounts:logout-user' %}">
+				{% csrf_token %}
+				<button class="logout" type="submit">Logout</button>
+				</form>
+			</div>
 		</div>
-		<div class="user-info">
-			<span>Welcome, {{ user.username }}</span>
-			<form method="post" action="{% url 'accounts:logout-user' %}">
-			{% csrf_token %}
-			<button class="logout" type="submit">Logout</button>
-			</form>
-		</div>
-	</div>
 
-	<div id="loader">
-        <div id="loader_div">
-        <img src="{% static 'gif/gif.gif' %}" alt="gif">
-        </div>
-    </div>
-  
-	<div class="custom-container">
-	  <div class="sidebar" id="boards-sidebar">
-		<div class="add" id="add-board-btn"
-			 data-bs-toggle="modal"
-			 data-bs-target="#createBoard"
-			>
-		  + Add New Board
+		<div id="loader">
+			<div id="loader_div">
+			<img src="{% static 'gif/gif.gif' %}" alt="gif">
+			</div>
 		</div>
-		<div id="boards">
-		{% for board in boards %}
-		{% include 'boards/components/board_list_item.html' with board=board %}
-		{% endfor %}
+	
+		<div class="custom-container">
+		<div class="sidebar" id="boards-sidebar">
+			<div class="add" id="add-board-btn"
+				data-bs-toggle="modal"
+				data-bs-target="#createBoard"
+				>
+			+ Add New Board
+			</div>
+			<div id="boards">
+			{% for board in boards %}
+			{% include 'boards/components/board_list_item.html' with board=board %}
+			{% endfor %}
+			</div>
 		</div>
-	  </div>
-  
-	  <div class="main-content" id="main-content">
-		<h2>Welcome to TaskMaster</h2>
-		<p>Select a board to view its content.</p>
-	  </div>
-	</div>
+	
+		<div class="main-content" id="main-content">
+			<h2>Welcome to TaskMaster</h2>
+			<p>Select a board to view its content.</p>
+		</div>
+		</div>
 
-	<div class="modal fade" id="createBoard" tabindex="-1" aria-labelledby="createBoardLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="createBoardLabel">Add New Board</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body" id="modal-board-body">
-					<form hx-post="{% url 'board:board-create' %}" hx-target="#boards" hx-swap="beforeend" id="create_board_form" method="POST" action="{% url 'board:board-create' %}">
-						{% csrf_token %}
-						<div class="mb-3">
-							<label for="board_name" class="form-label">Board Name</label>
-							<input type="text" class="form-control" id="board_name" name="name" required>
-						</div>
-						<div class="modal-footer">
-							<button type="submit" class="btn btn-primary">Create</button>
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_createBoardModal">Cancel</button>
-						</div>
-					</form>
+		<div class="modal fade" id="createBoard" tabindex="-1" aria-labelledby="createBoardLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="createBoardLabel">Add New Board</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="modal-board-body">
+						<form hx-post="{% url 'board:board-create' %}" hx-target="#boards" hx-swap="beforeend" id="create_board_form" method="POST" action="{% url 'board:board-create' %}">
+							{% csrf_token %}
+							<div class="mb-3">
+								<label for="board_name" class="form-label">Board Name</label>
+								<input type="text" class="form-control" id="board_name" name="name" required>
+							</div>
+							<div class="modal-footer">
+								<button type="submit" class="btn btn-primary">Create</button>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_createBoardModal">Cancel</button>
+							</div>
+						</form>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<div class="modal fade" id="createColumnModal" tabindex="-1" aria-labelledby="createColumnModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="createColumnModalLabel">Add New Column</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body" id="modal-column-body">
+		<div class="modal fade" id="createColumnModal" tabindex="-1" aria-labelledby="createColumnModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="createColumnModalLabel">Add New Column</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="modal-column-body">
+						
+					</div>
 					
 				</div>
-				
 			</div>
 		</div>
-	</div>
 
-	<div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
-            </div>
-            <div class="modal-body" id="edit_task_modal">
-              Editing task content here.
-            </div>
-          </div>
-        </div>
-    </div>
-  </body>
-<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script>
-	const editTaskModal = document.getElementById("editTaskModal");
-	editTaskModal.addEventListener("hidden.bs.modal", (event) => {
-		event.target.querySelector(".modal-body").innerHTML = "";
-	});
-
-	htmx.on("columnDeleted", function (evt) {
-		column_list_item = evt.detail.column_list_item;
-		document.getElementById(column_list_item).remove();
-		columns = document.getElementById("columns").children;
-		setTimeout(() => {
-			if (columns.length == 0) {
-				content = `<div class="col-md-12 text-center">
-								<p>No columns available. Please create a column.</p>
-								<button class="btn btn-primary" 
-								hx-get="${evt.detail.create_column_url}"
-								hx-target="#modal-column-body"
-								hx-swap="innerHTML"
-								data-bs-toggle="modal" 
-								data-bs-target="#createColumnModal" 
-								id="createColumnButton"
-								>Create Column</button>
-							</div>`
-				document.getElementById("columns").innerHTML = content;
-				htmx.process(document.getElementById("columns"));
-			}
-		}, 1000);
-	});
-
-	htmx.on("boardCreated", function (evt) {
-		document.getElementById("create_board_form").reset();
-		document.getElementById("close_createBoardModal").click();
-		board_url = evt.detail.message;
-		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
-	});
-	htmx.on("reloadBoard", function (evt) {
-		document.getElementById("close_createColumnModal").click();
-		board_url = evt.detail.message;
-		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
-	});
-
-	htmx.on("boardLoaded", function (evt) {
-		let previous_board = document.querySelector(".active_board")
-		if (previous_board) {
-			previous_board.classList.remove("active_board");
-		}
-		let current_board = document.getElementById(`board-${evt.detail.board_id}`)
-		current_board.classList.add("active_board");
-	});
-
-	htmx.on("taskEdited", function (evt) {
-		board_url = evt.detail.message;
-		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
-		document.getElementById("close_editTaskModal").click();
-	});
-
-	htmx.on("taskCreated", function (evt) {
-		document.getElementById(`create_task_form_${column_id}`).reset();
-		board_id = evt.detail.board_id;
-		column_id = evt.detail.column_id;
-		get_task_lists = evt.detail.get_task_lists;
-		
-		{% comment %} htmx.ajax("GET", get_task_lists, { target: `#tasks_list_${column_id}`, swap: "innerHTML" }); {% endcomment %}
-		
-		no_task = document.getElementById(`column_${column_id}_no_task`);
-		if (no_task) {
-			no_task.remove();
-		}
-
-	});
-</script>
+		<div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+				<h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+				</div>
+				<div class="modal-body" id="edit_task_modal">
+				Editing task content here.
+				</div>
+			</div>
+			</div>
+		</div>
+	</body>
+	<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+	<script src="{% static 'js/board_index.js' %}"></script>
 
 </html>
