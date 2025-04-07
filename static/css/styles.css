@@ -154,16 +154,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f8f9fa;
+  background-color: #cbd2d9;
+  
   border-radius: 16px;
   padding: 0.75rem 1.25rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 30%);
   margin-bottom: 1rem;
   transition: box-shadow 0.3s ease;
+  cursor: pointer;
 }
 
 .task-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 90%);
 }
 .task-card p {
   margin: 0;
