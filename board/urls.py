@@ -3,7 +3,7 @@ from board import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('create/', views.board_view, name='board-create'),
+    path('create/', views.create_board, name='board-create'),
     path('<int:board_id>/', views.board_view, name='board-view'),
     path('<int:board_id>/create_column/', views.create_column, name='column-create'),
     path('<int:board_id>/columns/<int:column_id>/', views.get_task_lists, name='get_task_lists'),

@@ -28,7 +28,25 @@ def index(request):
 @login_required
 def board_view(request, board_id):
     board = get_object_or_404(Board, pk=board_id)
-    return render(request, 'boards/components/board.html', {'board': board})
+    response = render(request, 'boards/components/board.html', {'board': board})
+    response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
+    return response
+
+@require_http_methods(['POST'])
+@login_required
+def create_board(request):
+    data = {
+        'name': request.POST.get('name'),
+        'description': request.POST.get('description'),
+        'created_by': request.user,
+    }
+    board = Board.objects.create(**data)
+    board.members.add(request.user)
+    response = render(request,'boards/components/board_list_item.html',{'board':board})
+    if request.htmx:
+        board_url = reverse('board:board-view',kwargs={'board_id':board.id}) 
+        response['HX-Trigger']=json.dumps({"boardCreated":{"message":board_url,"level":"info"}})
+    return response
 
 @require_http_methods(['GET', 'POST'])
 @login_required
@@ -36,12 +54,12 @@ def create_column(request, board_id):
     board = get_object_or_404(Board, pk=board_id)
     if request.method == 'POST':
         column = Column.objects.create(name=request.POST.get('name'), board=board, created_by=request.user)
-        response = render(request,'boards/components/board_list_item.html',{'column':column,'board_id':board_id})
+        response = render(request,'boards/components/column_list_item.html',{'column':column,'board_id':board_id})
         if request.htmx:
             board_url = reverse('board:board-view',kwargs={'board_id':board_id}) 
             response['HX-Trigger']=json.dumps({"reloadBoard":{"message":board_url,"level":"info"}})
         return response
-    return render(request, 'boards/components/board_create.html', {'board': board,})
+    return render(request, 'boards/components/column_create.html', {'board': board,})
 
 @require_http_methods(['DELETE'])
 @login_required
@@ -50,7 +68,7 @@ def delete_column(request, board_id, column_id):
     column.delete()    
     response = JsonResponse(data={'detail':'Column Deleted'},safe=False,status=200)  # Renders nothing for removal
     if request.htmx:
-        response['HX-Trigger'] = json.dumps({"columnDeleted": {"level": "info", "board_list_item": f"board_{board_id}_column_{column_id}"}})
+        response['HX-Trigger'] = json.dumps({"columnDeleted": {"level": "info", "column_list_item": f"board_{board_id}_column_{column_id}"}})
     return response
 
 

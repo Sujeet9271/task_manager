@@ -27,7 +27,7 @@ class SoftDeleteModel(models.Model):
 
 class Board(SoftDeleteModel):
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey('accounts.Users', on_delete=models.CASCADE, related_name='boards')
     members = models.ManyToManyField('accounts.Users', related_name='board_memberships', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

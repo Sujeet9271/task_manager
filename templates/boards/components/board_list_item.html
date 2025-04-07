@@ -1,1 +1,24 @@
-<li id="board_{{column.board_id}}_column_{{column.id}}"> - {{ column.name }}</li>
+<div class="board" id="board-{{ board.id }}">
+    <div class="pointer"
+            hx-get="{% url 'board:board-view' board.id %}"
+            hx-target="#main-content"
+            hx-swap="innerHTML">
+        <h3>
+            {{ board.name }}
+        </h3>
+        <ul id="columns-{{ board.id }}">
+            {% for column in board.columns.all %}
+            {% include 'boards/components/column_list_item.html' with column=column %}
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="add" 
+        hx-get="{% url 'board:column-create' board.id %}"
+        hx-target="#modal-column-body"
+        hx-swap="innerHTML"
+        data-bs-toggle="modal" 
+        data-bs-target="#createColumnModal" 
+        data-board-id="{{ board.id }}">
+    + Add New Column
+    </div>
+</div>

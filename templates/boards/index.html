@@ -5,146 +5,29 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>TaskMaster Home</title>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+	<link rel="icon" type="image/x-icon" href="{% static 'images/task_master.png' %}">
+	<title>TaskMaster</title>
 	<link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
+	<link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}" />
 	<link rel="stylesheet" href="{% static 'css/styles.css' %}" />
 	<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
 	<script src="{% static 'js/common.js' %}"></script>
-	<style>
-		* {
-			margin: 0;
-			padding: 0;
-			box-sizing: border-box;
-		}
-
-		body {
-			font-family: "Inter", sans-serif;
-			background: #f9fafb;
-		}
-
-		.navbar {
-			height: 60px;
-			background: #1f2937;
-			color: white;
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 0 20px;
-		}
-
-		.navbar img {
-			height: 40px;
-		}
-
-		.navbar .user-info {
-			display: flex;
-			align-items: center;
-			gap: 15px;
-		}
-
-		.navbar .user-info span {
-			font-weight: 500;
-		}
-
-		.navbar .logout {
-			background: #ef4444;
-			color: white;
-			border: none;
-			padding: 6px 12px;
-			border-radius: 6px;
-			cursor: pointer;
-		}
-
-		.custom-container {
-			display: flex;
-			height: calc(100vh - 60px);
-		}
-
-		.sidebar {
-			width: 280px;
-			background: #e5e7eb;
-			padding: 20px;
-			overflow-y: auto;
-		}
-
-		.board {
-			background: #f3f4f6;
-			margin-bottom: 20px;
-			padding: 10px;
-			border-radius: 10px;
-		}
-
-		.board h3 {
-			font-size: 16px;
-			color: #374151;
-			margin-bottom: 10px;
-		}
-
-		.board ul {
-			list-style: none;
-			padding-left: 20px;
-		}
-
-		.board li {
-			margin: 6px 0;
-			font-size: 14px;
-			color: #111827;
-			cursor: pointer;
-		}
-
-		.sidebar .add {
-			margin-top: 10px;
-			color: #2563eb;
-			font-weight: 600;
-			cursor: pointer;
-		}
-
-		.main-content {
-			flex-grow: 1;
-			padding: 20px;
-		}
-		.pointer {
-			cursor: pointer;
-		}
-		/* Horizontal scroll for column container */
-		.horizontal-scroll-wrapper {
-			overflow-x: auto;
-			padding-bottom: 1rem;
-			height: 100%;
-		}
-		
-		/* Prevent columns from wrapping */
-		#columns {
-			flex-wrap: nowrap !important;
-			height: 100%;
-		}
-		
-		/* Limit the height of each column and make it scrollable vertically */
-		#columns .card {
-			height: 100%;
-			max-height: 90vh;
-			display: flex;
-			flex-direction: column;
-		}
-
-		#columns .card-body {
-			overflow-y: auto;
-			flex-grow: 1;
-		}
-	</style>
 </head>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
 	<div class="navbar">
-	  <img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo">
-	  <div class="user-info">
-		<span>Welcome, {{ user.username }}</span>
-		<form method="post" action="{% url 'accounts:logout-user' %}">
-		  {% csrf_token %}
-		  <button class="logout" type="submit">Logout</button>
-		</form>
-	  </div>
+		<div class="navbar-brand">
+			<a href="{% url 'board:index' %}">
+				<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo">
+			</a>
+		</div>
+		<div class="user-info">
+			<span>Welcome, {{ user.username }}</span>
+			<form method="post" action="{% url 'accounts:logout-user' %}">
+			{% csrf_token %}
+			<button class="logout" type="submit">Logout</button>
+			</form>
+		</div>
 	</div>
 
 	<div id="loader">
@@ -155,44 +38,16 @@
   
 	<div class="custom-container">
 	  <div class="sidebar" id="boards-sidebar">
-		{% for board in boards %}
-		<div class="board" id="board-{{ board.id }}">
-			<div class="pointer"
-					hx-get="{% url 'board:board-view' board.id %}"
-					hx-target="#main-content"
-					hx-swap="innerHTML">
-				<h3>
-					{{ board.name }}
-				</h3>
-				<ul id="columns-{{ board.id }}">
-					{% for column in board.columns.all %}
-					{% include 'boards/components/board_list_item.html' with column=column %}
-					{% endfor %}
-				</ul>
-			</div>
-			<div class="add" 
-				hx-get="{% url 'board:column-create' board.id %}"
-				hx-target="#modal-column-body"
-				hx-swap="innerHTML"
-				data-bs-toggle="modal" 
-				data-bs-target="#createColumnModal" 
-				data-board-id="{{ board.id }}">
-			+ Add New Column
-			</div>
-			{% comment %} <div class="add" 
-				hx-get="{% url 'board:column-create' board.id %}" 
-				hx-target="#board-{{ board.id }}" 
-				hx-swap="beforeend">
-				+ Add New Column
-			</div> {% endcomment %}
-		</div>
-		{% endfor %}
-  
-		<div class="add"
-			 hx-get="{% url 'board:board-create' %}"
-			 hx-target="#boards-sidebar"
-			 hx-swap="beforeend">
+		<div class="add" id="add-board-btn"
+			 data-bs-toggle="modal"
+			 data-bs-target="#createBoard"
+			>
 		  + Add New Board
+		</div>
+		<div id="boards">
+		{% for board in boards %}
+		{% include 'boards/components/board_list_item.html' with board=board %}
+		{% endfor %}
 		</div>
 	  </div>
   
@@ -200,6 +55,30 @@
 		<h2>Welcome to TaskMaster</h2>
 		<p>Select a board to view its content.</p>
 	  </div>
+	</div>
+
+	<div class="modal fade" id="createBoard" tabindex="-1" aria-labelledby="createBoardLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="createBoardLabel">Add New Board</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body" id="modal-board-body">
+					<form hx-post="{% url 'board:board-create' %}" hx-target="#boards" hx-swap="beforeend" id="create_board_form" method="POST" action="{% url 'board:board-create' %}">
+						{% csrf_token %}
+						<div class="mb-3">
+							<label for="board_name" class="form-label">Board Name</label>
+							<input type="text" class="form-control" id="board_name" name="name" required>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-primary">Create</button>
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_createBoardModal">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<div class="modal fade" id="createColumnModal" tabindex="-1" aria-labelledby="createColumnModalLabel" aria-hidden="true">
@@ -238,13 +117,29 @@
 	});
 
 	htmx.on("columnDeleted", function (evt) {
-		board_list_item = evt.detail.board_list_item;
-		document.getElementById(board_list_item).remove();
+		column_list_item = evt.detail.column_list_item;
+		document.getElementById(column_list_item).remove();
 	});
-	htmx.on("reloadBoard", function (evt) {
+
+	htmx.on("boardCreated", function (evt) {
+		document.getElementById("create_board_form").reset();
+		document.getElementById("close_createBoardModal").click();
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
+	});
+	htmx.on("reloadBoard", function (evt) {
 		document.getElementById("close_createColumnModal").click();
+		board_url = evt.detail.message;
+		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
+	});
+
+	htmx.on("boardLoaded", function (evt) {
+		let previous_board = document.querySelector(".active_board")
+		if (previous_board) {
+			previous_board.classList.remove("active_board");
+		}
+		let current_board = document.getElementById(`board-${evt.detail.board_id}`)
+		current_board.classList.add("active_board");
 	});
 
 	htmx.on("taskEdited", function (evt) {
@@ -265,7 +160,7 @@
 		if (no_task) {
 			no_task.remove();
 		}
-		
+
 	});
 </script>
 

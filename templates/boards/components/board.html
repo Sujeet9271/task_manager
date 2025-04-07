@@ -1,5 +1,5 @@
-<div class="horizontal-scroll-wrapper">
-    <div class="row gx-4 gy-4" id="columns">
+<div class="horizontal-scroll-wrapper auto-hide-scrollbar">
+    <div class="row gx-4" id="columns">
         {% for column in board.columns.all %}
             <div class="col-md-3" id="column_{{ column.id }}">
                 <div class="card border-0 shadow-lg">
@@ -27,7 +27,7 @@
 
                     <!-- Task List -->
                     <div id="tasks_list_{{ column.id }}" 
-                        class="card-body bg-white" 
+                        class="card-body bg-white auto-hide-scrollbar" 
                         hx-target="this" 
                         hx-swap="innerHTML" 
                         hx-trigger="load" 

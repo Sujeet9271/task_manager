@@ -1,53 +1,211 @@
-.kanban-board {
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: #f9fafb;
+}
+
+.navbar {
+  height: 60px;
+  background: #1f2937;
+  color: white;
   display: flex;
-  gap: 1rem;
-  padding: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
 }
 
-.kanban-column {
-  background: #f0f0f0;
-  padding: 1rem;
-  border-radius: 5px;
-  width: 250px;
-  min-height: 300px;
+.navbar img {
+  height: 40px;
 }
 
-.card {
-  border-radius: 12px;
+.navbar .user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.card-header {
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
+.navbar .user-info span {
+  font-weight: 500;
+}
+
+.navbar .logout {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.custom-container {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+.sidebar {
+  min-width: 280px;
+  width: 280px;
+  background: #e5e7eb;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.board {
+  background: #f3f4f6;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.board h3 {
+  font-size: 16px;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.board ul {
+  list-style: none;
+  padding-left: 20px;
+}
+
+.board li {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.sidebar .add {
+  margin-top: 10px;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 10px;
+}
+.pointer {
+  cursor: pointer;
+}
+/* Horizontal scroll for column container */
+.horizontal-scroll-wrapper {
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  height: 100%;
+}
+
+/* Prevent columns from wrapping */
+#columns {
+  flex-wrap: nowrap !important;
+  height: 100%;
+}
+
+/* Limit the height of each column and make it scrollable vertically */
+#columns .card {
+  height: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+}
+
+#columns .card-body {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+
+/* Base style: hide scrollbar */
+.auto-hide-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+.auto-hide-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 10px;
+  visibility: hidden;
+}
+
+/* On hover: show the scrollbar thumb */
+.auto-hide-scrollbar:hover::-webkit-scrollbar-thumb {
+  visibility: visible;
+}
+
+/* Firefox */
+.auto-hide-scrollbar {
+  scrollbar-width: none; /* Hide in Firefox */
+}
+
+.auto-hide-scrollbar:hover {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
 }
 
 .task-card {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  background-color: #f8f9fa;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
-  transition: box-shadow 0.3s ease; /* Smooth transition */
+  background-color: #f8f9fa;
+  border-radius: 16px;
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+  transition: box-shadow 0.3s ease;
 }
 
 .task-card:hover {
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Hover effect */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+.task-card p {
+  margin: 0;
+  font-weight: 500;
+  color: #343a40;
+  flex-grow: 1;
 }
 
-.task-actions button {
-  background: none;
+.task-icons {
+  display: flex;
+  align-items: center;
+}
+
+/* Emoji buttons */
+.task-actions {
+  background: transparent;
   border: none;
-  padding: 5px;
+  font-size: 1.25rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-.task-actions img {
-  width: 20px;
-  height: 20px;
+.task-actions {
+  background: transparent;
+  border: none;
+  color: #212529;
+  font-size: 1.1rem;
+  margin-left: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
+
+.task-actions:hover {
+  color: #0d6efd; /* Bootstrap primary color or any highlight */
+  transform: scale(1.2);
+}
+
+.task-actions:focus {
+  outline: none;
+}
+
 
 #loader_div {
   width: 100px;
@@ -95,4 +253,21 @@
 form input[type="checkbox"]{
     width: 12px !important;
     height: fit-content !important;
+}
+
+.active_board{
+  background-color: #2329364d !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 2px 10px rgba(76, 186, 220, 0.05) !important;
+}
+
+
+#add-board-btn{
+  background-color: #2329364d !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 2px 10px rgba(76, 186, 220, 0.05) !important;
 }
