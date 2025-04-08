@@ -20,15 +20,17 @@ from django.urls import path, include
 from django.contrib.auth.decorators import login_required
 from board import urls as board_urls
 from accounts import urls as accounts_urls
+from workspace import urls as workspace_urls
 
 
 @login_required
 def index(request):
-    return redirect('board:index')
+    return redirect('workspace:index')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',index, name='index'),
     path('auth/', include((accounts_urls, 'accounts'), namespace='accounts')),
     path('board/', include((board_urls, 'board'), namespace='board')),
+    path('workspace/', include((workspace_urls, 'workspace'), namespace='workspace')),
 ]

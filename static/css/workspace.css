@@ -1,0 +1,71 @@
+body {
+    background-color: #f8f9fa; /* subtle gray */
+    font-family: 'Inter', sans-serif; /* modern font */
+}
+
+.card {
+    border: none;
+    border-radius: 1.25rem; /* rounded-4 */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.card-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.btn-outline-primary {
+    color: #4e5efc;
+    border-color: #4e5efc;
+}
+
+.btn-outline-primary:hover {
+    background-color: #4e5efc;
+    color: #fff;
+}
+
+.btn-outline-secondary {
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #adb5bd;
+    color: #fff;
+}
+
+.btn-outline-danger {
+    color: #fa5252;
+    border-color: #fa5252;
+}
+
+.btn-outline-danger:hover {
+    background-color: #fa5252;
+    color: #fff;
+}
+
+.workspace .card-body {
+    padding-top: 1.2rem;
+    padding-bottom: 0.8rem;
+}
+
+.card-footer {
+    background-color: transparent;
+    border-top: none;
+    padding-top: 0;
+}

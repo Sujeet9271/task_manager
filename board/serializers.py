@@ -2,19 +2,11 @@
 
 from rest_framework import serializers
 from accounts.models import Users as User
-from board.models import Board, Column, Task, SubTask
-
-
-class SubTaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SubTask
-        fields = '__all__'
-        read_only_fields = ('task', 'created_by', 'created_at')
+from board.models import Board, Column, Task
 
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    subtasks = SubTaskSerializer(many=True, read_only=True)
     
     class Meta:
         model = Task

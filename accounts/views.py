@@ -5,9 +5,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from accounts.models import Users
 from accounts.forms import CustomPasswordResetForm, CustomSetPasswordForm, UserSignupForm
+from workspace.models import Workspace
 from django.contrib.auth.views import PasswordResetView,PasswordResetConfirmView, PasswordResetCompleteView, PasswordResetDoneView
 
 from task_manager.logger import logger
@@ -46,7 +47,7 @@ def email_login(request):
                 login(request,user)
                 if next:
                     return redirect(next)
-                return redirect('board:index')
+                return redirect('workspace:index')
     except Exception as e:
         messages.error(request,e.args[0])
         logger.exception(stack_info=False, msg=f"Exception={e.args}")

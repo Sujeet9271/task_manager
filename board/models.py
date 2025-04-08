@@ -1,6 +1,7 @@
 from django.db import models
-
-
+from django.db.models import FileField
+from django.forms import ValidationError
+from django.template.defaultfilters import filesizeformat
 
 
 class SoftDeleteManager(models.Manager):
@@ -26,6 +27,7 @@ class SoftDeleteModel(models.Model):
         abstract = True
 
 class Board(SoftDeleteModel):
+    workspace = models.ForeignKey('workspace.Workspace', on_delete=models.SET_NULL, null=True, blank=True, related_name='boards')
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey('accounts.Users', on_delete=models.CASCADE, related_name='boards')
@@ -54,8 +56,61 @@ class Column(SoftDeleteModel):
         ordering = ['board','order']  # Order by the 'order' field
 
 
+
+def location(instance,filename):
+    return f'attachments/workspace_{instance.workspace_id}/task_{instance.task_id}/{filename}'
+
+
+
+class ContentTypeRestrictedFileField(FileField):
+    """
+    Same as FileField, but with additional constraints:
+        * content_types - List of allowed content types (e.g., ['application/pdf', 'image/jpeg'])
+        * max_upload_size - Maximum file size allowed for upload in bytes.
+            - 2.5MB  = 2621440
+            - 5MB    = 5242880
+            - 10MB   = 10485760
+            - 20MB   = 20971520
+            - 50MB   = 52428800
+            - 100MB  = 104857600
+            - 250MB  = 214958080
+            - 500MB  = 429916160
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.content_types = kwargs.pop("content_types", [])
+        self.max_upload_size = kwargs.pop("max_upload_size", None)
+        super().__init__(*args, **kwargs)
+
+
+    def clean(self, data, *args, **kwargs):
+        data = super().clean(data, *args, **kwargs)
+        if not data:
+            return data
+
+        file = getattr(data, 'file', None)
+        errors = []
+
+        # Check content type
+        content_type = getattr(file, "content_type", None)
+        if self.content_types and content_type not in self.content_types:
+            errors.append("File type not supported.")
+
+        # Check file size
+        if self.max_upload_size and file.size > self.max_upload_size:
+            errors.append(
+                f"File too large ({filesizeformat(file.size)}). Maximum size: {filesizeformat(self.max_upload_size)}"
+            )
+
+        if errors:
+            raise ValidationError(errors)  # Correctly passing as a list
+
+        return data
+    
+
 class Task(SoftDeleteModel):
     column = models.ForeignKey(Column, on_delete=models.CASCADE, related_name='tasks')
+    parent_task = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sub_tasks')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     assigned_to = models.ManyToManyField('accounts.Users', related_name='assigned_tasks', blank=True)
@@ -66,21 +121,49 @@ class Task(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='tasks')
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
+    extra_data = models.JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return self.title
+    
 
 
-class SubTask(SoftDeleteModel):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks')
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    assigned_to = models.ManyToManyField('accounts.Users', related_name='assigned_subtasks', blank=True)
-    is_completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='sub_tasks')
-    updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
+class Attachment(models.Model):
+    workspace = models.ForeignKey('workspace.Workspace',on_delete=models.SET_NULL,null=True,blank=True, related_name='workspace_attachment')
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
+    file = ContentTypeRestrictedFileField(
+        upload_to=location,
+        content_types=['application/pdf', 'application/zip', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain', 'text/csv', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+        max_upload_size=10485760
+    )
+    type = models.CharField(max_length=10, choices=[('file','File'),('url','URL')],default='file')
+    name = models.CharField(max_length=255, null=True, blank=True)
+    url = models.URLField(null=True,blank=True)
+    uploaded_by = models.ForeignKey("accounts.Users",on_delete=models.SET_NULL,null=True,blank=True)
 
+    def attachment_url(self):
+        if self.type=='file' and self.file:
+            return self.file.url
+        elif self.type=='url' and self.url:
+            return self.url
+        return None
+
+    def attachment_name(self):
+        if self.type=='file' and self.file:
+            return self.file.name
+        elif self.type=='url' and self.url:
+            return self.name if self.name else self.url
+        return None
+    
     def __str__(self):
-        return self.title
+        """Returns a readable string representation of the attachment."""
+        if self.task and self.file and self.file.name:
+            return f"Attachment ({self.file.name}) for Task ID {self.task_id}"
+        return "Attachment"
+    
+    def file_size(self):
+        """Returns the file size in KB or MB."""
+        if self.file:
+            size_kb = self.file.size / 1024
+            return f"{size_kb:.2f} KB" if size_kb < 1024 else f"{size_kb / 1024:.2f} MB"
+        return "Unknown Size" if self.type == 'file' else None

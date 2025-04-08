@@ -1,0 +1,31 @@
+<div class="col" id="workspace-{{ workspace.id }}">
+    <div class="workspace card h-100 rounded-4 border-0">
+        <div class="card-body">
+            <h5 class="card-title fw-semibold">{{ workspace.name }}</h5>
+            {% if workspace.description %}
+            <p class="card-text text-muted">{{ workspace.description }}</p>
+            {% endif %}
+        </div>
+        <div class="card-footer bg-white border-0 d-flex align-items-center px-3 pb-3">
+            <div class="ms-auto d-flex gap-2">
+                <a href="{% url 'workspace:get_workspace_boards' workspace.id %}" class="btn btn-outline-primary btn-sm" title="View">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <button class="btn btn-outline-secondary btn-sm" title="Edit Workspace"
+                        hx-get="{% url 'workspace:workspace_actions' workspace.id %}"
+                        hx-target="#editWorkspaceModalContent"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editWorkspaceModal">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" title="Delete Workspace"
+                        hx-delete="{% url 'workspace:workspace_actions' workspace.id %}"
+                        hx-target="#workspace-{{ workspace.id }}"
+                        hx-swap="delete"
+                        hx-confirm="Are you sure?">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

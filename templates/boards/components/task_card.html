@@ -8,12 +8,6 @@
       data-bs-target="#editTaskModal">
     <p>{{ task.title }}</p>
     <div class="task-icons d-flex">
-      {% comment %} <button class="task-actions"
-        hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}" 
-        hx-target="#edit_task_modal" 
-        hx-swap="innerHTML"
-        data-bs-toggle="modal"
-        data-bs-target="#editTaskModal"><i class="fas fa-pen" style="color:grey;"></i></button> {% endcomment %}
       <button class="task-actions"
         hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}" 
         hx-target="#task_{{ task.id }}" 

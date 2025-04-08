@@ -1,0 +1,12 @@
+<form id="edit_workspace_form" 
+    method="POST"
+    action="{% url 'workspace:workspace_actions' form.instance.id %}" 
+    hx-post="{% url 'workspace:workspace_actions' form.instance.id %}" 
+    hx-target="#workspace-{{ form.instance.id }}" 
+    hx-swap="outerHTML">
+    {% include 'form.html' with form=form %}
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Cancel</button>
+    </div>
+</form>

@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
     'accounts.apps.AccountsConfig',
     'board.apps.BoardConfig', 
+    'workspace.apps.WorkspaceConfig', 
 ]
 
 AUTH_USER_MODEL = 'accounts.Users'

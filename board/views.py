@@ -10,9 +10,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from board.forms import TaskCreateForm, TaskForm
-from board.models import Board, Column, Task, SubTask
+from board.models import Attachment, Board, Column, Task
 from board.permissions import IsBoardMemberOrReadOnly
-from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, SubTaskSerializer, BoardListSerializer
+from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, BoardListSerializer
 
 
 from task_manager.logger import logger
@@ -20,26 +20,41 @@ from task_manager.logger import logger
 
 from django_filters.rest_framework import DjangoFilterBackend
 
+from workspace.models import Workspace
+
 @login_required
-def index(request):
-    boards = Board.objects.filter(members=request.user).exclude(is_deleted=True)
-    return render(request, 'boards/index.html', {'boards': boards})
+def index(request, workspace_id):
+    try:
+        workspace = Workspace.objects.get(id=workspace_id)
+        boards = Board.objects.filter(workspace=workspace, members=request.user).exclude(is_deleted=True)
+        return render(request, 'boards/index.html', {'boards': boards,'workspace_id':workspace_id})
+    except Workspace.DoesNotExist:
+        return redirect('workspace:index')
 
 @login_required
 def board_view(request, board_id):
-    board = get_object_or_404(Board, pk=board_id)
-    response = render(request, 'boards/components/board.html', {'board': board})
-    response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
+    board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
+    context={'board':board}
+    if request.htmx:
+        response = render(request, 'boards/components/board.html', context)
+        response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
+    else:
+        context['boards'] = Board.objects.filter(members=request.user).exclude(is_deleted=True)
+        context['workspace_id'] = board.workspace_id
+        response = render(request, 'boards/index.html', context)
     return response
 
 @require_http_methods(['POST'])
 @login_required
 def create_board(request):
+    logger.info(request.session.get('workspace'))
     data = {
         'name': request.POST.get('name'),
         'description': request.POST.get('description'),
         'created_by': request.user,
     }
+    if request.POST.get('workspace_id'):
+        data['workspace']=Workspace.objects.filter(id=request.POST['workspace_id']).first()
     board = Board.objects.create(**data)
     board.members.add(request.user)
     response = render(request,'boards/components/board_list_item.html',{'board':board})
@@ -76,7 +91,8 @@ def delete_column(request, board_id, column_id):
 @login_required
 def get_task_lists(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id)
-    return render(request, 'boards/components/column.html', {'column': column})
+    tasks = column.tasks.filter(assigned_to=request.user) if not request.user.is_staff else column.tasks.all()
+    return render(request, 'boards/components/column.html', {'column': column,'tasks':tasks})
 
 
 @require_POST
@@ -100,12 +116,55 @@ def create_task(request, board_id, column_id):
 @login_required
 def edit_task(request, board_id, column_id, task_id):
     task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
-    form = TaskForm(instance=task, data=request.POST or None)
+    form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
     if request.method=='POST':
         if form.is_valid():
+            attachments = request.FILES.getlist('attachments')  # multiple files support
             task = form.save(commit=False)
             task.updated_by = request.user
             task.save()
+            form.save_m2m()
+
+            attachment_list = []
+            for attachment in attachments:
+                attachment_list.append(
+                Attachment(
+                    workspace=form.workspace,
+                    task=task,
+                    file=attachment,
+                    uploaded_by=request.user
+                ))
+
+            files = request.FILES.getlist('attachments')
+            urls = request.POST.getlist('urls')
+            url_names = request.POST.getlist('url_names')
+
+            # Upload files
+            for file in files:
+                attachment_list.append(
+                Attachment(
+                    workspace=form.workspace,
+                    task=task,
+                    file=file,
+                    type='file',
+                    uploaded_by=request.user
+                ))
+
+            # Store links
+            for url, name in zip(urls, url_names):
+                if url.strip():  # skip blanks
+                    attachment_list.append(
+                    Attachment(
+                        workspace=form.workspace,
+                        task=task,
+                        type='url',
+                        url=url.strip(),
+                        name=name.strip() or None,
+                        uploaded_by=request.user
+                    ))
+
+            if attachment_list:
+                Attachment.objects.bulk_create(attachment_list)
             if request.htmx:
                 response = HttpResponse()
                 response['HX-Trigger'] = json.dumps({"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}})
@@ -230,45 +289,3 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
-
-    
-class SubTaskViewSet(viewsets.ModelViewSet):
-    queryset = SubTask.objects.all()
-    serializer_class = SubTaskSerializer
-
-
-    def get_queryset(self):
-        """
-        Return columns for the specified board.
-        """
-        board_id = self.kwargs.get('board_id')
-        if board_id:
-            column_id = self.kwargs.get('column_id')
-            if column_id:
-                task_id = self.kwargs.get('task_id')
-                if task_id:
-                    return SubTask.objects.filter(task__column__board_id=board_id, task__column_id=column_id, task_id=task_id)
-                return SubTask.objects.filter(task__column__board_id=board_id,task__column_id=column_id)
-            return SubTask.objects.filter(task__column__board_id=board_id)
-        return super().get_queryset()
-    
-
-    def perform_create(self, serializer):
-        board_id = self.kwargs.get('board_id')
-        column_id = self.kwargs.get('column_id')
-        task_id = self.kwargs.get('task_id')
-        task = Task.objects.get(column__board_id=board_id, column_id=column_id, id=task_id)
-        instance:SubTask = serializer.save(task=task, created_by=self.request.user)
-        instance.assigned_to.add(self.request.user)
-
-
-    def perform_destroy(self, instance):
-        instance.is_deleted = True
-        instance.save(update_fields=['is_deleted', 'deleted_at'])
-
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
-
-

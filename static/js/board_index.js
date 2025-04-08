@@ -54,9 +54,9 @@ const editTaskModal = document.getElementById("editTaskModal");
 	});
 
 	htmx.on("taskCreated", function (evt) {
-		document.getElementById(`create_task_form_${column_id}`).reset();
 		board_id = evt.detail.board_id;
 		column_id = evt.detail.column_id;
+		document.getElementById(`create_task_form_${column_id}`).reset();
 		get_task_lists = evt.detail.get_task_lists;
 		
 		//htmx.ajax("GET", get_task_lists, { target: `#tasks_list_${column_id}`, swap: "innerHTML" });
@@ -67,3 +67,22 @@ const editTaskModal = document.getElementById("editTaskModal");
 		}
 
 	});
+
+
+	function addUrlInput() {
+        const wrapper = document.getElementById('link-wrapper');
+        const div = document.createElement('div');
+        div.classList.add('url-input', 'mb-2', 'd-flex', 'gap-2', 'align-items-start');
+        div.innerHTML = `
+            <div class="flex-grow-1">
+                <input type="url" class="form-control mb-1" name="urls" placeholder="https://example.com">
+                <input type="text" class="form-control" name="url_names" placeholder="Optional name">
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUrlInput(this)">❌</button>
+        `;
+        wrapper.appendChild(div);
+    }
+
+    function removeUrlInput(btn) {
+        btn.closest('.url-input').remove();
+    }

@@ -1,0 +1,12 @@
+<form id="create_workspace_form" 
+    method="POST"
+    action="{% url 'workspace:workspace_create' %}" 
+    hx-post="{% url 'workspace:workspace_create' %}" 
+    hx-target="#workspaces" 
+    hx-swap="beforeend">
+    {% include 'form.html' with form=form %}
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Create</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Cancel</button>
+    </div>
+</form>

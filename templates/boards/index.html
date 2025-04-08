@@ -17,7 +17,7 @@
 	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
 		<div class="navbar">
 			<div class="navbar-brand">
-				<a href="{% url 'board:index' %}">
+				<a href="{% url 'workspace:index' %}">
 					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo">
 				</a>
 			</div>
@@ -52,8 +52,12 @@
 		</div>
 	
 		<div class="main-content" id="main-content">
+			{% if board %}
+			{% include "boards/components/board.html" with board=board %}
+			{% else %}
 			<h2>Welcome to TaskMaster</h2>
 			<p>Select a board to view its content.</p>
+			{% endif %}
 		</div>
 		</div>
 
@@ -70,6 +74,7 @@
 							<div class="mb-3">
 								<label for="board_name" class="form-label">Board Name</label>
 								<input type="text" class="form-control" id="board_name" name="name" required>
+								<input type="hidden" class="form-control" id="workspace_id" name="workspace_id" value="{{workspace_id}}">
 							</div>
 							<div class="modal-footer">
 								<button type="submit" class="btn btn-primary">Create</button>
