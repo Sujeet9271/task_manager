@@ -7,11 +7,13 @@
       data-bs-toggle="modal"
       data-bs-target="#editTaskModal">
     <p>{{ task.title }}</p>
+    {% if task.created_by == request.user %}
     <div class="task-icons d-flex">
       <button class="task-actions"
-        hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}" 
-        hx-target="#task_{{ task.id }}" 
-        hx-swap="delete"
-        hx-confirm="Are You Sure"><i class="fas fa-trash-alt" style="color:red;"></i></button>
+      hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}" 
+      hx-target="#task_{{ task.id }}" 
+      hx-swap="delete"
+      hx-confirm="Are You Sure"><i class="fas fa-trash-alt" style="color:red;"></i></button>
     </div>
+    {% endif %}
   </div>

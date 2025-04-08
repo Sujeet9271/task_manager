@@ -11,6 +11,7 @@
                 <a href="{% url 'workspace:get_workspace_boards' workspace.id %}" class="btn btn-outline-primary btn-sm" title="View">
                     <i class="fas fa-arrow-right"></i>
                 </a>
+                {% if workspace.created_by == request.user %}
                 <button class="btn btn-outline-secondary btn-sm" title="Edit Workspace"
                         hx-get="{% url 'workspace:workspace_actions' workspace.id %}"
                         hx-target="#editWorkspaceModalContent"
@@ -25,6 +26,7 @@
                         hx-confirm="Are you sure?">
                     <i class="fas fa-trash"></i>
                 </button>
+                {% endif %}
             </div>
         </div>
     </div>

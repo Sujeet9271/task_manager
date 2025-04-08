@@ -1,4 +1,4 @@
-<form hx-post="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=form.instance.id %}" hx-encoding='multipart/form-data' >
+<form hx-post="{% url 'board:create_sub_task' board_id=board_id column_id=column_id task_id=task_id %}" hx-target="#edit_task_modal" hx-swap="innerHTML" hx-encoding='multipart/form-data' >
     {% csrf_token %}
     {% include 'form.html' with form=form %}
     <!-- Link Attachment Section -->
@@ -37,24 +37,6 @@
     </div>
     <div class="modal-footer">
         <button type="submit" class="btn btn-primary">Save Changes</button>
-        {% if task.parent_task %}
-        <button type="button" class="btn btn-warning"
-         hx-get={% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.parent_task_id %}
-         hx-target="#edit_task_modal"
-         hx-swap="innerHTML"
-         >Parent task</button>
-         <button type="button" class="btn btn-secondary"
-         hx-get="{% url 'board:get_sub_task_list' board_id=board_id column_id=column_id task_id=task.parent_task_id %}"
-         hx-target="#edit_task_modal"
-         hx-swap="innerHTML"
-         >Back</button>
-         {% else %}
-         <button type="button" class="btn btn-warning"
-         hx-get="{% url 'board:get_sub_task_list' board_id=board_id column_id=column_id task_id=form.instance.id  %}"
-         hx-target="#edit_task_modal"
-         hx-swap="innerHTML"
-         >Sub-tasks</button>
-         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_editTaskModal">Close</button>
-        {% endif %}
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_editTaskModal">Close</button>
     </div>
 </form>

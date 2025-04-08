@@ -1,0 +1,23 @@
+<div id="sub_task_list">
+{% for task in sub_tasks %}
+    <div class="task-card" id="sub_task_{{ task.id }}"
+      hx-get="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.id %}" 
+      hx-target="#edit_task_modal" 
+      hx-swap="innerHTML"
+      >
+    <p>{{ task.title }}</p>
+  </div>
+{% endfor %}
+</div>
+
+<button class="btn btn-primary"
+    hx-get="{% url 'board:create_sub_task' board_id=board_id column_id=column_id task_id=task_id %}" 
+    hx-target="#edit_task_modal" 
+    hx-swap="innerHTML">Create Sub Task
+</button>
+<button class="btn btn-warning"
+    hx-get="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task_id %}" 
+    hx-target="#edit_task_modal" 
+    hx-swap="innerHTML">View Parent Task
+</button>
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_editTaskModal">Close</button>

@@ -9,7 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
-from board.forms import TaskCreateForm, TaskForm
+from accounts.models import Users
+from board.forms import SubTaskCreateForm, TaskCreateForm, TaskForm
 from board.models import Attachment, Board, Column, Task
 from board.permissions import IsBoardMemberOrReadOnly
 from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, BoardListSerializer
@@ -22,14 +23,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from workspace.models import Workspace
 
-@login_required
-def index(request, workspace_id):
-    try:
-        workspace = Workspace.objects.get(id=workspace_id)
-        boards = Board.objects.filter(workspace=workspace, members=request.user).exclude(is_deleted=True)
-        return render(request, 'boards/index.html', {'boards': boards,'workspace_id':workspace_id})
-    except Workspace.DoesNotExist:
-        return redirect('workspace:index')
 
 @login_required
 def board_view(request, board_id):
@@ -56,7 +49,10 @@ def create_board(request):
     if request.POST.get('workspace_id'):
         data['workspace']=Workspace.objects.filter(id=request.POST['workspace_id']).first()
     board = Board.objects.create(**data)
-    board.members.add(request.user)
+    if board.workspace:
+        board.members.add(*board.workspace.members.all())
+    else:
+        board.members.add(request.user)
     response = render(request,'boards/components/board_list_item.html',{'board':board})
     if request.htmx:
         board_url = reverse('board:board-view',kwargs={'board_id':board.id}) 
@@ -91,9 +87,50 @@ def delete_column(request, board_id, column_id):
 @login_required
 def get_task_lists(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id)
-    tasks = column.tasks.filter(assigned_to=request.user) if not request.user.is_staff else column.tasks.all()
+    tasks = column.tasks.filter(assigned_to=request.user).exclude(parent_task__isnull=False) if not request.user.is_staff else column.tasks.all()
     return render(request, 'boards/components/column.html', {'column': column,'tasks':tasks})
 
+
+
+def sub_task_list(user:Users,task:Task,context:dict=dict):
+    context['task'] = task
+    context['sub_tasks'] = task.sub_tasks.filter(assigned_to=user) if not user.is_staff else task.sub_tasks.all()
+    return context
+
+
+
+@require_GET
+@login_required
+def get_sub_task_lists(request, board_id, column_id, task_id):
+    context={'board_id':board_id, 'column_id':column_id, 'task_id':task_id}
+    task = get_object_or_404(Task, pk=task_id, column_id=column_id)
+    context = sub_task_list(user=request.user,task=task, context=context)
+    return render(request, 'boards/components/sub_task_list.html', context)
+
+
+@require_http_methods(['GET','POST'])
+@login_required
+def create_sub_task(request, board_id, column_id, task_id):
+    task = get_object_or_404(Task, pk=task_id)
+    context={
+        'task_id':task_id,
+        'column_id':column_id,
+        'board_id':board_id
+    }
+    form = SubTaskCreateForm(user=request.user,task=task,data=request.POST or None)
+    if request.method=='POST' and form.is_valid():
+        instance:Task = form.save(commit=False)
+        instance.parent_task = task
+        instance.column = task.column
+        instance.created_by = request.user
+        instance.save()
+        form.save_m2m()
+        instance.assigned_to.add(request.user)
+        context = sub_task_list(user=request.user,task=task, context=context)
+        response = render(request, 'boards/components/sub_task_list.html',context)
+        return response
+    context['form'] = form
+    return render(request,'boards/components/sub_task_create.html',context)
 
 @require_POST
 @login_required
@@ -125,20 +162,10 @@ def edit_task(request, board_id, column_id, task_id):
             task.save()
             form.save_m2m()
 
-            attachment_list = []
-            for attachment in attachments:
-                attachment_list.append(
-                Attachment(
-                    workspace=form.workspace,
-                    task=task,
-                    file=attachment,
-                    uploaded_by=request.user
-                ))
-
             files = request.FILES.getlist('attachments')
             urls = request.POST.getlist('urls')
             url_names = request.POST.getlist('url_names')
-
+            attachment_list = []
             # Upload files
             for file in files:
                 attachment_list.append(
