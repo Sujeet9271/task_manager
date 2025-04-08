@@ -59,7 +59,7 @@ def email_login(request):
 def logout_user(request):
     try:
         logout(request)
-        return redirect('board:index')
+        return redirect('accounts:login-user')
     except Exception as e:
         messages.error(request, e.args[0])
         logger.exception(stack_info=False, msg=f"Exception={e.args}")
