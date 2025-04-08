@@ -10,8 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from accounts.models import Users
-from board.forms import SubTaskCreateForm, TaskCreateForm, TaskForm
-from board.models import Attachment, Board, Column, Task
+from board.forms import CommentForm, SubTaskCreateForm, TaskCreateForm, TaskForm
+from board.models import Attachment, Board, Column, Comments, Task
 from board.permissions import IsBoardMemberOrReadOnly
 from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, BoardListSerializer
 
@@ -156,7 +156,6 @@ def edit_task(request, board_id, column_id, task_id):
     form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
     if request.method=='POST':
         if form.is_valid():
-            attachments = request.FILES.getlist('attachments')  # multiple files support
             task = form.save(commit=False)
             task.updated_by = request.user
             task.save()
@@ -196,7 +195,25 @@ def edit_task(request, board_id, column_id, task_id):
                 response = HttpResponse()
                 response['HX-Trigger'] = json.dumps({"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}})
                 return response
-    return render(request,'boards/components/edit.html',{'task':task,'board_id':board_id,'column_id':column_id, 'form':form})
+    
+    comments = Comments.objects.select_related('added_by').filter(task=task)
+    comment_form = CommentForm()
+    return render(request,'boards/components/edit.html',{'task':task,'board_id':board_id,'column_id':column_id, 'form':form, "comments":comments,"comment_form":comment_form})
+
+@require_http_methods(['POST'])
+@login_required
+def add_comment(request, task_id):
+    task = get_object_or_404(Task, pk=task_id,)
+    form = CommentForm(data=request.POST)
+    if form.is_valid():
+        comment:Comments = form.save(commit=False)
+        comment.added_by = request.user
+        comment.task = task
+        comment.save()
+        response = render(request,'boards/components/comment.html',{'comment':comment})
+        response['HX-Trigger'] = 'commentAdded'
+        return response
+    return JsonResponse(data=form.errors.as_json(), status=400)
 
 
 @require_http_methods(['DELETE'])

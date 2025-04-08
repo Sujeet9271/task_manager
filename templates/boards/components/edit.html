@@ -1,60 +1,83 @@
-<form hx-post="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=form.instance.id %}" hx-encoding='multipart/form-data' >
-    {% csrf_token %}
-    {% include 'form.html' with form=form %}
-    <!-- Link Attachment Section -->
-    <div class="mb-3" id="link-wrapper">
-        <label class="form-label">Add Links:</label>
-
-        <div class="url-input mb-2 d-flex gap-2 align-items-start">
-            <div class="flex-grow-1">
-                <input type="url" class="form-control mb-1" name="urls" placeholder="https://example.com">
-                <input type="text" class="form-control" name="url_names" placeholder="Optional name">
+<div class="d-flex  gap-3">
+    <div id="form_div">
+        <form hx-post="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=form.instance.id %}" hx-encoding='multipart/form-data' >
+            {% csrf_token %}
+            {% include 'form.html' with form=form %}
+            <!-- Link Attachment Section -->
+            <div class="mb-3" id="link-wrapper">
+                <label class="form-label">Add Links:</label>
+        
+                <div class="url-input mb-2 d-flex gap-2 align-items-start">
+                    <div class="flex-grow-1">
+                        <input type="url" class="form-control mb-1" name="urls" placeholder="https://example.com">
+                        <input type="text" class="form-control" name="url_names" placeholder="Optional name">
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUrlInput(this)">❌</button>
+                </div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUrlInput(this)">❌</button>
+        
+            <!-- Add another link button -->
+            <button type="button" class="btn btn-sm btn-outline-primary mb-3" onclick="addUrlInput()">+ Add Another Link</button>
+        
+            <div class="mb-3" id="attachments_id">
+                <label for="attachments" class="form-label">Attachements:</label>
+                <input class="form-control" name="attachments" type="file"  multiple>
+                <div class="form-text">Select Attachements to upload</div>
+                {% if task.attachments.exists %}
+                <div class="form-text">Existing Attachments:</div>
+                <ul>
+                    {% for attachment in task.attachments.all %}
+                    <li>
+                        <a target="_blank" href="{{ attachment.attachment_url }}">{{ attachment.attachment_name }}</a>
+                        {% if attachment.file_size %}
+                        ({{ attachment.file_size }})
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                {% if task.parent_task %}
+                <button type="button" class="btn btn-warning"
+                hx-get={% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.parent_task_id %}
+                hx-target="#edit_task_modal"
+                hx-swap="innerHTML"
+                >Parent task</button>
+                <button type="button" class="btn btn-secondary"
+                hx-get="{% url 'board:get_sub_task_list' board_id=board_id column_id=column_id task_id=task.parent_task_id %}"
+                hx-target="#edit_task_modal"
+                hx-swap="innerHTML"
+                >Back</button>
+                {% else %}
+                <button type="button" class="btn btn-warning"
+                hx-get="{% url 'board:get_sub_task_list' board_id=board_id column_id=column_id task_id=form.instance.id  %}"
+                hx-target="#edit_task_modal"
+                hx-swap="innerHTML"
+                >Sub-tasks</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_editTaskModal">Close</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <div class="container py-3" id="comment_div">
+        <div class="chat-container">
+
+            <!-- Scrollable Messages Section -->
+            <div id="chatMessages" class="chat-messages mb-3 d-flex flex-column">
+                {% for comment in comments %}
+                {% include 'boards/components/comment.html' with comment=comment %}
+                {% endfor %}
+            </div>
+        
+            <!-- Input Form -->
+        <form id="comment_form" class="chat-input" hx-post="{% url 'board:add_comment' form.instance.id %}" hx-target="#chatMessages" hx-swap="beforeend">
+              <div class="input-group">
+                <input name="comment" type="text" id="chatInput" class="form-control" placeholder="Type a message..." required>
+                <button class="btn btn-primary" type="submit">Send</button>
+              </div>
+            </form>
         </div>
     </div>
-
-    <!-- Add another link button -->
-    <button type="button" class="btn btn-sm btn-outline-primary mb-3" onclick="addUrlInput()">+ Add Another Link</button>
-
-    <div class="mb-3" id="attachments_id">
-        <label for="attachments" class="form-label">Attachements:</label>
-        <input class="form-control" name="attachments" type="file"  multiple>
-        <div class="form-text">Select Attachements to upload</div>
-        {% if task.attachments.exists %}
-        <div class="form-text">Existing Attachments:</div>
-        <ul>
-            {% for attachment in task.attachments.all %}
-            <li>
-                <a target="_blank" href="{{ attachment.attachment_url }}">{{ attachment.attachment_name }}</a>
-                {% if attachment.file_size %}
-                ({{ attachment.file_size }})
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    </div>
-    <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        {% if task.parent_task %}
-        <button type="button" class="btn btn-warning"
-         hx-get={% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.parent_task_id %}
-         hx-target="#edit_task_modal"
-         hx-swap="innerHTML"
-         >Parent task</button>
-         <button type="button" class="btn btn-secondary"
-         hx-get="{% url 'board:get_sub_task_list' board_id=board_id column_id=column_id task_id=task.parent_task_id %}"
-         hx-target="#edit_task_modal"
-         hx-swap="innerHTML"
-         >Back</button>
-         {% else %}
-         <button type="button" class="btn btn-warning"
-         hx-get="{% url 'board:get_sub_task_list' board_id=board_id column_id=column_id task_id=form.instance.id  %}"
-         hx-target="#edit_task_modal"
-         hx-swap="innerHTML"
-         >Sub-tasks</button>
-         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_editTaskModal">Close</button>
-        {% endif %}
-    </div>
-</form>
+</div>

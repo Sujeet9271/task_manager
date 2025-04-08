@@ -140,6 +140,8 @@ class Attachment(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True,blank=True)
     uploaded_by = models.ForeignKey("accounts.Users",on_delete=models.SET_NULL,null=True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def attachment_url(self):
         if self.type=='file' and self.file:
@@ -167,3 +169,11 @@ class Attachment(models.Model):
             size_kb = self.file.size / 1024
             return f"{size_kb:.2f} KB" if size_kb < 1024 else f"{size_kb / 1024:.2f} MB"
         return "Unknown Size" if self.type == 'file' else None
+    
+
+class Comments(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name="comments")
+    comment = models.TextField()
+    added_by = models.ForeignKey("accounts.Users", on_delete=models.SET_NULL, null=True, blank=True, related_name="comments")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

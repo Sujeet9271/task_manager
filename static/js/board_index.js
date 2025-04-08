@@ -37,6 +37,9 @@ const editTaskModal = document.getElementById("editTaskModal");
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
+	htmx.on("commentAdded", function (evt) {
+		document.getElementById("comment_form").reset();
+	});
 
 	htmx.on("boardLoaded", function (evt) {
 		let previous_board = document.querySelector(".active_board")

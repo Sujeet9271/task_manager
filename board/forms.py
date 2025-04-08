@@ -1,6 +1,6 @@
 from django import forms
 from accounts.models import Users
-from board.models import Attachment, Board, Column, Task
+from board.models import Attachment, Board, Column, Comments, Task
 from workspace.models import Workspace
 
 class TaskCreateForm(forms.ModelForm):
@@ -85,3 +85,10 @@ class AttachmentForm(forms.ModelForm):
             'url': forms.URLInput(attrs={'placeholder': 'https://example.com'}),
             'name': forms.TextInput(attrs={'placeholder': 'Optional name for the URL'}),
         }
+
+
+class CommentForm(forms.ModelForm):
+
+    class Meta:
+        model = Comments
+        fields = ['comment']

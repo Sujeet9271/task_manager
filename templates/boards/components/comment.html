@@ -1,0 +1,9 @@
+    {% if comment.added_by == request.user %}
+    <div class="chat-message message-sender">
+        <strong>You:</strong> {{comment.comment}}
+    </div>
+    {% else %}
+    <div class="chat-message message-other">
+        <strong>{{comment.added_by.username}}:</strong> {{comment.comment}}
+    </div>
+    {% endif %}
