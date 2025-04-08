@@ -3,7 +3,5 @@
     <div class="task-list">
         {% for task in tasks %}
             {% include 'boards/components/task_card.html' with board_id=column.board_id task=task %}
-        {% empty %}
-            <p id="column_{{column.id}}_no_task">No tasks</p>
         {% endfor %}
     </div>

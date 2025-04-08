@@ -122,6 +122,7 @@ class Task(SoftDeleteModel):
     created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='tasks')
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
     extra_data = models.JSONField(default=dict, null=True, blank=True)
+    is_complete = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

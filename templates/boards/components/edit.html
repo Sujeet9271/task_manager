@@ -1,5 +1,5 @@
 <div class="d-flex  gap-3">
-    <div id="form_div">
+    <div id="form_div" style="width:50%">
         <form hx-post="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=form.instance.id %}" hx-encoding='multipart/form-data' >
             {% csrf_token %}
             {% include 'form.html' with form=form %}
@@ -61,7 +61,7 @@
             </div>
         </form>
     </div>
-    <div class="container py-3" id="comment_div">
+    <div class="container py-3" id="comment_div" style="width:50%">
         <div class="chat-container">
 
             <!-- Scrollable Messages Section -->

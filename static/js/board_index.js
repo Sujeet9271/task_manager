@@ -32,13 +32,25 @@ const editTaskModal = document.getElementById("editTaskModal");
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
+
 	htmx.on("reloadBoard", function (evt) {
 		document.getElementById("close_createColumnModal").click();
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
+
 	htmx.on("commentAdded", function (evt) {
 		document.getElementById("comment_form").reset();
+	});
+
+	htmx.on("columnUpdated", function (evt) {
+		board_id = evt.detail.board_id;
+		column_id = evt.detail.column_id;
+		column_name = evt.detail.column_name;
+		id=`board_${board_id}_column_${column_id}`
+		console.log(id)
+		document.getElementById(id).innerHTML = ` - ${column_name}`
+		document.getElementById(`column_name_${column_id}`).value = column_name
 	});
 
 	htmx.on("boardLoaded", function (evt) {
@@ -56,19 +68,13 @@ const editTaskModal = document.getElementById("editTaskModal");
 		document.getElementById("close_editTaskModal").click();
 	});
 
-	htmx.on("taskCreated", function (evt) {
+	htmx.on("reloadTaskList", function (evt) {
 		board_id = evt.detail.board_id;
 		column_id = evt.detail.column_id;
 		document.getElementById(`create_task_form_${column_id}`).reset();
 		get_task_lists = evt.detail.get_task_lists;
 		
 		//htmx.ajax("GET", get_task_lists, { target: `#tasks_list_${column_id}`, swap: "innerHTML" });
-		
-		no_task = document.getElementById(`column_${column_id}_no_task`);
-		if (no_task) {
-			no_task.remove();
-		}
-
 	});
 
 

@@ -12,44 +12,20 @@
 		<link rel="stylesheet" href="{% static 'css/styles.css' %}" />
 		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
 		<script src="{% static 'js/common.js' %}"></script>
+		<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 		<style>
-			.chat-container {
-			  height: 90vh;
-			  display: flex;
-			  flex-direction: column;
-			}
-		
-			.chat-messages {
-			  flex-grow: 1;
-			  overflow-y: auto;
-			  padding: 1rem;
-			  background-color: #f8f9fa;
-			  border: 1px solid #dee2e6;
-			  border-radius: .5rem;
-			}
-		
-			.chat-message {
-			  max-width: 75%;
-			  padding: 0.5rem 1rem;
-			  border-radius: 1rem;
-			  margin-bottom: 0.5rem;
-			}
-		
-			.message-sender {
-			  background-color: #d1e7dd;
-			  align-self: flex-end;
-			}
-		
-			.message-other {
-			  background-color: #e2e3e5;
-			  align-self: flex-start;
-			}
-		
-			.chat-input {
-			  border-top: 1px solid #dee2e6;
-			  padding-top: .5rem;
-			}
-		  </style>
+			.welcome-illustration {
+				text-align: center;
+				margin-top: 5rem;
+				color: #333;
+			  }
+			  .welcome-illustration img {
+				width: 400px;
+				margin-bottom: 1.5rem;
+			  }
+			  
+		</style>
+
 	</head>
 
 	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
@@ -63,7 +39,7 @@
 				<span>Welcome, {{ user.username }}</span>
 				<form method="post" action="{% url 'accounts:logout-user' %}">
 				{% csrf_token %}
-				<button class="logout" type="submit">Logout</button>
+				<button class="logout" type="submit"><i class="fa-solid fa-right-from-bracket"></i></button>
 				</form>
 			</div>
 		</div>
@@ -93,8 +69,11 @@
 			{% if board %}
 			{% include "boards/components/board.html" with board=board %}
 			{% else %}
-			<h2>Welcome to TaskMaster</h2>
-			<p>Select a board to view its content.</p>
+			<div class="welcome-illustration">
+				<img src="{% static 'images/welcome.svg' %}" alt="Welcome" />
+				<h1>Welcome to TaskMaster</h1>
+				<p>Select a board to view its content or create a new one!</p>
+			  </div>
 			{% endif %}
 		</div>
 		</div>
@@ -154,5 +133,78 @@
 	</body>
 	<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 	<script src="{% static 'js/board_index.js' %}"></script>
+	<script>
+		htmx.on('htmx:afterSwap', (evt) => {
+			// Only reinitialize if the swapped content is inside the main content area
+			// if (evt.target.id !== 'main-content') return;
+			if (!evt.target.closest('#main-content')) return;
 
+			initDragAndDrop(); // Call reusable init function
+		  });
+		  
+		  function initDragAndDrop() {
+			const taskCards = document.querySelectorAll('.task-card');
+			const dropzones = document.querySelectorAll('.dropzone');
+		  
+			taskCards.forEach(card => {
+			  card.addEventListener('dragstart', (e) => {
+				e.dataTransfer.setData('text/plain', card.dataset.taskId);
+			  });
+			});
+		  
+			dropzones.forEach(zone => {
+			  zone.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				zone.classList.add('bg-light');
+			  });
+		  
+			  zone.addEventListener('dragleave', () => {
+				zone.classList.remove('bg-light');
+			  });
+		  
+			  zone.addEventListener('drop', (e) => {
+				e.preventDefault();
+				const taskId = e.dataTransfer.getData('text/plain');
+				const columnId = zone.dataset.columnId;
+		  
+				fetch(`/board/tasks/${taskId}/move/`, {
+				  method: 'POST',
+				  headers: {
+					'X-CSRFToken': getCookie('csrftoken'),
+					'Content-Type': 'application/x-www-form-urlencoded',
+				  },
+				  body: `column_id=${columnId}`,
+				})
+				.then(response => {
+				  if (response.ok) {
+					const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+					zone.appendChild(taskCard);
+				  } else {
+					alert('Failed to move task');
+				  }
+				  zone.classList.remove('bg-light');
+				});
+			  });
+			});
+		  }
+		  
+		  // Utility function to get CSRF token
+		  function getCookie(name) {
+			let cookieValue = null;
+			if (document.cookie && document.cookie !== '') {
+			  const cookies = document.cookie.split(';');
+			  for (let cookie of cookies) {
+				cookie = cookie.trim();
+				if (cookie.startsWith(name + '=')) {
+				  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+				  break;
+				}
+			  }
+			}
+			return cookieValue;
+		  }
+		  
+		  // Call on initial page load too
+		document.addEventListener('DOMContentLoaded', initDragAndDrop);
+	  </script>
 </html>

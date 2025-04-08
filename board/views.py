@@ -72,6 +72,20 @@ def create_column(request, board_id):
         return response
     return render(request, 'boards/components/column_create.html', {'board': board,})
 
+@require_http_methods(['POST'])
+@login_required
+def update_column_name(request, board_id, column_id):
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    name = request.POST.get('column_name')
+    if name:
+        column.name = name
+        column.save(update_fields=['name'])
+    response = JsonResponse(data={'detail':'Column Name Updated'},safe=False,status=200)  # Renders nothing for removal
+    if request.htmx:
+        response['HX-Trigger'] = json.dumps({"columnUpdated": {"level": "info","column_id":column_id,"board_id":board_id, "column_name": column.name}})
+    return response
+
+
 @require_http_methods(['DELETE'])
 @login_required
 def delete_column(request, board_id, column_id):
@@ -87,7 +101,7 @@ def delete_column(request, board_id, column_id):
 @login_required
 def get_task_lists(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id)
-    tasks = column.tasks.filter(assigned_to=request.user).exclude(parent_task__isnull=False) if not request.user.is_staff else column.tasks.all()
+    tasks = column.tasks.filter(assigned_to=request.user, parent_task__isnull=True) if not request.user.is_staff else column.tasks.filter(parent_task__isnull=True)
     return render(request, 'boards/components/column.html', {'column': column,'tasks':tasks})
 
 
@@ -144,7 +158,7 @@ def create_task(request, board_id, column_id):
         instance.save()
         instance.assigned_to.add(request.user)
         response = render(request, 'boards/components/task_card.html', {'board_id': board_id, 'task': instance})
-        response['HX-Trigger'] = json.dumps({"taskCreated": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
+        response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
         return response
     return render(request,'boards/components/create.html',{'board_id':board_id,'column_id':column_id, 'form':form})
 
@@ -216,6 +230,18 @@ def add_comment(request, task_id):
     return JsonResponse(data=form.errors.as_json(), status=400)
 
 
+@require_http_methods(['POST'])
+@login_required
+def task_status_toggle(request, board_id, column_id, task_id):
+    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    if task.is_complete:
+        task.is_complete = False
+    else:
+        task.is_complete = True
+    task.save(update_fields=['is_complete'])
+    response = render(request,'boards/components/task_card.html',{'task':task,"board_id":board_id,"column_id":column_id})
+    return response
+
 @require_http_methods(['DELETE'])
 @login_required
 def delete_task(request, board_id, column_id, task_id):
@@ -223,7 +249,21 @@ def delete_task(request, board_id, column_id, task_id):
     task.delete()
     return JsonResponse(data={'detail':'Task Deleted'},safe=False,status=200)  # Renders nothing for removal
 
-
+@require_POST
+@login_required
+def move_task(request, task_id):
+    new_column_id = request.POST.get('column_id')
+    try:
+        task = Task.objects.get(id=task_id)
+        old_column_id = task.column_id
+        column = Column.objects.get(id=new_column_id)
+        task.column = column
+        task.save()
+        response = JsonResponse({'success': True})
+        response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': column.board_id,'column_id':old_column_id}),'column_id':old_column_id,'board_id':column.board_id, "level": "info"}})
+        return response
+    except (Task.DoesNotExist, Column.DoesNotExist):
+        return JsonResponse({'success': False}, status=400)
 
 class BoardViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()

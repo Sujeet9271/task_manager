@@ -1,14 +1,24 @@
 <div id="sub_task_list">
-{% for task in sub_tasks %}
-    <div class="task-card" id="sub_task_{{ task.id }}"
-      hx-get="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.id %}" 
-      hx-target="#edit_task_modal" 
-      hx-swap="innerHTML"
-      >
-    <p>{{ task.title }}</p>
-  </div>
-{% endfor %}
+  {% for task in sub_tasks %}
+    <div class="task-card" id="sub_task_{{ task.id }}">
+      <input type="checkbox"
+              {% if task.is_complete %}checked{% endif %}
+              hx-post="{% url 'board:task-status-toggle' board_id=board_id column_id=task.column_id task_id=task.id %}" 
+              hx-target="#sub_task_{{ task.id }}" 
+              hx-swap="outerHTML"
+              title="Mark as complete">
+
+      <!-- Sub-task title with strike-through if completed -->
+      <p class="subtask-title {% if task.is_complete %}completed-text{% endif %}"
+          hx-get="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.id %}" 
+          hx-target="#edit_task_modal" 
+          hx-swap="innerHTML">
+        {{ task.title }}
+      </p>
+    </div>
+  {% endfor %}
 </div>
+
 
 <button class="btn btn-primary"
     hx-get="{% url 'board:create_sub_task' board_id=board_id column_id=column_id task_id=task_id %}" 
