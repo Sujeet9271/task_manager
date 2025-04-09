@@ -36,7 +36,7 @@ def email_login(request):
     context= {}
     try:
         if request.user and request.user.is_authenticated:
-            return redirect('board:index')
+            return redirect('workspace:index')
         
         next = request.GET.get('next')
         if request.method=='POST':
