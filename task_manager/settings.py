@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_htmx',
     'widget_tweaks',
+    'django_crontab',
 
     'accounts.apps.AccountsConfig',
     'board.apps.BoardConfig', 
