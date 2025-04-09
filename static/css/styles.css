@@ -425,3 +425,16 @@ form input[type="checkbox"]{
   color: #343a40;
   flex-grow: 1;
 }
+
+
+/* Style for mentions */
+.mention {
+  color: #007bff; /* Blue color */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.mention:hover {
+  text-decoration: underline;
+}
+

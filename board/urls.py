@@ -18,7 +18,6 @@ urlpatterns = [
     path('tasks/<int:task_id>/add_comment/', views.add_comment, name='add_comment'),
     path('tasks/<int:task_id>/move/', views.move_task, name='task-move'),
 
-
     # path('api/', include(router.urls)),
     path('api/boards/', views.BoardViewSet.as_view({'get': 'list', 'post':'create'}), name='board_list'),
     path('api/boards/<int:pk>/', views.BoardViewSet.as_view({'get': 'retrieve', 'delete':'destroy', 'put':'update', 'patch':'partial_update'}), name='board_detail'),

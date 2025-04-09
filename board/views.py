@@ -1,4 +1,5 @@
 import json
+import re
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -34,6 +35,8 @@ def board_view(request, board_id):
     else:
         context['boards'] = Board.objects.filter(members=request.user).exclude(is_deleted=True)
         context['workspace_id'] = board.workspace_id
+        context['users'] = board.members.all()
+        context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
         response = render(request, 'boards/index.html', context)
     return response
 
@@ -171,6 +174,7 @@ def edit_task(request, board_id, column_id, task_id):
     task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
     context = {'task':task,'board_id':board_id,'column_id':column_id}
     form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
+    context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
     if request.method=='POST':
         if form.is_valid():
             task = form.save(commit=False)
@@ -214,10 +218,11 @@ def edit_task(request, board_id, column_id, task_id):
                 response['HX-Trigger'] = json.dumps({"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}})
                 return response
     
-    comments = Comments.objects.select_related('added_by').filter(task=task)
+    comments = Comments.objects.select_related('added_by').filter(task=task).order_by('created_at')
     comment_form = CommentForm()
     context['form'] = form
     context['comments'] = comments
+    logger.info(comments)
     context['comment_form'] = comment_form
     if not task.parent_task:
         context = sub_task_list(user=request.user, task=task, context=context)
@@ -233,6 +238,10 @@ def add_comment(request, task_id):
         comment.added_by = request.user
         comment.task = task
         comment.save()
+        mentions = re.findall(r'@([a-zA-Z0-9_]+)', comment.comment)
+        if mentions:
+            mentioned_users = Users.objects.filter(username__in=mentions)
+            comment.mentioned_users.set(mentioned_users)
         response = render(request,'boards/components/comment.html',{'comment':comment})
         response['HX-Trigger'] = 'commentAdded'
         return response

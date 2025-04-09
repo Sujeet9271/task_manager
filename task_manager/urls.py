@@ -20,6 +20,7 @@ from django.urls import path, include
 from django.contrib.auth.decorators import login_required
 from board import urls as board_urls
 from accounts import urls as accounts_urls
+from notifications import urls as notification_urls
 from workspace import urls as workspace_urls
 
 
@@ -32,5 +33,6 @@ urlpatterns = [
     path('',index, name='index'),
     path('auth/', include((accounts_urls, 'accounts'), namespace='accounts')),
     path('board/', include((board_urls, 'board'), namespace='board')),
+    path('notification/', include((notification_urls, 'notifications'), namespace='notifications')),
     path('workspace/', include((workspace_urls, 'workspace'), namespace='workspace')),
 ]

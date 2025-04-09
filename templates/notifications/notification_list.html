@@ -1,0 +1,8 @@
+{% for notification in notifications %}
+{% include 'notifications/notification_card.html' with notification=notification next=next %}
+{% empty %}
+    <div class="notification-item">
+        <p>No new notifications</p>
+    </div>
+{% endfor %}
+<div class="notification_loader"></div>

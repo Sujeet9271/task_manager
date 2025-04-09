@@ -23,8 +23,140 @@
 				width: 400px;
 				margin-bottom: 1.5rem;
 			}
-			  
 		</style>
+		<style>
+			#mentionSuggestions {
+				background-color: white;
+				border: 1px solid #ccc;
+				max-height: 150px;
+				overflow-y: auto;
+				position: absolute;
+				top: 100%;  /* Below the input */
+				left: 0;
+				width: 100%;  /* Match input width */
+				z-index: 1000;
+			}
+			
+		
+			#mentionSuggestions li:hover {
+				background-color: #f0f0f0;
+			}
+		</style>
+		<style>
+			/* Navbar Styling */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    padding: 15px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-logo {
+    height: 40px;
+    width: auto;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+}
+
+.notifications {
+    position: relative;
+    margin-right: 20px;
+}
+
+.notification-button {
+    font-size: 1.5rem;
+    color: white;
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.notification-button:hover {
+    color: #ff6347; /* Tomato color on hover */
+}
+
+.notification-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    font-size: 0.8rem;
+    border-radius: 50%;
+    padding: 0.2rem 0.5rem;
+    min-width: 1.2rem;
+    text-align: center;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    color: white;
+}
+
+.user-info span {
+    margin-right: 10px;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
+}
+
+.logout-btn:hover {
+    color: #ff6347; /* Tomato color on hover */
+}
+
+.logout-btn i {
+    margin-right: 5px;
+}
+/* Notification Dropdown */
+.notification-dropdown {
+    position: absolute;
+    top: 60px; /* Adjust based on navbar height */
+    right: 20px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 8px;
+    display: none;
+    z-index: 1000;
+    padding: 10px;
+}
+
+.notification-dropdown .notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.notification-dropdown .notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-dropdown .notification-item:hover {
+    background-color: #f0f0f0;
+}
+
+.notification-dropdown.show {
+    display: block;
+}
+
+		</style>
+		
 
 	</head>
 
@@ -32,17 +164,41 @@
 		<div class="navbar">
 			<div class="navbar-brand">
 				<a href="{% url 'workspace:index' %}">
-					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo">
+					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="navbar-logo">
 				</a>
 			</div>
-			<div class="user-info">
-				<span>Welcome, {{ user.username }}</span>
-				<form method="post" action="{% url 'accounts:logout-user' %}">
-				{% csrf_token %}
-				<button class="logout" type="submit"><i class="fa-solid fa-right-from-bracket"></i></button>
-				</form>
+		
+			<div class="navbar-links">
+				<!-- Notification Button -->
+				<div class="notifications" hx-get="{% url 'notifications:notifications' %}" hx-target="#notification-list" hx-trigger="click">
+					<a href="javascript:void(0)" class="notification-button">
+						<i class="fa-solid fa-bell"></i>
+						{% if unread_notification_count > 0 %}
+							<span id="unread_notification_count" class="notification-count">
+								{{ unread_notification_count }}
+							</span>
+						{% endif %}
+					</a>
+				</div>
+		
+				<!-- User Info and Logout Button -->
+				<div class="user-info">
+					<span>Welcome, {{ user.username }}</span>
+					<form method="post" action="{% url 'accounts:logout-user' %}">
+						{% csrf_token %}
+						<button class="logout-btn" type="submit">
+							<i class="fa-solid fa-right-from-bracket"></i> Logout
+						</button>
+					</form>
+				</div>
 			</div>
 		</div>
+		
+		<!-- Notifications Dropdown (Initially Hidden) -->
+		<div id="notification-list" class="notification-dropdown fade"></div>
+		
+		
+		
 
 		<div id="loader">
 			<div id="loader_div">
@@ -134,77 +290,146 @@
 	<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 	<script src="{% static 'js/board_index.js' %}"></script>
 	<script>
+		const users = [
+			{% for user in users %}
+				'{{ user.username }}',
+			{% endfor %}
+		];
+		
 		htmx.on('htmx:afterSwap', (evt) => {
-			// Only reinitialize if the swapped content is inside the main content area
-			// if (evt.target.id !== 'main-content') return;
-			if (!evt.target.closest('#main-content')) return;
-
-			initDragAndDrop(); // Call reusable init function
-		  });
-		  
-		  function initDragAndDrop() {
-			const taskCards = document.querySelectorAll('.task-card');
-			const dropzones = document.querySelectorAll('.dropzone');
-		  
-			taskCards.forEach(card => {
-			  card.addEventListener('dragstart', (e) => {
-				e.dataTransfer.setData('text/plain', card.dataset.taskId);
-			  });
-			});
-		  
-			dropzones.forEach(zone => {
-			  zone.addEventListener('dragover', (e) => {
-				e.preventDefault();
-				zone.classList.add('bg-light');
-			  });
-		  
-			  zone.addEventListener('dragleave', () => {
-				zone.classList.remove('bg-light');
-			  });
-		  
-			  zone.addEventListener('drop', (e) => {
-				e.preventDefault();
-				const taskId = e.dataTransfer.getData('text/plain');
-				const columnId = zone.dataset.columnId;
-		  
-				fetch(`/board/tasks/${taskId}/move/`, {
-				  method: 'POST',
-				  headers: {
-					'X-CSRFToken': getCookie('csrftoken'),
-					'Content-Type': 'application/x-www-form-urlencoded',
-				  },
-				  body: `column_id=${columnId}`,
+			if(evt.target.id=="notification-list"){
+				var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+				var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+					return new bootstrap.Tooltip(tooltipTriggerEl)
 				})
-				.then(response => {
-				  if (response.ok) {
-					const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
-					zone.appendChild(taskCard);
-				  } else {
-					alert('Failed to move task');
-				  }
-				  zone.classList.remove('bg-light');
+			}else if(evt.target.id=="edit_task_modal"){
+				mentionable_users = document.getElementById('mentionable_users').value.split(",")
+				chatInput = document.getElementById('chatInput');
+				mentionBox = document.getElementById('mentionSuggestions');
+				let currentMentionStart = -1;
+			
+				chatInput.addEventListener('input', (e) => {
+					let caretPos = chatInput.selectionStart;
+					let text = chatInput.value;
+					let lastAt = text.lastIndexOf('@', caretPos - 1);
+				
+					// If '@' is found, show mention suggestions
+					if (lastAt !== -1 && (lastAt === 0 || /\s/.test(text[lastAt - 1]))) {
+						let query = text.substring(lastAt + 1, caretPos).toLowerCase();
+				
+						// Filter users based on query
+						let matches = mentionable_users.filter(username => username.toLowerCase().includes(query));
+				
+						// If there are matches, show the mention box
+						if (matches.length > 0) {
+							mentionBox.innerHTML = matches.map(username =>
+								`<li class="list-group-item list-group-item-action" data-username="${username}">@${username}</li>`
+							).join('');
+							mentionBox.classList.remove('d-none');
+						} else {
+							mentionBox.classList.add('d-none');
+						}
+					} else {
+						mentionBox.classList.add('d-none');
+					}
 				});
-			  });
-			});
-		  }
-		  
-		  // Utility function to get CSRF token
-		  function getCookie(name) {
-			let cookieValue = null;
-			if (document.cookie && document.cookie !== '') {
-			  const cookies = document.cookie.split(';');
-			  for (let cookie of cookies) {
-				cookie = cookie.trim();
-				if (cookie.startsWith(name + '=')) {
-				  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-				  break;
-				}
-			  }
+				
+			
+				// Click to select a mention
+				mentionBox.addEventListener('click', (e) => {
+					if (e.target.dataset.username) {
+						let text = chatInput.value;
+						let caretPos = chatInput.selectionStart;
+						let before = text.substring(0, currentMentionStart);
+						let after = text.substring(caretPos);
+			
+						chatInput.value = `${before}@${e.target.dataset.username} ${after}`;
+						chatInput.focus();
+						mentionBox.classList.add('d-none');
+					}
+				});
+			
+				// Hide on click outside
+				document.addEventListener('click', (e) => {
+					if (!mentionBox.contains(e.target) && e.target !== chatInput) {
+						mentionBox.classList.add('d-none');
+					}
+				});
+			}else if (!evt.target.closest('#main-content')){
+				initDragAndDrop(); // Call reusable init function
 			}
-			return cookieValue;
-		  }
+
+		});
+		
+		function initDragAndDrop() {
+		const taskCards = document.querySelectorAll('.task-card');
+		const dropzones = document.querySelectorAll('.dropzone');
+		
+		taskCards.forEach(card => {
+			card.addEventListener('dragstart', (e) => {
+			e.dataTransfer.setData('text/plain', card.dataset.taskId);
+			});
+		});
+		
+		dropzones.forEach(zone => {
+			zone.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			zone.classList.add('bg-light');
+			});
+		
+			zone.addEventListener('dragleave', () => {
+			zone.classList.remove('bg-light');
+			});
+		
+			zone.addEventListener('drop', (e) => {
+			e.preventDefault();
+			const taskId = e.dataTransfer.getData('text/plain');
+			const columnId = zone.dataset.columnId;
+		
+			fetch(`/board/tasks/${taskId}/move/`, {
+				method: 'POST',
+				headers: {
+				'X-CSRFToken': getCookie('csrftoken'),
+				'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: `column_id=${columnId}`,
+			})
+			.then(response => {
+				if (response.ok) {
+				const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+				zone.appendChild(taskCard);
+				} else {
+				alert('Failed to move task');
+				}
+				zone.classList.remove('bg-light');
+			});
+			});
+		});
+		}
+		
+		// Utility function to get CSRF token
+		function getCookie(name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			const cookies = document.cookie.split(';');
+			for (let cookie of cookies) {
+			cookie = cookie.trim();
+			if (cookie.startsWith(name + '=')) {
+				cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+				break;
+			}
+			}
+		}
+		return cookieValue;
+		}
 		  
-		  // Call on initial page load too
+		// Call on initial page load too
 		document.addEventListener('DOMContentLoaded', initDragAndDrop);
-	  </script>
+	
+		
+	
+		
+	</script>
+	
+	
 </html>

@@ -178,3 +178,7 @@ class Comments(models.Model):
     added_by = models.ForeignKey("accounts.Users", on_delete=models.SET_NULL, null=True, blank=True, related_name="comments")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    mentioned_users = models.ManyToManyField("accounts.Users", related_name='mentioned_in_comments', blank=True)
+
+    def __str__(self):
+        return self.comment

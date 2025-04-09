@@ -12,4 +12,13 @@ window.onload = function() {
     setTimeout(function(){
         document.getElementById("loader").classList.add("gif_loader");
     }, 100);
+	
+	notification_list = document.querySelector('.notifications')
+	if (notification_list){
+		notification_list.addEventListener('click', function() {
+			const dropdown = document.getElementById('notification-list');
+			dropdown.classList.toggle('show');
+		});
+	}
 }
+

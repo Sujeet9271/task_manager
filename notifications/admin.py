@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.db.models import ForeignKey, ManyToManyField
 from django.apps import apps
+from notifications.models import Notification
 from task_manager.logger import logger
 import sys
 
@@ -33,6 +34,10 @@ class MyModelAdmin(admin.ModelAdmin):
 
         self.filter_horizontal = [field.name for field in model._meta.get_fields() if isinstance(field, ManyToManyField)]
 
+    
+@admin.register(Notification)
+class NotificationAdmin(MyModelAdmin):
+    list_filter = ['notification_type','content_type','created_at','read']
 
 
 for model in app_config.get_models():

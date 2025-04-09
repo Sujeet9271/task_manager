@@ -44,6 +44,8 @@ def get_workspace_boards(request,workspace_id):
     boards:QuerySet[Board] = request.user.board_memberships.filter(workspace=workspace)
     context['boards'] = boards
     context['workspace_id'] = workspace_id
+    context['users'] = workspace.members.all()
+    context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
     return render(request,'boards/index.html',context)
 
 

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
     'accounts.apps.AccountsConfig',
     'board.apps.BoardConfig', 
+    'notifications.apps.NotificationsConfig', 
     'workspace.apps.WorkspaceConfig', 
 ]
 
@@ -180,3 +181,8 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS',cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL',default='')
 
 SITE_ID = 1
+
+
+CRONJOBS = [
+        ('0 0 * * *', 'board.cronjob.overdue_tasks', '>> /var/www/html/over_due_tasks.log 2>&1'),
+    ]

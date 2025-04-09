@@ -1,4 +1,5 @@
 <form id="edit_task_form" name="edit_task_form" hx-post="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.id %}" hx-target="#edit_task_form" hx-swap="outerHTML" hx-encoding='multipart/form-data' >
+    <input type="hidden" value="{{mentionable_users}}" id="mentionable_users">
     {% csrf_token %}
     {% include 'form.html' with form=form %}
     <!-- Link Attachment Section -->
