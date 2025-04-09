@@ -1,22 +1,20 @@
-import json
-import re
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Page
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status
 
 from accounts.models import Users
-from board.forms import CommentForm, SubTaskCreateForm, TaskCreateForm, TaskForm
+from board.forms import CommentForm, TaskCreateForm, TaskForm
 from board.models import Attachment, Board, Column, Comments, Task
 from board.permissions import IsBoardMemberOrReadOnly
 from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, BoardListSerializer
 
-
+from notifications.views import get_notifications
 from task_manager.logger import logger
 
 
@@ -24,11 +22,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from workspace.models import Workspace
 
+import json
+import re
 
 @login_required
 def board_view(request, board_id):
+    context:dict = {}
     board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
-    context={'board':board}
+    context['board'] = board
     if request.htmx:
         response = render(request, 'boards/components/board.html', context)
         response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
@@ -37,6 +38,7 @@ def board_view(request, board_id):
         context['workspace_id'] = board.workspace_id
         context['users'] = board.members.all()
         context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
+        context:dict = get_notifications(user=request.user, page_number=1, context=context)
         response = render(request, 'boards/index.html', context)
     return response
 
@@ -277,8 +279,18 @@ def move_task(request, task_id):
         column = Column.objects.get(id=new_column_id)
         task.column = column
         task.save()
-        response = JsonResponse({'success': True})
-        response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': column.board_id,'column_id':old_column_id}),'column_id':old_column_id,'board_id':column.board_id, "level": "info"}})
+        kwargs = {
+            'board_id':column.board_id,
+            'column_id':task.column_id,
+            'task_id':task_id
+        }
+        urls = {
+            f'task_toggle_{task_id}':{'get':reverse('board:task-status-toggle', kwargs=kwargs)},
+            f'task_title_{task_id}':{'get':reverse('board:task-edit', kwargs=kwargs)},
+            f'task_delete_{task_id}':{'delete':reverse('board:task-delete', kwargs=kwargs)},
+        }
+        response = JsonResponse({'success': True,'urls':urls})
+        # response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': column.board_id,'column_id':old_column_id}),'column_id':old_column_id,'board_id':column.board_id, "level": "info"}})
         return response
     except (Task.DoesNotExist, Column.DoesNotExist):
         return JsonResponse({'success': False}, status=400)

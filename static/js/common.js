@@ -16,7 +16,7 @@ window.onload = function() {
 	notification_list = document.querySelector('.notifications')
 	if (notification_list){
 		notification_list.addEventListener('click', function() {
-			const dropdown = document.getElementById('notification-list');
+			const dropdown = document.getElementById('notification-div');
 			dropdown.classList.toggle('show');
 		});
 	}

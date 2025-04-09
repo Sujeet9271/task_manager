@@ -1,13 +1,11 @@
 {% load board_tags %}
     <div id="notification_{{notification.id}}"
          class="notification-item {% if not notification.read %}unread{% endif %}"
-         data-bs-toggle="tooltip"
-         data-bs-placement="bottom"
-         data-bs-title="{{ notification.message }}"
+         title="{{ notification.message }}"
          {% if forloop.last and next %}
          hx-get="{{ next }}"
          hx-target="#notification-list"
-         hx-indicator=".notification_loader"
+         hx-indicator=".notification-loader"
          hx-swap="beforeend"
          hx-trigger="intersect once"
          {% endif %}>
@@ -16,7 +14,7 @@
         <p {% if not notification.read %}
            hx-get="{% url 'notifications:read_notification' notification.id %}"
            hx-target="#notification_{{notification.id}}"
-           hx-swap="innerHTML"
+           hx-swap="outerHTML"
            hx-trigger="click"
            {% endif %}>
            {{ notification.message|notification_trim }}

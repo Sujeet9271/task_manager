@@ -1,7 +1,7 @@
 <div class="task-card" id="task_{{ task.id }}" draggable="true" data-task-id="{{ task.id }}">
   
   <!-- Completion Checkbox -->
-  <input type="checkbox"
+  <input type="checkbox" id="task_toggle_{{task.id}}"
          {% if task.is_complete %}checked{% endif %}
          hx-post="{% url 'board:task-status-toggle' board_id=board_id column_id=task.column_id task_id=task.id %}"
          hx-target="#task_{{ task.id }}"
@@ -9,19 +9,21 @@
          title="Mark as complete" />
 
   <!-- Task Title (opens edit modal) -->
-  <p class="task-title {% if task.is_complete %}completed-text{% endif %}"
-     hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}" 
-     hx-target="#edit_task_modal" 
-     hx-swap="innerHTML"
-     data-bs-toggle="modal"
-     data-bs-target="#editTaskModal">
+  <p id="task_title_{{task.id}}"
+    class="task-title {% if task.is_complete %}completed-text{% endif %}"
+    hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}" 
+    hx-target="#edit_task_modal" 
+    hx-swap="innerHTML"
+    data-bs-toggle="modal"
+    data-bs-target="#editTaskModal">
     {{ task.title }}
   </p>
 
   <!-- Delete Button -->
   {% if task.created_by == request.user %}
     <div class="task-icons d-flex justify-content-end">
-      <button class="task-actions"
+      <button id="task_delete_{{task.id}}"
+              class="task-actions"
               hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}" 
               hx-target="#task_{{ task.id }}" 
               hx-swap="delete"

@@ -5,7 +5,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django.core.paginator import Page
 from board.models import Board
+from notifications.views import get_notifications
 from workspace.forms import WorkSpaceForm
 from workspace.models import Workspace
 from django_htmx.http import HttpResponseClientRedirect
@@ -46,6 +48,7 @@ def get_workspace_boards(request,workspace_id):
     context['workspace_id'] = workspace_id
     context['users'] = workspace.members.all()
     context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
+    context:dict = get_notifications(user=request.user, page_number=1, context=context)
     return render(request,'boards/index.html',context)
 
 

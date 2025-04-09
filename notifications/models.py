@@ -51,3 +51,6 @@ class Notification(models.Model):
             content_object=content_object,
             message=message
         )
+
+    class Meta:
+        ordering = ['-updated_at']
