@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
+    cron \
     python3-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
