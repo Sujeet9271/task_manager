@@ -10,13 +10,13 @@ class TaskCreateForm(forms.ModelForm):
         fields = ['title',]
 
 class SubTaskCreateForm(forms.ModelForm):
-    assigned_to = forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple(),queryset=Users.objects.none(),label='Assign Users')
+    # assigned_to = forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple(),queryset=Users.objects.none(),label='Assign Users')
 
     def __init__(self, user:Users, task:Task, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.task = task
         self.user = user
-        self.fields['assigned_to'].queryset = task.assigned_to.all()
+        # self.fields['assigned_to'].queryset = task.assigned_to.all()
 
     def clean(self):
         super().clean()

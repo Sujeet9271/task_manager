@@ -21,7 +21,7 @@
 
 
 <button class="btn btn-primary"
-    hx-get="{% url 'board:create_sub_task' board_id=board_id column_id=column_id task_id=task_id %}" 
+    hx-get="{% url 'board:sub-task-create' board_id=board_id column_id=column_id task_id=task_id %}" 
     hx-target="#edit_task_modal" 
     hx-swap="innerHTML">Create Sub Task
 </button>
@@ -30,4 +30,3 @@
     hx-target="#edit_task_modal" 
     hx-swap="innerHTML">View Parent Task
 </button>
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_editTaskModal">Close</button>

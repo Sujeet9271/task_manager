@@ -1,0 +1,34 @@
+<div class="sub-task-card" id="sub_task_{{ sub_task.id }}" data-task-id="{{ sub_task.id }}">
+  
+    <!-- Completion Checkbox -->
+    <input type="checkbox"
+           {% if sub_task.is_complete %}checked{% endif %}
+           hx-post="{% url 'board:task-status-toggle' board_id=board_id column_id=sub_task.column_id task_id=sub_task.id %}"
+           hx-target="#sub_task_{{ sub_task.id }}"
+           hx-swap="outerHTML"
+           title="Mark as complete" />
+  
+    <!-- Task Title (opens edit modal) -->
+    <p class="task-title {% if sub_task.is_complete %}completed-text{% endif %}"
+       hx-get="{% url 'board:task-edit' board_id=board_id column_id=sub_task.column_id task_id=sub_task.id %}" 
+       hx-target="#edit_task_modal" 
+       hx-swap="innerHTML"
+       >
+      {{ sub_task.title }}
+    </p>
+  
+    <!-- Delete Button -->
+    {% if sub_task.created_by == request.user %}
+      <div class="task-icons d-flex justify-content-end">
+        <button class="task-actions"
+                hx-delete="{% url 'board:task-delete' board_id=board_id column_id=sub_task.column_id task_id=sub_task.id %}" 
+                hx-target="#sub_task_{{ sub_task.id }}" 
+                hx-swap="delete"
+                hx-confirm="Are you sure?">
+          <i class="fas fa-trash-alt" style="color: red;"></i>
+        </button>
+      </div>
+    {% endif %}
+  
+  </div>
+  

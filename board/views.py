@@ -122,7 +122,7 @@ def get_sub_task_lists(request, board_id, column_id, task_id):
     return render(request, 'boards/components/sub_task_list.html', context)
 
 
-@require_http_methods(['GET','POST'])
+@require_http_methods(['POST'])
 @login_required
 def create_sub_task(request, board_id, column_id, task_id):
     task = get_object_or_404(Task, pk=task_id)
@@ -131,20 +131,22 @@ def create_sub_task(request, board_id, column_id, task_id):
         'column_id':column_id,
         'board_id':board_id
     }
-    form = SubTaskCreateForm(user=request.user,task=task,data=request.POST or None)
+    form = TaskCreateForm(data=request.POST)
     if request.method=='POST' and form.is_valid():
         instance:Task = form.save(commit=False)
         instance.parent_task = task
         instance.column = task.column
         instance.created_by = request.user
         instance.save()
-        form.save_m2m()
         instance.assigned_to.add(request.user)
-        context = sub_task_list(user=request.user,task=task, context=context)
-        response = render(request, 'boards/components/sub_task_list.html',context)
+        context['sub_task'] = instance
+        response = render(request, 'boards/components/sub_task_card.html',context)
+        response['HX-Trigger'] = json.dumps({'subTaskCreated':{"level": "info","column_id":column_id,"board_id":board_id, "task_id":task_id}})
         return response
     context['form'] = form
-    return render(request,'boards/components/sub_task_create.html',context)
+    response = render(request,'boards/components/sub_task_create.html',context)
+    response['HX-Trigger'] = json.dumps({'subTaskCreateFailed':{"level": "info","column_id":column_id,"board_id":board_id, "task_id":task_id}})
+    return response
 
 @require_POST
 @login_required
@@ -167,6 +169,7 @@ def create_task(request, board_id, column_id):
 @login_required
 def edit_task(request, board_id, column_id, task_id):
     task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    context = {'task':task,'board_id':board_id,'column_id':column_id}
     form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
     if request.method=='POST':
         if form.is_valid():
@@ -206,13 +209,19 @@ def edit_task(request, board_id, column_id, task_id):
             if attachment_list:
                 Attachment.objects.bulk_create(attachment_list)
             if request.htmx:
-                response = HttpResponse()
+                context['form'] = form
+                response = render(request,'boards/components/edit_form.html',context)
                 response['HX-Trigger'] = json.dumps({"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}})
                 return response
     
     comments = Comments.objects.select_related('added_by').filter(task=task)
     comment_form = CommentForm()
-    return render(request,'boards/components/edit.html',{'task':task,'board_id':board_id,'column_id':column_id, 'form':form, "comments":comments,"comment_form":comment_form})
+    context['form'] = form
+    context['comments'] = comments
+    context['comment_form'] = comment_form
+    if not task.parent_task:
+        context = sub_task_list(user=request.user, task=task, context=context)
+    return render(request,'boards/components/edit.html',context)
 
 @require_http_methods(['POST'])
 @login_required

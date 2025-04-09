@@ -28,13 +28,11 @@ const editTaskModal = document.getElementById("editTaskModal");
 
 	htmx.on("boardCreated", function (evt) {
 		document.getElementById("create_board_form").reset();
-		document.getElementById("close_createBoardModal").click();
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
 
 	htmx.on("reloadBoard", function (evt) {
-		document.getElementById("close_createColumnModal").click();
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
@@ -65,13 +63,22 @@ const editTaskModal = document.getElementById("editTaskModal");
 	htmx.on("taskEdited", function (evt) {
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
-		document.getElementById("close_editTaskModal").click();
 	});
 
 	htmx.on("reloadTaskList", function (evt) {
 		board_id = evt.detail.board_id;
 		column_id = evt.detail.column_id;
 		document.getElementById(`create_task_form_${column_id}`).reset();
+		get_task_lists = evt.detail.get_task_lists;
+		
+		//htmx.ajax("GET", get_task_lists, { target: `#tasks_list_${column_id}`, swap: "innerHTML" });
+	});
+
+	htmx.on("subTaskCreated", function (evt) {
+		board_id = evt.detail.board_id;
+		column_id = evt.detail.column_id;
+		task_id = evt.detail.task_id
+		document.getElementById(`create_sub_task_form`).reset();
 		get_task_lists = evt.detail.get_task_lists;
 		
 		//htmx.ajax("GET", get_task_lists, { target: `#tasks_list_${column_id}`, swap: "innerHTML" });

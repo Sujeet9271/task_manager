@@ -1,4 +1,4 @@
-<form id="create_sub_task_form" name="create_sub_task_form" hx-post="{% url 'board:sub-task-create' board_id=board_id column_id=column_id task_id=task_id %}" hx-target="#edit_task_modal" hx-swap="innerHTML" hx-encoding='multipart/form-data' >
+<form id="edit_task_form" name="edit_task_form" hx-post="{% url 'board:task-edit' board_id=board_id column_id=column_id task_id=task.id %}" hx-target="#edit_task_form" hx-swap="outerHTML" hx-encoding='multipart/form-data' >
     {% csrf_token %}
     {% include 'form.html' with form=form %}
     <!-- Link Attachment Section -->
@@ -36,6 +36,3 @@
         {% endif %}
     </div>
 </form>
-<div class="modal-footer">
-    <button type="submit" class="btn btn-primary" submit="create_sub_task_form">Save Changes</button>
-</div>
