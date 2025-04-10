@@ -136,7 +136,9 @@ class Task(SoftDeleteModel):
     is_complete = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.title
+        if self.parent_task:
+            return f'SubTask: {self.title}'
+        return f'Task: {self.title}'
     
 
 class TaskHistory(SoftDeleteModel):

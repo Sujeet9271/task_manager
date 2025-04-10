@@ -3,7 +3,7 @@ from django import forms
 from accounts.models import Users
 from board.models import Attachment, Board, Column, Comments, Task
 from workspace.models import Workspace
-
+from task_manager.logger import logger
 class TaskCreateForm(forms.ModelForm):
 
     class Meta:
@@ -41,6 +41,24 @@ class SubTaskCreateForm(forms.ModelForm):
             'priority': 'Priority',
         }
 
+
+class BoardForm(forms.ModelForm):
+    members = forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple(),queryset=Users.objects.none(),label='Assign Users')
+
+    def __init__(self, workspace:Workspace, user:Users, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.workspace = workspace
+        self.user = user
+        
+        self.fields['members'].queryset = workspace.members.all().exclude(id=user.id)
+        
+    class Meta:
+        model = Board
+        fields = ['name','members']
+    
+
+
+
 class TaskForm(forms.ModelForm):
     assigned_to = forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple(),queryset=Users.objects.none(),label='Assign Users')
 
@@ -48,11 +66,17 @@ class TaskForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.workspace = workspace
         self.user = user
-        if self.workspace:
-            self.fields['assigned_to'].queryset = workspace.members.all()
-        elif self.instance and self.instance.pk: 
-            self.fields['assigned_to'].queryset = self.instance.column.board.members.all()
-
+        
+        if self.instance and self.instance.pk: 
+            exclude_users = [self.instance.created_by_id, user.id]
+            if self.instance.parent_task:
+                exclude_users.append(self.instance.parent_task.created_by_id)
+                self.fields['assigned_to'].queryset = self.instance.parent_task.assigned_to.all().exclude(id__in=exclude_users)
+            else:
+                self.fields['assigned_to'].queryset = self.instance.column.board.members.all().exclude(id__in=exclude_users)
+        elif self.workspace:
+            self.fields['assigned_to'].queryset = workspace.members.all().exclude(id=user.id)
+        
         self.fields['due_date'].widget.attrs.update({'min':f"{str(date.today())}"})
         if self.instance and self.instance.parent_task and self.instance.parent_task.due_date:
             self.fields['due_date'].widget.attrs.update({'max':f"{str(self.instance.parent_task.due_date)}"})

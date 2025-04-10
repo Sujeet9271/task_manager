@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
@@ -7,9 +7,9 @@ from django.core.paginator import Page
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
+from django_htmx.http import HttpResponseClientRedirect
 from accounts.models import Users
-from board.forms import CommentForm, TaskCreateForm, TaskForm
+from board.forms import BoardForm, CommentForm, TaskCreateForm, TaskForm
 from board.models import Attachment, Board, Column, Comments, Task
 from board.permissions import IsBoardMemberOrReadOnly
 from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, BoardListSerializer
@@ -25,6 +25,8 @@ from workspace.models import Workspace
 import json
 import re
 
+
+
 @login_required
 def board_view(request, board_id):
     context:dict = {}
@@ -34,13 +36,15 @@ def board_view(request, board_id):
         response = render(request, 'boards/components/board.html', context)
         response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
     else:
-        context['boards'] = Board.objects.filter(members=request.user).exclude(is_deleted=True)
+        context['boards'] = [board]
         context['workspace_id'] = board.workspace_id
         context['users'] = board.members.all()
         context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
         context:dict = get_notifications(user=request.user, page_number=1, context=context)
         response = render(request, 'boards/index.html', context)
     return response
+
+
 
 @require_http_methods(['POST'])
 @login_required
@@ -63,6 +67,17 @@ def create_board(request):
         board_url = reverse('board:board-view',kwargs={'board_id':board.id}) 
         response['HX-Trigger']=json.dumps({"boardCreated":{"message":board_url,"level":"info"}})
     return response
+
+
+
+@require_http_methods(['DELETE'])
+@login_required
+def delete_board(request, board_id,):
+    board = get_object_or_404(Board, pk=board_id, created_by=request.user)
+    board.delete()
+    return JsonResponse(data={'detail':'Board Deleted'},safe=False,status=200)  # Renders nothing for removal
+
+
 
 @require_http_methods(['GET', 'POST'])
 @login_required
@@ -94,7 +109,7 @@ def update_column_name(request, board_id, column_id):
 @require_http_methods(['DELETE'])
 @login_required
 def delete_column(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id, created_by=request.user)
     column.delete()    
     response = JsonResponse(data={'detail':'Column Deleted'},safe=False,status=200)  # Renders nothing for removal
     if request.htmx:
@@ -130,7 +145,7 @@ def get_sub_task_lists(request, board_id, column_id, task_id):
 @require_http_methods(['POST'])
 @login_required
 def create_sub_task(request, board_id, column_id, task_id):
-    task = get_object_or_404(Task, pk=task_id)
+    task:Task = get_object_or_404(Task, pk=task_id)
     context={
         'task_id':task_id,
         'column_id':column_id,
@@ -143,7 +158,10 @@ def create_sub_task(request, board_id, column_id, task_id):
         instance.column = task.column
         instance.created_by = request.user
         instance.save()
-        instance.assigned_to.add(request.user)
+        assigned_to = [instance.created_by]
+        if instance.parent_task:
+            assigned_to.append(instance.parent_task.created_by)
+        instance.assigned_to.add(*assigned_to)
         context['sub_task'] = instance
         response = render(request, 'boards/components/sub_task_card.html',context)
         response['HX-Trigger'] = json.dumps({'subTaskCreated':{"level": "info","column_id":column_id,"board_id":board_id, "task_id":task_id}})
@@ -163,7 +181,10 @@ def create_task(request, board_id, column_id):
         instance.column = column
         instance.created_by = request.user
         instance.save()
-        instance.assigned_to.add(request.user)
+        assigned_to = [instance.created_by]
+        if instance.parent_task:
+            assigned_to.append(instance.parent_task.created_by)
+        instance.assigned_to.add(*assigned_to)
         response = render(request, 'boards/components/task_card.html', {'board_id': board_id, 'task': instance})
         response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
         return response
@@ -179,10 +200,14 @@ def edit_task(request, board_id, column_id, task_id):
     context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
     if request.method=='POST':
         if form.is_valid():
-            task = form.save(commit=False)
+            task:Task = form.save(commit=False)
             task.updated_by = request.user
             task.save()
             form.save_m2m()
+            assigned_to = [task.created_by, request.user]
+            if task.parent_task:
+                assigned_to.append(task.parent_task.created_by)
+            task.assigned_to.add(*assigned_to)
 
             files = request.FILES.getlist('attachments')
             urls = request.POST.getlist('urls')
@@ -217,14 +242,22 @@ def edit_task(request, board_id, column_id, task_id):
             if request.htmx:
                 context['form'] = form
                 response = render(request,'boards/components/edit_form.html',context)
-                response['HX-Trigger'] = json.dumps({"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}})
+                triggers = {"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}}
+                if not task.parent_task:
+                    triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
+                response['HX-Trigger'] = json.dumps(triggers)
                 return response
     
+        logger.info(f'{form.errors.as_json()=}')
+        if request.htmx:
+            context['form'] = form
+            response = render(request,'boards/components/edit_form.html',context)
+            return response
+
     comments = Comments.objects.select_related('added_by').filter(task=task).order_by('created_at')
     comment_form = CommentForm()
     context['form'] = form
     context['comments'] = comments
-    logger.info(comments)
     context['comment_form'] = comment_form
     if not task.parent_task:
         context = sub_task_list(user=request.user, task=task, context=context)
@@ -265,7 +298,7 @@ def task_status_toggle(request, board_id, column_id, task_id):
 @require_http_methods(['DELETE'])
 @login_required
 def delete_task(request, board_id, column_id, task_id):
-    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, created_by=request.user)
     task.delete()
     return JsonResponse(data={'detail':'Task Deleted'},safe=False,status=200)  # Renders nothing for removal
 

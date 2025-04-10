@@ -1,0 +1,6 @@
+            <form id="edit_board_form" name="edit_board_form" hx-post="{% url "workspace:board-actions" form.instance.workspace_id form.instance.id %}" hx-target="#board-{{ form.instance.id }}" hx-swap="outerHTML">
+                {% include 'form.html' with form=form %}
+            </form>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" form="edit_board_form">Save Changes</button>
+            </div>

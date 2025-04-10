@@ -241,7 +241,6 @@ body {
   /* Adjust the height as needed */
 }
 
-
 .checkbox-custom {
   width: 12px !important;
   height: 12px !important;
@@ -498,7 +497,6 @@ form input[type="checkbox"] {
   background-color: #f0f0f0;
 }
 
-
 .navbar-logo {
   height: 40px;
   width: auto;
@@ -601,6 +599,44 @@ form input[type="checkbox"] {
   display: block;
 }
 
-.unread{
+.unread {
   background-color: rgb(230 230 230);
+}
+
+/* Ensure that the menu (ellipsis) is positioned correctly */
+.menu {
+  position: relative;
+  cursor: pointer;
+}
+
+/* The dropdown menu hidden by default */
+.dropover {
+  display: none;
+  position: absolute;
+  top: 20px; /* Adjust this closer to the icon */
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  min-width: 120px;
+}
+
+/* For menu items to display inline */
+.menu .fa-ellipsis-vertical {
+  font-size: 18px;
+}
+
+.menu .dropover .menu-item {
+  padding: 5px;
+  text-align: start;
+  text-decoration: none;
+  color: var(--bs-dark);
+  background-color: white;
+  font-size: 14px;
+  width: 100%;
+  border: 1px solid rgb(228, 228, 228);
+}
+.menu .dropover .menu-item:hover {
+  background-color: #4965e63d;
 }

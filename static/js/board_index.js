@@ -89,6 +89,10 @@ const editTaskModal = document.getElementById("editTaskModal");
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
 
+	htmx.on("closeModal", function (evt) {
+		document.getElementById(evt.detail.modal_id).click()
+	});
+
 	htmx.on("reloadTaskList", function (evt) {
 		board_id = evt.detail.board_id;
 		column_id = evt.detail.column_id;

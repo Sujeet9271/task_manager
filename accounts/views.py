@@ -35,18 +35,20 @@ def account_created_msg(request):
 def email_login(request):
     context= {}
     try:
+        next_url = request.GET.get('next')
         if request.user and request.user.is_authenticated:
+            if next_url:
+                return redirect(next_url)
             return redirect('workspace:index')
         
-        next = request.GET.get('next')
         if request.method=='POST':
             username=request.POST['username']
             password=request.POST['password']
             user:Users = authenticate(request=request,username=username,password=password)
             if user:
                 login(request,user)
-                if next:
-                    return redirect(next)
+                if next_url:
+                    return redirect(next_url)
                 return redirect('workspace:index')
     except Exception as e:
         messages.error(request,e.args[0])

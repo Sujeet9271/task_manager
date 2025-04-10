@@ -1,24 +1,37 @@
 {% load board_tags %}
 <div class="board" id="board-{{ board.id }}">
-    <div class="pointer"
-            hx-get="{% url 'board:board-view' board.id %}"
-            hx-target="#main-content"
-            hx-swap="innerHTML">
-        <h3 class="d-flex gap-1">
-            <span>{{ board.name }}</span>
-
-            <span class="pointer" data-copy="{% get_board_full_url board request %}"  onclick="copyToClipboard(this)">
-                <i class="fa-solid fa-link"></i>
+    <div class="board-card d-flex justify-content-between pointer">
+        <div id="board-detail_{{board.id}}"
+             hx-get="{% url 'board:board-view' board.id %}"
+             hx-target="#main-content"
+             hx-swap="innerHTML"> 
+            <h3 class="d-flex gap-1">
+                <span>{{ board.name }}</span>
+                <span class="pointer" data-copy="{% get_board_full_url board request %}" onclick="copyToClipboard(this)">
+                    <i class="fa-solid fa-link"></i>
+                </span>
+            </h3>
+            <ul id="columns-{{ board.id }}">
+                {% for column in board.columns.all %}
+                    {% include 'boards/components/column_list_item.html' with column=column %}
+                {% endfor %}
+            </ul>
+        </div>
+    
+        {% if request.user == board.created_by %}
+        <!-- Menu with Dropdown -->
+        <div class="menu pointer">
+            <span  onclick="toggle_board_menu(this)">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
             </span>
-            {% comment %} <span onclick="copyToClipboard(this)" class="pointer" data-copy="{{ request.build_absolute_uri(url 'board:board-view' board.id) }}"><i class="fa-solid fa-link"></i></span> {% endcomment %}
-        </h3>
-        <ul id="columns-{{ board.id }}"
-            >
-            {% for column in board.columns.all %}
-            {% include 'boards/components/column_list_item.html' with column=column %}
-            {% endfor %}
-        </ul>
+            <div class="dropover d-none d-flex flex-column">
+                <button class="menu-item" data-bs-toggle="modal" data-bs-target="#editBoardModal" hx-get="{% url "workspace:board-actions" board.workspace_id board.id %}" hx-target="#edit_board_modal" hx-swap="innerHTML">Edit</button>
+                <button class="menu-item" hx-delete="{% url "workspace:board-actions" board.workspace_id board.id %}" hx-target="#board-{{ board.id }}" hx-swap="delete" hx-confirm="Are You Sure">Delete</button>
+            </div>
+        </div>
+        {% endif %}
     </div>
+    
     <div class="add" 
         hx-get="{% url 'board:column-create' board.id %}"
         hx-target="#modal-column-body"

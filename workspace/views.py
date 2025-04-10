@@ -1,3 +1,4 @@
+import json
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.db.models import QuerySet
@@ -6,11 +7,12 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Page
+from board.forms import BoardForm
 from board.models import Board
 from notifications.views import get_notifications
 from workspace.forms import WorkSpaceForm
 from workspace.models import Workspace
-from django_htmx.http import HttpResponseClientRedirect
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 from task_manager.logger import logger
 # Create your views here.
 
@@ -44,7 +46,7 @@ def get_workspace_boards(request,workspace_id):
     context = {}
     try:
         workspace = Workspace.objects.get(id=workspace_id)
-        boards:QuerySet[Board] = request.user.board_memberships.filter(workspace=workspace)
+        boards:QuerySet[Board] = request.user.board_memberships.filter(workspace=workspace).exclude(is_deleted=True)
         context['boards'] = boards
         context['workspace_id'] = workspace_id
         context['users'] = workspace.members.all()
@@ -72,6 +74,33 @@ def workspace_actions(request,workspace_id):
             response['HX-Trigger'] = 'workspaceEdited'
             return response
         return render(request,'workspace/components/edit.html',{'form':form})
+    except Exception as e:
+        logger.exception(stack_info=False, msg=str(e))
+        if request.htmx:
+            redirect_url = reverse('workspace:index')
+            return HttpResponseClientRedirect(redirect_to=redirect_url)
+        return redirect('workspace:index')
+
+
+
+@require_http_methods(['GET','POST','DELETE'])
+@login_required
+def board_actions(request,workspace_id,board_id):
+    try:
+        board:Board = Board.objects.get(workspace_id=workspace_id,id=board_id, created_by=request.user)
+        if request.method=='DELETE':
+            board.delete()
+            return HttpResponse(status=200)
+        form = BoardForm(workspace=board.workspace,user=request.user, instance=board, data=request.POST or None)
+        if request.method == 'POST' and form.is_valid():
+            instance:Board = form.save()
+            instance.members.add(request.user)
+            response = render(request,'boards/components/board_list_item.html',{'board':instance})
+            triggers = {}
+            triggers["closeModal"] = {"modal_id": "close_editBoardModal", "level": "info"}
+            response['HX-Trigger'] = json.dumps(triggers)
+            return response
+        return render(request,'boards/components/board_edit.html',{'form':form})
     except Exception as e:
         logger.exception(stack_info=False, msg=str(e))
         if request.htmx:
