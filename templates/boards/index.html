@@ -43,7 +43,7 @@
 					<form method="post" action="{% url 'accounts:logout-user' %}">
 						{% csrf_token %}
 						<button class="logout-btn" type="submit">
-							<i class="fa-solid fa-right-from-bracket"></i>
+							<i class="fa-solid fa-right-from-bracket"></i> Logout
 						</button>
 					</form>
 				</div>
@@ -57,6 +57,9 @@
 			</div>
 			<div class="notification-loader"><div></div><div></div><div></div></div>
 		</div>
+		
+		
+		
 
 		<div id="loader">
 			<div id="loader_div">
@@ -212,7 +215,7 @@
 						mentionBox.classList.add('d-none');
 					}
 				});
-			}else if(evt.target.id=='main-content'){
+			}else if(evt.target.closest('#main-content')){
 				initDragAndDrop(); // Call reusable init function
 			}
 
@@ -278,7 +281,7 @@
 					}).finally(() => {
 						zone.classList.remove('bg-light');
 					});					
-				},{ once: true });
+				});
 			});
 		}
 		
