@@ -101,7 +101,8 @@ def board_actions(request,workspace_id,board_id):
         board:Board = Board.objects.get(workspace_id=workspace_id,id=board_id, created_by=request.user)
         if request.method=='DELETE':
             board.delete()
-            return HttpResponse(status=200)
+            return HttpResponseClientRefresh()
+            
         form = BoardForm(workspace=board.workspace,user=request.user, instance=board, data=request.POST or None)
         if request.method == 'POST' and form.is_valid():
             members = form.cleaned_data.get('members')
