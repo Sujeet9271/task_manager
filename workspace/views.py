@@ -61,7 +61,7 @@ def get_workspace_boards(request,workspace_id):
 @login_required
 def workspace_actions(request,workspace_id):
     try:
-        workspace = Workspace.objects.get(id=workspace_id)
+        workspace = Workspace.objects.get(id=workspace_id, created_by=request.user)
         if request.method=='DELETE':
             workspace.delete()
             return HttpResponse(status=200)
@@ -69,7 +69,18 @@ def workspace_actions(request,workspace_id):
             return HttpResponseClientRedirect(redirect_to=redirect_url)
         form = WorkSpaceForm(user=request.user,instance=workspace, data=request.POST or None)
         if request.method == 'POST' and form.is_valid():
-            instance = form.save()
+            members = form.cleaned_data.get('members')
+            
+            members_list = list(members)
+            members_list.append(workspace.created_by)
+            
+            # Save form but don't commit to DB yet
+            instance = form.save(commit=False)
+            
+            # Manually set the modified members list
+            instance.save()
+            instance.members.set(members_list)  # assuming it's a ManyToMany field
+
             response = render(request, "workspace/components/workspace_card.html", {"workspace": instance})
             response['HX-Trigger'] = 'workspaceEdited'
             return response
@@ -93,8 +104,16 @@ def board_actions(request,workspace_id,board_id):
             return HttpResponse(status=200)
         form = BoardForm(workspace=board.workspace,user=request.user, instance=board, data=request.POST or None)
         if request.method == 'POST' and form.is_valid():
-            instance:Board = form.save()
-            instance.members.add(request.user)
+            members = form.cleaned_data.get('members')
+            
+            members_list = list(members)
+            members_list.append(board.created_by)
+
+            instance:Board = form.save(commit=False)
+            # Manually set the modified members list
+            instance.save()
+            instance.members.set(members_list)  # assuming it's a ManyToMany field
+
             response = render(request,'boards/components/board_list_item.html',{'board':instance})
             triggers = {}
             triggers["closeModal"] = {"modal_id": "close_editBoardModal", "level": "info"}

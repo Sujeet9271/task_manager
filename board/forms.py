@@ -15,6 +15,10 @@ class SubTaskCreateForm(forms.ModelForm):
 
     def __init__(self, user:Users, task:Task, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.auto_id='edit_%s'
+        else:
+            self.auto_id='id_%s'
         self.task = task
         self.user = user
         # self.fields['assigned_to'].queryset = task.assigned_to.all()
@@ -47,6 +51,10 @@ class BoardForm(forms.ModelForm):
 
     def __init__(self, workspace:Workspace, user:Users, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.auto_id='edit_%s'
+        else:
+            self.auto_id='id_%s'
         self.workspace = workspace
         self.user = user
         
@@ -64,6 +72,10 @@ class TaskForm(forms.ModelForm):
 
     def __init__(self, workspace:Workspace, user:Users, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.auto_id='edit_%s'
+        else:
+            self.auto_id='id_%s'
         self.workspace = workspace
         self.user = user
         

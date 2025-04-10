@@ -158,10 +158,12 @@ def create_sub_task(request, board_id, column_id, task_id):
         instance.column = task.column
         instance.created_by = request.user
         instance.save()
+
         assigned_to = [instance.created_by]
         if instance.parent_task:
             assigned_to.append(instance.parent_task.created_by)
         instance.assigned_to.add(*assigned_to)
+        
         context['sub_task'] = instance
         response = render(request, 'boards/components/sub_task_card.html',context)
         response['HX-Trigger'] = json.dumps({'subTaskCreated':{"level": "info","column_id":column_id,"board_id":board_id, "task_id":task_id}})
@@ -181,10 +183,12 @@ def create_task(request, board_id, column_id):
         instance.column = column
         instance.created_by = request.user
         instance.save()
+
         assigned_to = [instance.created_by]
         if instance.parent_task:
             assigned_to.append(instance.parent_task.created_by)
         instance.assigned_to.add(*assigned_to)
+
         response = render(request, 'boards/components/task_card.html', {'board_id': board_id, 'task': instance})
         response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
         return response
@@ -200,14 +204,18 @@ def edit_task(request, board_id, column_id, task_id):
     context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
     if request.method=='POST':
         if form.is_valid():
+            assigned_to = form.cleaned_data.get('assigned_to')
+            assigned_to_list = list(assigned_to)
+
+            assigned_to_list.extend([task.created_by,request.user])
+            if task.parent_task:
+                assigned_to_list.append(task.parent_task.created_by)
+
             task:Task = form.save(commit=False)
             task.updated_by = request.user
             task.save()
-            form.save_m2m()
-            assigned_to = [task.created_by, request.user]
-            if task.parent_task:
-                assigned_to.append(task.parent_task.created_by)
-            task.assigned_to.add(*assigned_to)
+
+            task.assigned_to.set(assigned_to_list)
 
             files = request.FILES.getlist('attachments')
             urls = request.POST.getlist('urls')

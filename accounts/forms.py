@@ -25,6 +25,10 @@ class UserSignupForm(UserCreationForm):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.auto_id='edit_%s'
+        else:
+            self.auto_id='id_%s'
   
     def clean_email(self):  
         email = self.cleaned_data['email'].lower()

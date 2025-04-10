@@ -9,6 +9,10 @@ class WorkSpaceForm(forms.ModelForm):
 
     def __init__(self, user,*args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.auto_id='edit_%s'
+        else:
+            self.auto_id='id_%s'
         self.user = user
         if self.user: 
             self.fields['members'].queryset = Users.objects.all().exclude(id=self.user.id)

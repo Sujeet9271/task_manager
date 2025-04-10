@@ -254,8 +254,18 @@ body {
 .form-check {
   padding-left: 2px !important;
 }
-.selectall-btn {
+.btn-select-all {
   display: block !important;
+}
+.searchInput {
+  width: 100%;
+  padding: 4px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  margin: 4px 0;
+  margin-left: 4px;
+  border: 1px solid black;
+  outline: none;
 }
 form input[type="checkbox"] {
   width: 12px !important;
