@@ -185,5 +185,22 @@ SITE_ID = 1
 
 
 CRONJOBS = [
-        ('0 0 * * *', 'board.cronjob.overdue_tasks', '>> /var/www/html/over_due_tasks.log 2>&1'),
+        ('0 0 * * *', 'board.cronjob.overdue_tasks', '>> /app/over_due_tasks.log 2>&1'),
     ]
+
+if not DEBUG:
+    import socket
+    hostname = socket.gethostname()
+    CSRF_TRUSTED_ORIGINS = [
+                                'http://localhost:3000',
+                                'http://127.0.0.1:3000',
+                                'http://host.docker.internal:3000',  # For requests from host
+                                'http://web:8000'                    # Internal Docker network
+                            ]
+
+    # CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
+    SECURE_PROXY_SSL_HEADER = None  # Disable for HTTP
+    USE_X_FORWARDED_HOST = True
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_HTTPONLY = False 
