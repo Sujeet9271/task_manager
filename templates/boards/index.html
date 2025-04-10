@@ -43,7 +43,7 @@
 					<form method="post" action="{% url 'accounts:logout-user' %}">
 						{% csrf_token %}
 						<button class="logout-btn" type="submit">
-							<i class="fa-solid fa-right-from-bracket"></i> Logout
+							<i class="fa-solid fa-right-from-bracket"></i>
 						</button>
 					</form>
 				</div>
@@ -57,9 +57,6 @@
 			</div>
 			<div class="notification-loader"><div></div><div></div><div></div></div>
 		</div>
-		
-		
-		
 
 		<div id="loader">
 			<div id="loader_div">
@@ -100,7 +97,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title" id="createBoardLabel">Add New Board</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_createBoardModal"></button>
 					</div>
 					<div class="modal-body" id="modal-board-body">
 						<form hx-post="{% url 'board:board-create' %}" hx-target="#boards" hx-swap="beforeend" id="create_board_form" method="POST" action="{% url 'board:board-create' %}">
@@ -112,7 +109,6 @@
 							</div>
 							<div class="modal-footer">
 								<button type="submit" class="btn btn-primary">Create</button>
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close_createBoardModal">Cancel</button>
 							</div>
 						</form>
 					</div>
@@ -125,7 +121,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title" id="createColumnModalLabel">Add New Column</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_createColumnModal"></button>
 					</div>
 					<div class="modal-body" id="modal-column-body">
 						
@@ -216,13 +212,14 @@
 						mentionBox.classList.add('d-none');
 					}
 				});
-			}else if(evt.target.closest('#main-content')){
+			}else if(evt.target.id=='main-content'){
 				initDragAndDrop(); // Call reusable init function
 			}
 
 		});
 		
 		function initDragAndDrop() {
+			console.log('here')
 			const taskCards = document.querySelectorAll('.task-card');
 			const dropzones = document.querySelectorAll('.dropzone');
 		
@@ -281,7 +278,7 @@
 					}).finally(() => {
 						zone.classList.remove('bg-light');
 					});					
-				});
+				},{ once: true });
 			});
 		}
 		

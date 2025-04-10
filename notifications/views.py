@@ -30,7 +30,6 @@ def get_notifications(user, page_number=1, context:dict=dict):
 def notifications(request):
     context={}
     try:
-        time.sleep(2)
         page_number = int(request.GET.get('page',1))
         context = get_notifications(user=request.user, page_number=page_number, context=context)
     except Exception as e:

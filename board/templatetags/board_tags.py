@@ -3,6 +3,9 @@ from django.urls import reverse
 from django.utils.html import mark_safe
 import re
 
+from accounts.models import Users
+from board.models import Column
+
 register = template.Library()
 
 @register.filter
@@ -31,3 +34,8 @@ def notification_title(notification_title:str):
 def notification_trim(notification_text:str):
     words = notification_text.split(' ')[:10]
     return f"{" ".join(words)}..."
+
+
+@register.filter
+def get_tasks_for_user(column:Column, user:Users):
+    return column.get_tasks(user)

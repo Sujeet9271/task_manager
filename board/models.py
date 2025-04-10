@@ -52,6 +52,10 @@ class Column(SoftDeleteModel):
     def __str__(self):
         return f"{self.name} ({self.board.name})"
     
+
+    def get_tasks(self, user):
+        return self.tasks.filter(assigned_to=user, parent_task__isnull=True) if not user.is_staff else self.tasks.filter(parent_task__isnull=True)
+    
     class Meta:
         ordering = ['board','order']  # Order by the 'order' field
 
@@ -126,6 +130,20 @@ class Task(SoftDeleteModel):
 
     def __str__(self):
         return self.title
+    
+
+class TaskHistory(SoftDeleteModel):
+    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name='history')
+    updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, blank=True)
+    changes = models.JSONField(default=dict)
+    snapshot = models.JSONField(default=dict)  # ← full cleaned snapshot
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    hash = models.TextField(blank=True)
+
+    def __str__(self):
+        return f'History: {self.task_id}, Changes by: {self.updated_by_id}'
+
     
 
 

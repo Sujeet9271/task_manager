@@ -29,6 +29,7 @@ const editTaskModal = document.getElementById("editTaskModal");
 	htmx.on("boardCreated", function (evt) {
 		document.getElementById("create_board_form").reset();
 		board_url = evt.detail.message;
+		document.getElementById('close_createBoardModal').click()
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
 
@@ -36,10 +37,19 @@ const editTaskModal = document.getElementById("editTaskModal");
 		board_url = evt.detail.message;
 		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
 	});
+	
+	htmx.on("columnCreated", function (evt) {
+		board_url = evt.detail.message;
+		document.getElementById('close_createColumnModal').click()
+		htmx.ajax("GET", board_url, { target: "#main-content", swap: "innerHTML" });
+	});
+
 
 	htmx.on("commentAdded", function (evt) {
 		document.getElementById("comment_form").reset();
 	});
+
+
 	htmx.on("notificationRead", function (evt) {
 		try{
 			unread_counts = document.getElementById('unread_notification_count').innerHTML

@@ -73,7 +73,7 @@ def create_column(request, board_id):
         response = render(request,'boards/components/column_list_item.html',{'column':column,'board_id':board_id})
         if request.htmx:
             board_url = reverse('board:board-view',kwargs={'board_id':board_id}) 
-            response['HX-Trigger']=json.dumps({"reloadBoard":{"message":board_url,"level":"info"}})
+            response['HX-Trigger']=json.dumps({"columnCreated":{"message":board_url,"level":"info"}})
         return response
     return render(request, 'boards/components/column_create.html', {'board': board,})
 
@@ -277,18 +277,21 @@ def move_task(request, task_id):
         task = Task.objects.get(id=task_id)
         old_column_id = task.column_id
         column = Column.objects.get(id=new_column_id)
-        task.column = column
-        task.save()
         kwargs = {
             'board_id':column.board_id,
             'column_id':task.column_id,
             'task_id':task_id
         }
         urls = {
-            f'task_toggle_{task_id}':{'get':reverse('board:task-status-toggle', kwargs=kwargs)},
+            f'task_toggle_{task_id}':{'post':reverse('board:task-status-toggle', kwargs=kwargs)},
             f'task_title_{task_id}':{'get':reverse('board:task-edit', kwargs=kwargs)},
             f'task_delete_{task_id}':{'delete':reverse('board:task-delete', kwargs=kwargs)},
         }
+        if task.column == column:
+            return JsonResponse({'success': True,'urls':urls})
+        
+        task.column = column
+        task.save()
         response = JsonResponse({'success': True,'urls':urls})
         # response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': column.board_id,'column_id':old_column_id}),'column_id':old_column_id,'board_id':column.board_id, "level": "info"}})
         return response

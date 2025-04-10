@@ -1,4 +1,4 @@
-{% load static %}
+{% load static board_tags %}
 <div class="horizontal-scroll-wrapper auto-hide-scrollbar">
     <div class="row gx-4" id="columns">
         {% if board.columns.exists %}
@@ -6,16 +6,18 @@
             <div class="col-md-3" id="column_{{ column.id }}">
                 <div class="card border-0 shadow-lg">
                     <div class="card-header text-white px-3 py-2" style="background-color: rgb(73 101 230) !important;">
-                        <div class="justify-content-between align-items-start d-flex mt-2">
-                            <input id="column_name_{{column.id}}" name="column_name" value="{{ column.name }}"  class="form-control w-75" 
+                        <div class="d-flex mt-2 gap-3">
+                            <input id="column_name_{{column.id}}" name="column_name" value="{{ column.name }}"  class="form-control" 
                             hx-post="{% url 'board:update_column_name' column.board_id column.id %}" 
                             hx-trigger="keyup changed delay:500ms"
                             />
+                            {% if request.user.is_staff or board.created_by == request.user or column.created_by == request.user %}
                             <button class="btn btn-light fw-bold" 
-                                    hx-delete="{% url 'board:column-delete' column.board_id column.id %}" 
-                                    hx-target="#column_{{ column.id }}" 
-                                    hx-swap="delete" 
-                                    hx-confirm="Are You Sure?">🗑️</button>
+                            hx-delete="{% url 'board:column-delete' column.board_id column.id %}" 
+                            hx-target="#column_{{ column.id }}" 
+                            hx-swap="delete" 
+                            hx-confirm="Are You Sure?">🗑️</button>
+                            {% endif %}
                         </div>
                         <form id="create_task_form_{{ column.id }}"
                             class="d-flex mt-2"
@@ -34,10 +36,8 @@
                     <div id="tasks_list_{{ column.id }}" 
                         class="card-body bg-white auto-hide-scrollbar dropzone" 
                         data-column-id="{{ column.id }}"
-                        hx-target="this" 
-                        hx-swap="innerHTML" 
-                        hx-trigger="load" 
-                        hx-get="{% url 'board:get_task_lists' board.id column.id %}">
+                        >
+                        {% include 'boards/components/column.html' with column=column tasks=column|get_tasks_for_user:user %}
                     </div>
                 </div>
             </div>
