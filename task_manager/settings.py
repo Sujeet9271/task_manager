@@ -189,16 +189,8 @@ CRONJOBS = [
     ]
 
 if not DEBUG:
-    import socket
-    hostname = socket.gethostname()
-    CSRF_TRUSTED_ORIGINS = [
-                                'http://localhost:3000',
-                                'http://127.0.0.1:3000',
-                                'http://host.docker.internal:3000',  # For requests from host
-                                'http://web:8000'                    # Internal Docker network
-                            ]
+    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(',')
 
-    # CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
     SECURE_PROXY_SSL_HEADER = None  # Disable for HTTP
     USE_X_FORWARDED_HOST = True
     SESSION_COOKIE_SECURE = False
