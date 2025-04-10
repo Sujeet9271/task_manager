@@ -1,3 +1,4 @@
+from datetime import date
 from django import forms
 from accounts.models import Users
 from board.models import Attachment, Board, Column, Comments, Task
@@ -51,6 +52,14 @@ class TaskForm(forms.ModelForm):
             self.fields['assigned_to'].queryset = workspace.members.all()
         elif self.instance and self.instance.pk: 
             self.fields['assigned_to'].queryset = self.instance.column.board.members.all()
+
+        self.fields['due_date'].widget.attrs.update({'min':f"{str(date.today())}"})
+        if self.instance and self.instance.parent_task and self.instance.parent_task.due_date:
+            self.fields['due_date'].widget.attrs.update({'max':f"{str(self.instance.parent_task.due_date)}"})
+            if self.instance.parent_task.due_date == date.today():
+                self.fields['due_date'].widget.attrs.update({'value':f"{str(self.instance.parent_task.due_date)}"})
+
+        
 
     def clean(self):
         super().clean()

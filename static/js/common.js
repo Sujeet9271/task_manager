@@ -22,3 +22,22 @@ window.onload = function() {
 	}
 }
 
+function copyToClipboard(element) {
+    // Get the data-url value
+    const url = element.getAttribute('data-copy');
+
+    // Create a temporary input element to hold the URL for copying
+    const input = document.createElement('input');
+    input.value = url;
+    document.body.appendChild(input);
+
+    // Select the input field and copy the value
+    input.select();
+    document.execCommand('copy');
+    
+    // Remove the temporary input element
+    document.body.removeChild(input);
+
+    // Optional: You can add a notification here, such as an alert or a message
+    alert('URL copied to clipboard!');
+  }

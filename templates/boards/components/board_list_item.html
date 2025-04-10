@@ -1,12 +1,19 @@
+{% load board_tags %}
 <div class="board" id="board-{{ board.id }}">
     <div class="pointer"
             hx-get="{% url 'board:board-view' board.id %}"
             hx-target="#main-content"
             hx-swap="innerHTML">
-        <h3>
-            {{ board.name }}
+        <h3 class="d-flex gap-1">
+            <span>{{ board.name }}</span>
+
+            <span class="pointer" data-copy="{% get_board_full_url board request %}"  onclick="copyToClipboard(this)">
+                <i class="fa-solid fa-link"></i>
+            </span>
+            {% comment %} <span onclick="copyToClipboard(this)" class="pointer" data-copy="{{ request.build_absolute_uri(url 'board:board-view' board.id) }}"><i class="fa-solid fa-link"></i></span> {% endcomment %}
         </h3>
-        <ul id="columns-{{ board.id }}">
+        <ul id="columns-{{ board.id }}"
+            >
             {% for column in board.columns.all %}
             {% include 'boards/components/column_list_item.html' with column=column %}
             {% endfor %}

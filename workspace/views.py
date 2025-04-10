@@ -42,14 +42,17 @@ def workspace_create(request):
 @login_required
 def get_workspace_boards(request,workspace_id):
     context = {}
-    workspace = Workspace.objects.get(id=workspace_id)
-    boards:QuerySet[Board] = request.user.board_memberships.filter(workspace=workspace)
-    context['boards'] = boards
-    context['workspace_id'] = workspace_id
-    context['users'] = workspace.members.all()
-    context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
-    context:dict = get_notifications(user=request.user, page_number=1, context=context)
-    return render(request,'boards/index.html',context)
+    try:
+        workspace = Workspace.objects.get(id=workspace_id)
+        boards:QuerySet[Board] = request.user.board_memberships.filter(workspace=workspace)
+        context['boards'] = boards
+        context['workspace_id'] = workspace_id
+        context['users'] = workspace.members.all()
+        context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
+        context:dict = get_notifications(user=request.user, page_number=1, context=context)
+        return render(request,'boards/index.html',context)
+    except Workspace.DoesNotExist:
+        return redirect('workspace:index')
 
 
 @require_http_methods(['GET','POST','DELETE'])

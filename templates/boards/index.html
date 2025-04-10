@@ -215,20 +215,22 @@
 						mentionBox.classList.add('d-none');
 					}
 				});
-			}else if(evt.target.closest('#main-content')){
+			}else if(evt.target.id=='main-content'){
 				initDragAndDrop(); // Call reusable init function
 			}
 
 		});
 		
 		function initDragAndDrop() {
+			board_id = document.getElementById('board_id')
+			if (!board_id) return
 			console.log('here')
 			const taskCards = document.querySelectorAll('.task-card');
 			const dropzones = document.querySelectorAll('.dropzone');
 		
 			taskCards.forEach(card => {
 				card.addEventListener('dragstart', (e) => {
-				e.dataTransfer.setData('text/plain', card.dataset.taskId);
+					current_task_id = card.dataset.taskId
 				});
 			});
 			
@@ -244,10 +246,9 @@
 			
 				zone.addEventListener('drop', (e) => {
 					e.preventDefault();
-					const taskId = e.dataTransfer.getData('text/plain');
+
 					const columnId = zone.dataset.columnId;
-				
-					fetch(`/board/tasks/${taskId}/move/`, {
+					fetch(`/board/tasks/${current_task_id}/move/`, {
 						method: 'POST',
 						headers: {
 							'X-CSRFToken': getCookie('csrftoken'),
@@ -260,7 +261,7 @@
 						}
 						return response.json();
 					}).then(data => {
-						const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+						const taskCard = document.querySelector(`[data-task-id="${current_task_id}"]`);
 						zone.appendChild(taskCard);
 					
 						// Assuming data.urls is an object like { "edit": { id: 1, url: "/edit/1/" }, ... }

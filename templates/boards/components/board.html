@@ -1,5 +1,6 @@
 {% load static board_tags %}
 <div class="horizontal-scroll-wrapper auto-hide-scrollbar">
+    <input id="board_id" value="{{board.id}}" type="hidden">
     <div class="row gx-4" id="columns">
         {% if board.columns.exists %}
         {% for column in board.columns.all %}
@@ -36,10 +37,11 @@
                     <div id="tasks_list_{{ column.id }}" 
                         class="card-body bg-white auto-hide-scrollbar dropzone" 
                         data-column-id="{{ column.id }}"
-                        hx-target="this" 
+                        {% comment %} hx-target="this" 
                         hx-swap="innerHTML" 
                         hx-trigger="load" 
-                        hx-get="{% url 'board:get_task_lists' board.id column.id %}">
+                        hx-get="{% url 'board:get_task_lists' board.id column.id %}"{% endcomment %}>
+                        {% include 'boards/components/column.html' with column=column tasks=column|get_tasks_for_user:user %}
                     </div>
                 </div>
             </div>

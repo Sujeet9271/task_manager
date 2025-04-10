@@ -4,7 +4,7 @@ from django.utils.html import mark_safe
 import re
 
 from accounts.models import Users
-from board.models import Column
+from board.models import Board, Column
 
 register = template.Library()
 
@@ -39,3 +39,9 @@ def notification_trim(notification_text:str):
 @register.filter
 def get_tasks_for_user(column:Column, user:Users):
     return column.get_tasks(user)
+
+@register.simple_tag
+def get_board_full_url(board:Board, request):
+    """Generate the full URL for the board view."""
+    relative_url = reverse('board:board-view', args=[board.id])
+    return request.build_absolute_uri(relative_url)

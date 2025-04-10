@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import FileField
 from django.forms import ValidationError
 from django.template.defaultfilters import filesizeformat
+from django.urls import reverse
 
 
 class SoftDeleteManager(models.Manager):
@@ -38,6 +39,12 @@ class Board(SoftDeleteModel):
 
     def __str__(self):
         return self.name
+    
+
+    def get_full_url(self, request):
+        """Generate the full URL for the board view."""
+        relative_url = reverse('board:board-view', args=[self.id])
+        return request.build_absolute_uri(relative_url)
 
 
 class Column(SoftDeleteModel):

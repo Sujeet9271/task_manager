@@ -279,7 +279,7 @@ def move_task(request, task_id):
         column = Column.objects.get(id=new_column_id)
         kwargs = {
             'board_id':column.board_id,
-            'column_id':task.column_id,
+            'column_id':column.id,
             'task_id':task_id
         }
         urls = {
