@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'accounts.Users'
 
 MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
