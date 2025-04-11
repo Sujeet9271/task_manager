@@ -20,4 +20,5 @@ class Workspace(models.Model):
         self.is_deleted=True
         self.deleted_at = datetime.now()
         self.save(update_fields=['is_deleted','updated_at','deleted_at'])
+        return self
     
