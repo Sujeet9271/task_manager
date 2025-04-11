@@ -19,4 +19,5 @@ python3 $PROJECT_DIR/manage.py collectstatic --no-input
 service cron start
 # Start Django development server
 echo "Starting Django development server..."
-exec python3 $PROJECT_DIR/manage.py runserver 0.0.0.0:8000
+# exec python3 $PROJECT_DIR/manage.py runserver 0.0.0.0:8000
+exec daphne -b 0.0.0.0 -p 8000 task_manager.asgi:application
