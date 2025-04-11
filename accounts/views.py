@@ -46,11 +46,14 @@ def email_login(request):
             password=request.POST['password']
             user:Users = authenticate(request=request,username=username,password=password)
             if user:
+
                 login(request,user)
+                logger.info(f'{request.GET=}')
                 next_url = request.GET.get('next')
+                logger.info(f'{next_url=}')
                 if next_url:
                     return redirect(next_url)
-                return redirect('workspace:index')
+                return HttpResponse(status=200)
     except Exception as e:
         messages.error(request,e.args[0])
         logger.exception(stack_info=False, msg=f"Exception={e.args}")

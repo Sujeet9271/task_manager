@@ -82,7 +82,7 @@ def delete_board(request, board_id,):
 @require_http_methods(['GET', 'POST'])
 @login_required
 def create_column(request, board_id):
-    board = get_object_or_404(Board, pk=board_id)
+    board = get_object_or_404(Board, pk=board_id, members=request.user)
     if request.method == 'POST':
         column = Column.objects.create(name=request.POST.get('name'), board=board, created_by=request.user)
         response = render(request,'boards/components/column_list_item.html',{'column':column,'board_id':board_id})
@@ -95,11 +95,12 @@ def create_column(request, board_id):
 @require_http_methods(['POST'])
 @login_required
 def update_column_name(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__member=request.user)
     name = request.POST.get('column_name')
     if name:
         column.name = name
-        column.save(update_fields=['name'])
+        column.updated_by = request.user
+        column.save(update_fields=['name','updated_by','updated_at'])
     response = JsonResponse(data={'detail':'Column Name Updated'},safe=False,status=200)  # Renders nothing for removal
     if request.htmx:
         response['HX-Trigger'] = json.dumps({"columnUpdated": {"level": "info","column_id":column_id,"board_id":board_id, "column_name": column.name}})
@@ -120,7 +121,7 @@ def delete_column(request, board_id, column_id):
 @require_GET
 @login_required
 def get_task_lists(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__members=request.user)
     tasks = column.tasks.filter(assigned_to=request.user, parent_task__isnull=True) if not request.user.is_staff else column.tasks.filter(parent_task__isnull=True)
     return render(request, 'boards/components/column.html', {'column': column,'tasks':tasks})
 
@@ -137,7 +138,7 @@ def sub_task_list(user:Users,task:Task,context:dict=dict):
 @login_required
 def get_sub_task_lists(request, board_id, column_id, task_id):
     context={'board_id':board_id, 'column_id':column_id, 'task_id':task_id}
-    task = get_object_or_404(Task, pk=task_id, column_id=column_id)
+    task = get_object_or_404(Task, pk=task_id, column_id=column_id, assigned_to=request.user)
     context = sub_task_list(user=request.user,task=task, context=context)
     return render(request, 'boards/components/sub_task_list.html', context)
 
@@ -145,7 +146,7 @@ def get_sub_task_lists(request, board_id, column_id, task_id):
 @require_http_methods(['POST'])
 @login_required
 def create_sub_task(request, board_id, column_id, task_id):
-    task:Task = get_object_or_404(Task, pk=task_id)
+    task:Task = get_object_or_404(Task, pk=task_id, assigned_to=request.user)
     context={
         'task_id':task_id,
         'column_id':column_id,
@@ -176,7 +177,7 @@ def create_sub_task(request, board_id, column_id, task_id):
 @require_POST
 @login_required
 def create_task(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__members=request.user)
     form = TaskCreateForm(data=request.POST)
     if form.is_valid():
         instance:Task = form.save(commit=False)
@@ -198,7 +199,7 @@ def create_task(request, board_id, column_id):
 @require_http_methods(['GET','POST'])
 @login_required
 def edit_task(request, board_id, column_id, task_id):
-    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, assigned_to=request.user)
     context = {'task':task,'board_id':board_id,'column_id':column_id}
     form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
     context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
@@ -274,7 +275,7 @@ def edit_task(request, board_id, column_id, task_id):
 @require_http_methods(['POST'])
 @login_required
 def add_comment(request, task_id):
-    task = get_object_or_404(Task, pk=task_id,)
+    task = get_object_or_404(Task, pk=task_id,assigned_to=request.user)
     form = CommentForm(data=request.POST)
     if form.is_valid():
         comment:Comments = form.save(commit=False)
@@ -294,7 +295,7 @@ def add_comment(request, task_id):
 @require_http_methods(['POST'])
 @login_required
 def task_status_toggle(request, board_id, column_id, task_id):
-    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, assigned_to=request.user)
     if task.is_complete:
         task.is_complete = False
     else:
