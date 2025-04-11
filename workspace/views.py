@@ -21,7 +21,7 @@ from task_manager.logger import logger
 @require_http_methods(['GET',])
 @login_required
 def index(request):
-    workspaces = Workspace.objects.filter(members=request.user)
+    workspaces = Workspace.objects.filter(members=request.user).exclude(is_deleted=True)
     return render(request, 'workspace/index.html',{"workspaces":workspaces,"form":WorkSpaceForm(user=request.user)})
 
 
