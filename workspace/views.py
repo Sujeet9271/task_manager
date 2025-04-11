@@ -45,7 +45,7 @@ def workspace_create(request):
 def get_workspace_boards(request,workspace_id):
     context = {}
     try:
-        workspace = Workspace.objects.get(id=workspace_id)
+        workspace = Workspace.objects.get(id=workspace_id, members=request.user)
         boards:QuerySet[Board] = request.user.board_memberships.filter(workspace=workspace).exclude(is_deleted=True)
         context['boards'] = boards
         context['workspace_id'] = workspace_id

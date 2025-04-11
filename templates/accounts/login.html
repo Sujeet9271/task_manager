@@ -64,7 +64,7 @@
   <div class="login-container">
     <img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="logo">
     <h2>Login to TaskMaster</h2>
-    <form method="POST" action="{% url 'accounts:login-user' %}">
+    <form method="POST" action="">
       {% csrf_token %}
       <input name="username" type="text" placeholder="Email" required />
       <input name="password" type="password" placeholder="Password" required />

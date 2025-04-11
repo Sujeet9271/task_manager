@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.db import models
-from django.db.models import FileField
+from django.db.models import FileField, Manager, Case, When, Value, IntegerField
 from django.forms import ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
@@ -47,7 +47,18 @@ class Board(SoftDeleteModel):
 
     def get_full_url(self, request):
         """Generate the full URL for the board view."""
-        return get_full_url('board:board-view', args=[self.id])
+        relative_url = reverse('board:board-view', args=[self.id])
+        return request.build_absolute_uri(relative_url)
+    
+    class Meta:
+        verbose_name = 'Board'
+        verbose_name_plural = 'Boards'
+        indexes = [
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['workspace']),
+            models.Index(fields=['created_by']),
+        ]
+
 
 
 class Column(SoftDeleteModel):
@@ -68,6 +79,12 @@ class Column(SoftDeleteModel):
     
     class Meta:
         ordering = ['board','order']  # Order by the 'order' field
+        verbose_name = 'Column'
+        verbose_name_plural = 'Columns'
+        indexes = [
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['created_by']),
+        ]
 
 
 
@@ -122,39 +139,115 @@ class ContentTypeRestrictedFileField(FileField):
         return data
     
 
+class TaskManager(SoftDeleteManager):
+
+    def order_by_priority(self):
+        return super().get_queryset().annotate(
+            priority_order=Case(
+                When(priority='High', then=Value(1)),
+                When(priority='Medium', then=Value(2)),
+                When(priority='Low', then=Value(3)),
+                default=Value(4),
+                output_field=IntegerField()
+            )
+        ).order_by('priority_order', 'order', '-created_at')
+
+
 class Task(SoftDeleteModel):
-    column = models.ForeignKey(Column, on_delete=models.CASCADE, related_name='tasks')
-    parent_task = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sub_tasks')
+    column = models.ForeignKey(Column, on_delete=models.CASCADE, related_name='tasks', db_index=True)
+    parent_task = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='sub_tasks'
+    )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     assigned_to = models.ManyToManyField('accounts.Users', related_name='assigned_tasks', blank=True)
-    due_date = models.DateField(null=True, blank=True)
-    priority = models.CharField(max_length=20, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')], default='Medium')
+    due_date = models.DateField(null=True, blank=True, db_index=True)
+    priority = models.CharField(
+        max_length=20,
+        choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')],
+        default='Medium',
+        db_index=True
+    )
     order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='tasks')
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
     extra_data = models.JSONField(default=dict, null=True, blank=True)
-    is_complete = models.BooleanField(default=False)
+    is_complete = models.BooleanField(default=False, db_index=True)
+
+    objects = TaskManager()
 
     def __str__(self):
-        if self.parent_task:
-            return f'SubTask: {self.title}'
-        return f'Task: {self.title}'
+        return f'SubTask: {self.title}' if self.parent_task else f'Task: {self.title}'
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        # If this task is set as a subtask (i.e., has a parent_task)
+        # Then it should not itself be a parent to any other task
+        if self.pk and self.parent_task and Task.objects.filter(parent_task=self).exists():
+            raise ValidationError("Subtasks cannot have their own subtasks.")
+
+        # If parent_task is itself a subtask, prevent nesting
+        if self.parent_task and self.parent_task.parent_task is not None:
+            raise ValidationError("Cannot assign a subtask as parent. Nested subtasks are not allowed.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Enforces clean() during save
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = 'Task'
+        verbose_name_plural = 'Tasks'
+        indexes = [
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['column', 'order']),
+            models.Index(fields=['created_by']),
+            models.Index(fields=['priority']),
+            models.Index(fields=['is_complete']),
+        ]
+
     
 
 class TaskHistory(SoftDeleteModel):
-    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name='history')
-    updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, blank=True)
-    changes = models.JSONField(default=dict)
-    snapshot = models.JSONField(default=dict)  # ← full cleaned snapshot
+    task = models.ForeignKey(
+        'Task',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='history',
+    )
+    updated_by = models.ForeignKey(
+        'accounts.Users',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    changes = models.JSONField(default=dict, blank=True)
+    snapshot = models.JSONField(default=dict, blank=True)
+    hash = models.CharField(max_length=128, blank=True, db_index=True)  # assume hash is SHA-like
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    hash = models.TextField(blank=True)
 
     def __str__(self):
-        return f'History: {self.task_id}, Changes by: {self.updated_by_id}'
+        return f'History for Task #{self.task_id} by User #{self.updated_by_id}'
+    
+    class Meta:
+        verbose_name = 'Task History'
+        verbose_name_plural = 'Task Histories'
+        ordering = ['-created_at']  # show recent changes first
+        indexes = [
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['task']),
+            models.Index(fields=['updated_by']),
+            models.Index(fields=['hash']),
+            models.Index(fields=['-created_at']),
+        ]
+
+
 
     
 
@@ -201,6 +294,16 @@ class Attachment(models.Model):
             return f"{size_kb:.2f} KB" if size_kb < 1024 else f"{size_kb / 1024:.2f} MB"
         return "Unknown Size" if self.type == 'file' else None
     
+    class Meta:
+        verbose_name = 'Attachment'
+        verbose_name_plural = 'Attachments'
+        indexes = [
+            models.Index(fields=['workspace']),
+            models.Index(fields=['task']),
+            models.Index(fields=['uploaded_by']),
+        ]
+
+    
 
 class Comments(models.Model):
     task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name="comments")
@@ -212,3 +315,12 @@ class Comments(models.Model):
 
     def __str__(self):
         return self.comment
+
+    class Meta:
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments' 
+        indexes = [
+            models.Index(fields=['task']),
+            models.Index(fields=['added_by']),
+            models.Index(fields=['created_at']),
+        ]

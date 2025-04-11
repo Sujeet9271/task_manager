@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
@@ -82,7 +82,7 @@ def delete_board(request, board_id,):
 @require_http_methods(['GET', 'POST'])
 @login_required
 def create_column(request, board_id):
-    board = get_object_or_404(Board, pk=board_id)
+    board = get_object_or_404(Board, pk=board_id, members=request.user)
     if request.method == 'POST':
         column = Column.objects.create(name=request.POST.get('name'), board=board, created_by=request.user)
         response = render(request,'boards/components/column_list_item.html',{'column':column,'board_id':board_id})
@@ -95,11 +95,12 @@ def create_column(request, board_id):
 @require_http_methods(['POST'])
 @login_required
 def update_column_name(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__members=request.user)
     name = request.POST.get('column_name')
     if name:
         column.name = name
-        column.save(update_fields=['name'])
+        column.updated_by = request.user
+        column.save(update_fields=['name','updated_by','updated_at'])
     response = JsonResponse(data={'detail':'Column Name Updated'},safe=False,status=200)  # Renders nothing for removal
     if request.htmx:
         response['HX-Trigger'] = json.dumps({"columnUpdated": {"level": "info","column_id":column_id,"board_id":board_id, "column_name": column.name}})
@@ -120,7 +121,7 @@ def delete_column(request, board_id, column_id):
 @require_GET
 @login_required
 def get_task_lists(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__members=request.user)
     tasks = column.tasks.filter(assigned_to=request.user, parent_task__isnull=True) if not request.user.is_staff else column.tasks.filter(parent_task__isnull=True)
     return render(request, 'boards/components/column.html', {'column': column,'tasks':tasks})
 
@@ -137,46 +138,74 @@ def sub_task_list(user:Users,task:Task,context:dict=dict):
 @login_required
 def get_sub_task_lists(request, board_id, column_id, task_id):
     context={'board_id':board_id, 'column_id':column_id, 'task_id':task_id}
-    task = get_object_or_404(Task, pk=task_id, column_id=column_id)
+    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, assigned_to=request.user)
     context = sub_task_list(user=request.user,task=task, context=context)
     return render(request, 'boards/components/sub_task_list.html', context)
-
 
 @require_http_methods(['POST'])
 @login_required
 def create_sub_task(request, board_id, column_id, task_id):
-    task:Task = get_object_or_404(Task, pk=task_id)
-    context={
-        'task_id':task_id,
-        'column_id':column_id,
-        'board_id':board_id
-    }
+    task: Task = get_object_or_404(
+        Task,
+        pk=task_id,
+        column_id=column_id,
+        column__board_id=board_id,
+        column__board__members=request.user,
+        assigned_to=request.user
+    )
+
+    # Prevent creating a sub-task of a sub-task
+    if task.parent_task:
+        return HttpResponseForbidden("Cannot create a sub-task of a sub-task.")
+
     form = TaskCreateForm(data=request.POST)
-    if request.method=='POST' and form.is_valid():
-        instance:Task = form.save(commit=False)
+    context = {
+        'task_id': task_id,
+        'column_id': column_id,
+        'board_id': board_id
+    }
+
+    if form.is_valid():
+        instance: Task = form.save(commit=False)
         instance.parent_task = task
         instance.column = task.column
         instance.created_by = request.user
         instance.save()
 
-        assigned_to = [instance.created_by]
-        if instance.parent_task:
-            assigned_to.append(instance.parent_task.created_by)
-        instance.assigned_to.add(*assigned_to)
-        
+        # Assign to creator and parent task creator
+        assigned_users = {instance.created_by, task.created_by}
+        instance.assigned_to.add(*assigned_users)
+
         context['sub_task'] = instance
-        response = render(request, 'boards/components/sub_task_card.html',context)
-        response['HX-Trigger'] = json.dumps({'subTaskCreated':{"level": "info","column_id":column_id,"board_id":board_id, "task_id":task_id}})
+        response = render(request, 'boards/components/sub_task_card.html', context)
+        response['HX-Trigger'] = json.dumps({
+            'subTaskCreated': {
+                "level": "info",
+                "column_id": column_id,
+                "board_id": board_id,
+                "task_id": task_id
+            }
+        })
         return response
+
+    # If form is invalid
     context['form'] = form
-    response = render(request,'boards/components/sub_task_create.html',context)
-    response['HX-Trigger'] = json.dumps({'subTaskCreateFailed':{"level": "info","column_id":column_id,"board_id":board_id, "task_id":task_id}})
+    response = render(request, 'boards/components/sub_task_create.html', context)
+    response['HX-Trigger'] = json.dumps({
+        'subTaskCreateFailed': {
+            "level": "info",
+            "column_id": column_id,
+            "board_id": board_id,
+            "task_id": task_id
+        }
+    })
     return response
+
 
 @require_POST
 @login_required
 def create_task(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id)
+    column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__members=request.user)
     form = TaskCreateForm(data=request.POST)
     if form.is_valid():
         instance:Task = form.save(commit=False)
@@ -198,7 +227,7 @@ def create_task(request, board_id, column_id):
 @require_http_methods(['GET','POST'])
 @login_required
 def edit_task(request, board_id, column_id, task_id):
-    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, assigned_to=request.user)
     context = {'task':task,'board_id':board_id,'column_id':column_id}
     form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
     context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
@@ -274,7 +303,7 @@ def edit_task(request, board_id, column_id, task_id):
 @require_http_methods(['POST'])
 @login_required
 def add_comment(request, task_id):
-    task = get_object_or_404(Task, pk=task_id,)
+    task = get_object_or_404(Task, pk=task_id, task__column__board__members=request.user, assigned_to=request.user)
     form = CommentForm(data=request.POST)
     if form.is_valid():
         comment:Comments = form.save(commit=False)
@@ -294,7 +323,7 @@ def add_comment(request, task_id):
 @require_http_methods(['POST'])
 @login_required
 def task_status_toggle(request, board_id, column_id, task_id):
-    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id)
+    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, assigned_to=request.user)
     if task.is_complete:
         task.is_complete = False
     else:
@@ -307,6 +336,7 @@ def task_status_toggle(request, board_id, column_id, task_id):
 @login_required
 def delete_task(request, board_id, column_id, task_id):
     task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, created_by=request.user)
+    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, created_by=request.user)
     task.delete()
     return JsonResponse(data={'detail':'Task Deleted'},safe=False,status=200)  # Renders nothing for removal
 

@@ -19,9 +19,9 @@
     <button type="button" class="btn btn-sm btn-outline-primary mb-3" onclick="addUrlInput()">+ Add Another Link</button>
 
     <div class="mb-3" id="attachments_id">
-        <label for="attachments" class="form-label">Attachements:</label>
+        <label for="attachments" class="form-label">Attachments:</label>
         <input class="form-control" name="attachments" type="file"  multiple>
-        <div class="form-text">Select Attachements to upload</div>
+        <div class="form-text">Select Attachments to upload</div>
         {% if task.attachments.exists %}
         <div class="form-text">Existing Attachments:</div>
         <ul>
