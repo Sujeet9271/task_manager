@@ -8,8 +8,8 @@ PROJECT_DIR="/app"
 
 # Perform database migrations
 echo "Running makemigrations..."
-# python3 $PROJECT_DIR/manage.py makemigrations
-# python3 $PROJECT_DIR/manage.py migrate
+python3 $PROJECT_DIR/manage.py makemigrations
+python3 $PROJECT_DIR/manage.py migrate
 python3 $PROJECT_DIR/manage.py crontab add
 
 # Collect static files
