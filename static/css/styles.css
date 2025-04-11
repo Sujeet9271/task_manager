@@ -1,3 +1,12 @@
+/* Define the primary color */
+:root {
+  --custom-primary-color: rgb(
+    73,
+    101,
+    230
+  ); /* You can replace this with your desired primary color */
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,7 +18,38 @@ body {
   background: #f9fafb;
 }
 
-.navbar {
+/* Apply the primary color */
+.text-primary {
+  color: var(--custom-primary-color) !important;
+}
+
+.bg-primary {
+  background-color: var(--custom-primary-color) !important;
+}
+
+.btn-primary {
+  background-color: var(--custom-primary-color) !important;
+  border-color: var(
+    --custom-primary-color
+  ) !important; /* Ensure the border matches */
+}
+
+.btn-primary:hover {
+  background-color: var(--custom-primary-color) !important;
+  color: white !important; /* Override text color to white on hover */
+}
+
+.btn-outline-primary {
+  border-color: var(--custom-primary-color) !important;
+  color: var(--custom-primary-color) !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--custom-primary-color) !important;
+  color: white !important; /* Ensure text color turns white on hover */
+}
+
+/* .navbar {
   height: 60px;
   background: #1f2937;
   color: white;
@@ -34,13 +74,53 @@ body {
 }
 
 .navbar .logout {
-  background: #ef4444;
+  background: var(--custom-primary-color);
   color: white;
   border: none;
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
+} */
+
+
+.navbar {
+  background-color: #f8f9fa;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #dee2e6;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
+
+.navbar .text-primary {
+  color: #0d6efd;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.work-logout-btn {
+  border-radius: 50%;
+  /* padding: 8px 12px; */
+  font-size: 1.15rem;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  background-color: transparent;
+  border: 2px solid var(--custom-primary-color);
+  color: var(--custom-primary-color);
+}
+
+
+
+.work-logout-btn:hover {
+  background-color: var(--custom-primary-color);
+  color: white;
+  transform: scale(1.1);
+}
+
+
 
 .custom-container {
   display: flex;
@@ -371,11 +451,6 @@ form input[type="checkbox"] {
   color: gray;
 }
 
-.btn-primary,
-.bg-primary {
-  background-color: rgb(73 101 230) !important;
-}
-
 .sub-task-card {
   display: flex;
   justify-content: space-between;
@@ -512,10 +587,34 @@ form input[type="checkbox"] {
   width: auto;
 }
 
-.navbar-links {
-  display: flex;
-  align-items: center;
+.text-primary {
+  color: var(--custom-primary-color) !important;
 }
+
+.bg-primary {
+  background-color: var(--custom-primary-color) !important;
+}
+
+
+.badge {
+  font-size: 0.6rem;
+  padding: 0.35em 0.5em;
+}
+
+.btn-light:hover {
+  background-color: #f0f0f0;
+}
+
+.navbar-brand h3 {
+  font-size: 1.4rem;
+}
+
+@media (max-width: 576px) {
+  .user-info span {
+  display: none;
+  }
+}
+
 
 .notifications {
   position: relative;
@@ -524,14 +623,14 @@ form input[type="checkbox"] {
 
 .notification-button {
   font-size: 1.5rem;
-  color: white;
+  color: var(--custom-primary-color);
   text-decoration: none;
   position: relative;
   transition: color 0.3s ease;
 }
 
 .notification-button:hover {
-  color: #ff6347; /* Tomato color on hover */
+  color: var(--custom-primary-color); /* Tomato color on hover */
 }
 
 .notification-count {
@@ -558,23 +657,6 @@ form input[type="checkbox"] {
   margin-right: 10px;
 }
 
-.logout-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 5px 10px;
-  transition: color 0.3s ease;
-}
-
-.logout-btn:hover {
-  color: #ff6347; /* Tomato color on hover */
-}
-
-.logout-btn i {
-  margin-right: 5px;
-}
 /* Notification Dropdown */
 .notification-dropdown {
   position: absolute;
@@ -649,4 +731,109 @@ form input[type="checkbox"] {
 }
 .menu .dropover .menu-item:hover {
   background-color: #4965e63d;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-block;
+  border-top: 4px solid #fff;
+  border-right: 4px solid transparent;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+.loader::after {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border-left: 4px solid var(--custom-primary-color);
+  border-bottom: 4px solid transparent;
+  animation: rotation 0.5s linear infinite reverse;
+}
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-loader {
+  transform: rotateZ(45deg);
+  perspective: 1000px;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  color: #fff;
+}
+.spin-loader:before,
+.spin-loader:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: inherit;
+  height: inherit;
+  border-radius: 50%;
+  transform: rotateX(70deg);
+  animation: 1s spin linear infinite;
+}
+.spin-loader:after {
+  color: var(--custom-primary-color);
+  transform: rotateY(70deg);
+  animation-delay: 0.4s;
+}
+
+@keyframes rotate {
+  0% {
+    transform: translate(-50%, -50%) rotateZ(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotateZ(360deg);
+  }
+}
+
+@keyframes rotateccw {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+@keyframes spin {
+  0%,
+  100% {
+    box-shadow: 0.2em 0px 0 0px currentcolor;
+  }
+  12% {
+    box-shadow: 0.2em 0.2em 0 0 currentcolor;
+  }
+  25% {
+    box-shadow: 0 0.2em 0 0px currentcolor;
+  }
+  37% {
+    box-shadow: -0.2em 0.2em 0 0 currentcolor;
+  }
+  50% {
+    box-shadow: -0.2em 0 0 0 currentcolor;
+  }
+  62% {
+    box-shadow: -0.2em -0.2em 0 0 currentcolor;
+  }
+  75% {
+    box-shadow: 0px -0.2em 0 0 currentcolor;
+  }
+  87% {
+    box-shadow: 0.2em -0.2em 0 0 currentcolor;
+  }
 }

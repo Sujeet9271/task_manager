@@ -17,7 +17,7 @@
                             hx-delete="{% url 'board:column-delete' column.board_id column.id %}" 
                             hx-target="#column_{{ column.id }}" 
                             hx-swap="delete" 
-                            hx-confirm="Are You Sure?">🗑️</button>
+                            hx-confirm="Are You Sure?"><i class="fas fa-trash-alt" style="color: red;"></i></button>
                             {% endif %}
                         </div>
                         <form id="create_task_form_{{ column.id }}"

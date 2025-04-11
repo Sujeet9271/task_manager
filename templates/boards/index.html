@@ -13,48 +13,47 @@
 		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
 		<script src="{% static 'js/common.js' %}"></script>
 		<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-		<style>
-	
-
-
-
-		</style>
-
 	</head>
 
 	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
-		<div class="navbar">
-			<div class="navbar-brand">
-				<a href="{% url 'workspace:index' %}">
-					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="navbar-logo">
-				</a>
-			</div>
 		
-			<div class="navbar-links">
-				<!-- Notification Button -->
-				<div class="notifications">
-					<span class="notification-button">
-						<i class="fa-solid fa-bell"></i>
+		<nav class="navbar navbar-light shadow-sm px-4 py-2 bg-white sticky-top">
+			<div class="container-fluid d-flex justify-content-between align-items-center">
+			  
+				<!-- Logo & Title -->
+				<div class="navbar-brand d-flex align-items-center gap-2">
+					<a href="{% url 'workspace:index' %}">
+					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="navbar-logo" height="40">
+					</a>
+					<h3 class="fw-bold mb-0 text-primary">Boards</h3>
+				</div>
+		  
+			  <!-- User Info, Notifications & Logout -->
+				<div class="user-info d-flex align-items-center gap-3">
+					<span class="text-muted">Welcome, {{ user.username }}</span>
+			
+					<!-- Notifications -->
+					<div class="position-relative">
+					<span class="btn btn-light rounded-circle shadow-sm" title="Notifications">
+						<i class="fa-solid fa-bell text-primary"></i>
 						{% if unread_notification_count > 0 %}
-							<span id="unread_notification_count" class="notification-count">
-								{{ unread_notification_count }}
-							</span>
+						<span id="unread_notification_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+							{{ unread_notification_count }}
+						</span>
 						{% endif %}
 					</span>
-				</div>
-		
-				<!-- User Info and Logout Button -->
-				<div class="user-info">
-					<span>Welcome, {{ user.username }}</span>
-					<form method="post" action="{% url 'accounts:logout-user' %}">
-						{% csrf_token %}
-						<button class="logout-btn" type="submit">
-							<i class="fa-solid fa-right-from-bracket"></i>
-						</button>
+					</div>
+			
+					<!-- Logout Button -->
+					<form method="post" action="{% url 'accounts:logout-user' %}" class="mb-0">
+					{% csrf_token %}
+					<button class="btn work-logout-btn d-flex align-items-center gap-2" type="submit" title="Logout">
+						<i class="fa-solid fa-right-from-bracket"></i>
+					</button>
 					</form>
 				</div>
 			</div>
-		</div>
+		</nav>
 		
 		<!-- Notifications Dropdown (Initially Hidden) -->
 		<div id="notification-div" class="notification-dropdown fade">
@@ -65,11 +64,10 @@
 		</div>
 		
 		
-		
 
 		<div id="loader">
 			<div id="loader_div">
-			<img src="{% static 'gif/gif.gif' %}" alt="gif">
+				<span class="loader"></span>
 			</div>
 		</div>
 	
