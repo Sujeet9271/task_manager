@@ -5,6 +5,7 @@ import re
 
 from accounts.models import Users
 from board.models import Board, Column
+from task_manager.utils import get_full_url
 
 register = template.Library()
 
@@ -43,5 +44,4 @@ def get_tasks_for_user(column:Column, user:Users):
 @register.simple_tag
 def get_board_full_url(board:Board, request):
     """Generate the full URL for the board view."""
-    relative_url = reverse('board:board-view', args=[board.id])
-    return request.build_absolute_uri(relative_url)
+    return get_full_url('board:board-view', args=[board.id])

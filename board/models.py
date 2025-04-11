@@ -5,6 +5,8 @@ from django.forms import ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 
+from task_manager.utils import get_full_url
+
 
 class SoftDeleteManager(models.Manager):
     def get_queryset(self):
@@ -45,8 +47,7 @@ class Board(SoftDeleteModel):
 
     def get_full_url(self, request):
         """Generate the full URL for the board view."""
-        relative_url = reverse('board:board-view', args=[self.id])
-        return request.build_absolute_uri(relative_url)
+        return get_full_url('board:board-view', args=[self.id])
 
 
 class Column(SoftDeleteModel):
