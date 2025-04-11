@@ -52,15 +52,16 @@
 			
 					<!-- Notifications -->
 					<div class="position-relative">
-					<span class="btn btn-light rounded-circle shadow-sm" title="Notifications">
-						<i class="fa-solid fa-bell text-primary"></i>
-						{% if unread_notification_count > 0 %}
-						<span id="unread_notification_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-							{{ unread_notification_count }}
-						</span>
-						{% endif %}
-					</span>
+            <span class="btn btn-light rounded-circle shadow-sm notifications" title="Notifications">
+              <i class="fa-solid fa-bell text-primary"></i>
+              {% if unread_notification_count > 0 %}
+              <span id="unread_notification_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ unread_notification_count }}
+              </span>
+              {% endif %}
+            </span>
 					</div>
+          
 			
 					<!-- Logout Button -->
 					<form method="post" action="{% url 'accounts:logout-user' %}" class="mb-0">
@@ -72,6 +73,14 @@
 				</div>
 			</div>
 		</nav>
+    <!-- Notifications Dropdown (Initially Hidden) -->
+		<div id="notification-div" class="notification-dropdown fade">
+			<div id="notification-list">
+				{% include 'notifications/notification_list.html' with notifications=notifications %}
+			</div>
+			<div class="notification-loader"><div></div><div></div><div></div></div>
+		</div>
+		
 
     <!-- Content -->
     <div class="container py-5">

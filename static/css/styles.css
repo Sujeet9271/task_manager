@@ -615,12 +615,6 @@ form input[type="checkbox"] {
   }
 }
 
-
-.notifications {
-  position: relative;
-  margin-right: 20px;
-}
-
 .notification-button {
   font-size: 1.5rem;
   color: var(--custom-primary-color);
