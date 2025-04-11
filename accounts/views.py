@@ -53,7 +53,7 @@ def email_login(request):
                 logger.info(f'{next_url=}')
                 if next_url:
                     return redirect(next_url)
-                return HttpResponse(status=200)
+                return redirect('workspace:index')
     except Exception as e:
         messages.error(request,e.args[0])
         logger.exception(stack_info=False, msg=f"Exception={e.args}")
