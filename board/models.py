@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import models
 from django.db.models import FileField
 from django.forms import ValidationError
@@ -21,6 +22,7 @@ class SoftDeleteModel(models.Model):
 
     def delete(self, *args, **kwargs):
         self.is_deleted = True
+        self.deleted_at = datetime.now()
         self.save(update_fields=['is_deleted', 'deleted_at'])
         return self
 
