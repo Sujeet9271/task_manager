@@ -41,6 +41,7 @@ def board_view(request, board_id):
         context['users'] = board.members.all()
         context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
         context:dict = get_notifications(user=request.user, page_number=1, context=context)
+        context['view_name'] = 'Board'
         response = render(request, 'boards/index.html', context)
     return response
 

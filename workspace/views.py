@@ -21,8 +21,12 @@ from task_manager.logger import logger
 @require_http_methods(['GET',])
 @login_required
 def index(request):
+    context = {}
     workspaces = Workspace.objects.filter(members=request.user).exclude(is_deleted=True)
-    return render(request, 'workspace/index.html',{"workspaces":workspaces,"form":WorkSpaceForm(user=request.user)})
+    context["workspaces"] = workspaces
+    context["form"] =  WorkSpaceForm(user=request.user)
+    context['view_name'] = 'Workspace'
+    return render(request, 'workspace/index.html',context)
 
 
 @require_http_methods(['POST'])
@@ -46,11 +50,11 @@ def get_workspace_boards(request,workspace_id):
     context = {}
     try:
         workspace = Workspace.objects.get(id=workspace_id, members=request.user)
-        boards:QuerySet[Board] = request.user.board_memberships.filter(workspace=workspace).exclude(is_deleted=True)
+        boards:QuerySet[Board] = Board.objects.prefetch_related('columns').filter(workspace=workspace, members=request.user).exclude(is_deleted=True)
         context['boards'] = boards
         context['workspace_id'] = workspace_id
         context['users'] = workspace.members.all()
-        context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
+        context['view_name'] = 'Board'
         context:dict = get_notifications(user=request.user, page_number=1, context=context)
         return render(request,'boards/index.html',context)
     except Workspace.DoesNotExist:

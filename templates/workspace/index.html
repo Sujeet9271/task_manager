@@ -28,58 +28,7 @@
   </head>
   <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
 
-    <div id="loader">
-      <div id="loader_div">
-        {% comment %} <img src="{% static 'gif/gif.gif' %}" alt="gif"> {% endcomment %}
-        <span class="loader"></span>
-      </div>
-  </div>
-    <!-- Navbar -->
-    <nav class="navbar navbar-light shadow-sm px-4 py-2 bg-white sticky-top">
-			<div class="container-fluid d-flex justify-content-between align-items-center">
-			  
-				<!-- Logo & Title -->
-				<div class="navbar-brand d-flex align-items-center gap-2">
-					<a href="{% url 'workspace:index' %}">
-					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="navbar-logo" height="40">
-					</a>
-					<h3 class="fw-bold mb-0 text-primary">Workspace</h3>
-				</div>
-		  
-			  <!-- User Info, Notifications & Logout -->
-				<div class="user-info d-flex align-items-center gap-3">
-					<span class="text-muted">Welcome, {{ user.username }}</span>
-			
-					<!-- Notifications -->
-					<div class="position-relative">
-            <span class="btn btn-light rounded-circle shadow-sm notifications" title="Notifications">
-              <i class="fa-solid fa-bell text-primary"></i>
-              {% if unread_notification_count > 0 %}
-              <span id="unread_notification_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                {{ unread_notification_count }}
-              </span>
-              {% endif %}
-            </span>
-					</div>
-          
-			
-					<!-- Logout Button -->
-					<form method="post" action="{% url 'accounts:logout-user' %}" class="mb-0">
-					{% csrf_token %}
-					<button class="btn work-logout-btn d-flex align-items-center gap-2" type="submit" title="Logout">
-						<i class="fa-solid fa-right-from-bracket"></i>
-					</button>
-					</form>
-				</div>
-			</div>
-		</nav>
-    <!-- Notifications Dropdown (Initially Hidden) -->
-		<div id="notification-div" class="notification-dropdown fade">
-			<div id="notification-list">
-				{% include 'notifications/notification_list.html' with notifications=notifications %}
-			</div>
-			<div class="notification-loader"><div></div><div></div><div></div></div>
-		</div>
+    {% include "components/navbar.html" %}
 		
 
     <!-- Content -->

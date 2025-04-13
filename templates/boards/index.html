@@ -17,86 +17,52 @@
 
 	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
 		
-		<nav class="navbar navbar-light shadow-sm px-4 py-2 bg-white sticky-top">
-			<div class="container-fluid d-flex justify-content-between align-items-center">
-			  
-				<!-- Logo & Title -->
-				<div class="navbar-brand d-flex align-items-center gap-2">
-					<a href="{% url 'workspace:index' %}">
-					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="navbar-logo" height="40">
-					</a>
-					<h3 class="fw-bold mb-0 text-primary">Boards</h3>
-				</div>
-		  
-			  <!-- User Info, Notifications & Logout -->
-				<div class="user-info d-flex align-items-center gap-3">
-					<span class="text-muted">Welcome, {{ user.username }}</span>
-			
-					<!-- Notifications -->
-					<div class="position-relative">
-					<span class="btn btn-light rounded-circle shadow-sm notifications" title="Notifications">
-						<i class="fa-solid fa-bell text-primary"></i>
-						{% if unread_notification_count > 0 %}
-						<span id="unread_notification_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-							{{ unread_notification_count }}
-						</span>
-						{% endif %}
-					</span>
-					</div>
-			
-					<!-- Logout Button -->
-					<form method="post" action="{% url 'accounts:logout-user' %}" class="mb-0">
-					{% csrf_token %}
-					<button class="btn work-logout-btn d-flex align-items-center gap-2" type="submit" title="Logout">
-						<i class="fa-solid fa-right-from-bracket"></i>
-					</button>
-					</form>
-				</div>
-			</div>
-		</nav>
-		
-		<!-- Notifications Dropdown (Initially Hidden) -->
-		<div id="notification-div" class="notification-dropdown fade">
-			<div id="notification-list">
-				{% include 'notifications/notification_list.html' with notifications=notifications %}
-			</div>
-			<div class="notification-loader"><div></div><div></div><div></div></div>
-		</div>
-		
-		
-
-		<div id="loader">
-			<div id="loader_div">
-				<span class="loader"></span>
-			</div>
-		</div>
+		{% include "components/navbar.html" %}
 	
 		<div class="custom-container">
-		<div class="sidebar" id="boards-sidebar">
-			<div class="add" id="add-board-btn"
-				data-bs-toggle="modal"
-				data-bs-target="#createBoard"
-				>
-			+ Add New Board
+			{% comment %} <div class="sidebar" id="boards-sidebar">
+				<div class="add" id="add-board-btn"
+					data-bs-toggle="modal"
+					data-bs-target="#createBoard"
+					>
+				+ Add New Board
+				</div>
+				<div id="boards">
+				{% for board in boards %}
+				{% include 'boards/components/board_list_item.html' with board=board %}
+				{% endfor %}
+				</div>
+				</div> {% endcomment %}
+			<div id="boards-sidebar" class="sidebar p-3 bg-white border-end shadow-sm h-100">
+				<!-- Add Board Button -->
+				<div class="mb-4">
+						<button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+						data-bs-toggle="modal"
+						data-bs-target="#createBoard">
+						<i class="fa-solid fa-plus"></i> Add New Board
+					</button>
+				</div>
+			
+			<!-- Boards List -->
+				<div class="d-flex flex-column gap-2" id="boards">
+					{% for board in boards %}
+					{% include 'boards/components/board_list_item.html' with board=board %}
+					{% endfor %}
+				</div>
 			</div>
-			<div id="boards">
-			{% for board in boards %}
-			{% include 'boards/components/board_list_item.html' with board=board %}
-			{% endfor %}
+			  
+		
+			<div class="main-content" id="main-content">
+				{% if board %}
+				{% include "boards/components/board.html" with board=board %}
+				{% else %}
+				<div class="welcome-illustration">
+					<img src="{% static 'images/welcome.svg' %}" alt="Welcome" />
+					<h1>Welcome to TaskMaster</h1>
+					<p>Select a board to view its content or create a new one!</p>
+				</div>
+				{% endif %}
 			</div>
-		</div>
-	
-		<div class="main-content" id="main-content">
-			{% if board %}
-			{% include "boards/components/board.html" with board=board %}
-			{% else %}
-			<div class="welcome-illustration">
-				<img src="{% static 'images/welcome.svg' %}" alt="Welcome" />
-				<h1>Welcome to TaskMaster</h1>
-				<p>Select a board to view its content or create a new one!</p>
-			</div>
-			{% endif %}
-		</div>
 		</div>
 
 		<div class="modal fade" id="createBoard" tabindex="-1" aria-labelledby="createBoardLabel" aria-hidden="true">
