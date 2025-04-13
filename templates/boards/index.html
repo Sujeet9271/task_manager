@@ -9,96 +9,51 @@
 		<title>TaskMaster</title>
 		<link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
 		<link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}" />
-		<link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/style.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/board.css' %}" />
 		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
 		<script src="{% static 'js/common.js' %}"></script>
 		<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-		<style>
-	
-
-
-
-		</style>
-
 	</head>
 
 	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
-		<div class="navbar">
-			<div class="navbar-brand">
-				<a href="{% url 'workspace:index' %}">
-					<img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="navbar-logo">
-				</a>
-			</div>
 		
-			<div class="navbar-links">
-				<!-- Notification Button -->
-				<div class="notifications">
-					<span class="notification-button">
-						<i class="fa-solid fa-bell"></i>
-						{% if unread_notification_count > 0 %}
-							<span id="unread_notification_count" class="notification-count">
-								{{ unread_notification_count }}
-							</span>
-						{% endif %}
-					</span>
-				</div>
-		
-				<!-- User Info and Logout Button -->
-				<div class="user-info">
-					<span>Welcome, {{ user.username }}</span>
-					<form method="post" action="{% url 'accounts:logout-user' %}">
-						{% csrf_token %}
-						<button class="logout-btn" type="submit">
-							<i class="fa-solid fa-right-from-bracket"></i>
-						</button>
-					</form>
-				</div>
-			</div>
-		</div>
-		
-		<!-- Notifications Dropdown (Initially Hidden) -->
-		<div id="notification-div" class="notification-dropdown fade">
-			<div id="notification-list">
-				{% include 'notifications/notification_list.html' with notifications=notifications %}
-			</div>
-			<div class="notification-loader"><div></div><div></div><div></div></div>
-		</div>
-		
-		
-		
-
-		<div id="loader">
-			<div id="loader_div">
-			<img src="{% static 'gif/gif.gif' %}" alt="gif">
-			</div>
-		</div>
+		{% include "components/navbar.html" %}
 	
 		<div class="custom-container">
-		<div class="sidebar" id="boards-sidebar">
-			<div class="add" id="add-board-btn"
-				data-bs-toggle="modal"
-				data-bs-target="#createBoard"
-				>
-			+ Add New Board
+			
+			<div id="boards-sidebar" class="sidebar bg-white border-end shadow-sm">
+				<!-- Add Board Button -->
+				{% if not active_board %}
+				 <div class="mb-4">
+					 <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+					 data-bs-toggle="modal"
+					 data-bs-target="#createBoard">
+					 <i class="fa-solid fa-plus"></i> Add New Board
+					</button>
+				</div>
+				{% endif %}
+			
+				<!-- Boards List -->
+				<div class="d-flex flex-column gap-2 board_list horizontal-scroll-wrapper auto-hide-scrollbar" id="boards">
+					{% for board in boards %}
+					{% include 'boards/components/board_list_item.html' with board=board active_board=active_board %}
+					{% endfor %}
+				</div>
 			</div>
-			<div id="boards">
-			{% for board in boards %}
-			{% include 'boards/components/board_list_item.html' with board=board %}
-			{% endfor %}
+			  
+		
+			<div class="main-content" id="main-content">
+				{% if active_board %}
+				{% include "boards/components/board.html" with board=active_board %}
+				{% else %}
+				<div class="welcome-illustration">
+					<img src="{% static 'images/welcome.svg' %}" alt="Welcome" />
+					<h1>Welcome to TaskMaster</h1>
+					<p>Select a board to view its content or create a new one!</p>
+				</div>
+				{% endif %}
 			</div>
-		</div>
-	
-		<div class="main-content" id="main-content">
-			{% if board %}
-			{% include "boards/components/board.html" with board=board %}
-			{% else %}
-			<div class="welcome-illustration">
-				<img src="{% static 'images/welcome.svg' %}" alt="Welcome" />
-				<h1>Welcome to TaskMaster</h1>
-				<p>Select a board to view its content or create a new one!</p>
-			</div>
-			{% endif %}
-		</div>
 		</div>
 
 		<div class="modal fade" id="createBoard" tabindex="-1" aria-labelledby="createBoardLabel" aria-hidden="true">
@@ -324,9 +279,6 @@
 		// Call on initial page load too
 		document.addEventListener('DOMContentLoaded', initDragAndDrop);
 	
-		
-	
-		
 	</script>
 	
 	

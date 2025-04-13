@@ -69,8 +69,6 @@ const editTaskModal = document.getElementById("editTaskModal");
 		board_id = evt.detail.board_id;
 		column_id = evt.detail.column_id;
 		column_name = evt.detail.column_name;
-		id=`board_${board_id}_column_${column_id}`
-		document.getElementById(id).innerHTML = ` - ${column_name}`
 		document.getElementById(`column_name_${column_id}`).value = column_name
 	});
 

@@ -38,4 +38,4 @@ EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Default command for the application
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "task_manager.asgi:application"]
+# CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "task_manager.asgi:application"]

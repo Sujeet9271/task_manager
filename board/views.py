@@ -31,7 +31,7 @@ import re
 def board_view(request, board_id):
     context:dict = {}
     board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
-    context['board'] = board
+    context['active_board'] = board
     if request.htmx:
         response = render(request, 'boards/components/board.html', context)
         response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
@@ -41,6 +41,7 @@ def board_view(request, board_id):
         context['users'] = board.members.all()
         context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
         context:dict = get_notifications(user=request.user, page_number=1, context=context)
+        context['view_name'] = 'Board'
         response = render(request, 'boards/index.html', context)
     return response
 

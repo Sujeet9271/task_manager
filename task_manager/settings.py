@@ -83,6 +83,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'notifications.context_processors.notifications',
             ],
         },
     },
@@ -186,5 +187,14 @@ SITE_ID = 1
 
 
 CRONJOBS = [
-        ('0 0 * * *', 'board.cronjob.overdue_tasks', '>> /var/www/html/over_due_tasks.log 2>&1'),
+        ('0 0 * * *', 'board.cronjob.overdue_tasks', '>> /app/over_due_tasks.log 2>&1'),
     ]
+
+if not DEBUG:
+    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(',')
+
+    SECURE_PROXY_SSL_HEADER = None  # Disable for HTTP
+    USE_X_FORWARDED_HOST = True
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_HTTPONLY = False 

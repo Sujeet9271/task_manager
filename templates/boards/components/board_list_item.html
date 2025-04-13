@@ -1,44 +1,49 @@
 {% load board_tags %}
-<div class="board" id="board-{{ board.id }}">
-    <div class="board-card d-flex justify-content-between pointer">
-        <div id="board-detail_{{board.id}}"
-             hx-get="{% url 'board:board-view' board.id %}"
-             hx-target="#main-content"
-             hx-swap="innerHTML"> 
-            <h3 class="d-flex gap-1">
-                <span>{{ board.name }}</span>
-                <span class="pointer" data-copy="{% get_board_full_url board request %}" onclick="copyToClipboard(this)">
-                    <i class="fa-solid fa-link"></i>
-                </span>
-            </h3>
-            <ul id="columns-{{ board.id }}">
-                {% for column in board.columns.all %}
-                    {% include 'boards/components/column_list_item.html' with column=column %}
-                {% endfor %}
-            </ul>
-        </div>
-    
-        {% if request.user == board.created_by %}
-        <!-- Menu with Dropdown -->
-        <div class="menu pointer">
-            <span  onclick="toggle_board_menu(this)">
-                <i class="fa-solid fa-ellipsis-vertical"></i>
-            </span>
-            <div class="dropover d-none d-flex flex-column">
-                <button class="menu-item" data-bs-toggle="modal" data-bs-target="#editBoardModal" hx-get="{% url "workspace:board-actions" board.workspace_id board.id %}" hx-target="#edit_board_modal" hx-swap="innerHTML">Edit</button>
-                <button class="menu-item" hx-delete="{% url "workspace:board-actions" board.workspace_id board.id %}" hx-target="#board-{{ board.id }}" hx-swap="delete" hx-confirm="Are You Sure">Delete</button>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    
-    <div class="add" 
-        hx-get="{% url 'board:column-create' board.id %}"
-        hx-target="#modal-column-body"
-        hx-swap="innerHTML"
-        data-bs-toggle="modal" 
-        data-bs-target="#createColumnModal" 
-        data-board-id="{{ board.id }}">
-    + Add New Column
-    </div>
-</div>
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded hover:bg-gray-100 {% if board.id == active_board.id %}active_board{% endif %}" id="board-{{ board.id }}" title="Board: {{board.name}}">
+                        <a href="{% url 'board:board-view' board.id %}" hx-get="{% url 'board:board-view' board.id %}" hx-target="#main-content" hx-swap="innerHTML" class="text-decoration-none fw-bold text-black">
+                          {{ board.name }}
+                        </a>
+                        
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-sm btn-outline-primary"
+                                  title="Add Column"
+                                  hx-get="{% url 'board:column-create' board.id %}"
+                                  hx-target="#modal-column-body"
+                                  hx-swap="innerHTML"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#createColumnModal">
+                            <i class="fa fa-plus"></i>
+                          </button>
+                      
+                          <!-- Dropdown for Edit/Delete -->
+                          <div class="dropdown">
+                            <button class="btn btn-outline-primary btn-sm"
+                                    title="Board Actions"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                              <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                              <li>
+                                <a class="dropdown-item"
+                                  title="Edit Board"
+                                   hx-get="{% url "workspace:board-actions" board.workspace_id board.id %}"
+                                   hx-target="#edit_board_modal"
+                                   hx-swap="innerHTML"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#editBoardModal">Edit</a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item text-danger"
+                                title="Delete Board"
+                                   hx-delete="{% url "workspace:board-actions" board.workspace_id board.id %}"
+                                   hx-confirm="Are you sure you want to delete this board?"
+                                   hx-target="#board-{{ board.id }}"
+                                   hx-swap="outerHTML">Delete</a>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      

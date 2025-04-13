@@ -4,7 +4,7 @@
 set -e
 
 # Define the project directory
-PROJECT_DIR="/var/www/html/app"
+PROJECT_DIR="/app"
 
 # Perform database migrations
 echo "Running makemigrations..."

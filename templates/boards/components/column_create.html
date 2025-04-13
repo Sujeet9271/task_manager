@@ -2,8 +2,8 @@
             method="POST"
             action="{% url 'board:column-create' board.id %}" 
             hx-post="{% url 'board:column-create' board.id %}" 
-            hx-target="#columns-{{ board.id }}" 
-            hx-swap="beforeend">
+            hx-swap="none"
+            >
         {% csrf_token %}
         <div class="mb-3">
             <label for="column_name" class="form-label">Column Name</label>

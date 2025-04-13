@@ -1,11 +1,11 @@
 {% load static board_tags %}
 <div class="horizontal-scroll-wrapper auto-hide-scrollbar">
     <input id="board_id" value="{{board.id}}" type="hidden">
-    <div class="row gx-4" id="columns">
+    <div class="row gx-2" id="columns">
         {% if board.columns.exists %}
         {% for column in board.columns.all %}
-            <div class="col-md-3" id="column_{{ column.id }}">
-                <div class="card border-0 shadow-lg">
+            <div class="m-1 column col-md-3" id="column_{{ column.id }}">
+                <div class="card">
                     <div class="card-header text-white px-3 py-2" style="background-color: rgb(73 101 230) !important;">
                         <div class="d-flex mt-2 gap-3">
                             <input id="column_name_{{column.id}}" name="column_name" value="{{ column.name }}"  class="form-control" 
@@ -17,7 +17,7 @@
                             hx-delete="{% url 'board:column-delete' column.board_id column.id %}" 
                             hx-target="#column_{{ column.id }}" 
                             hx-swap="delete" 
-                            hx-confirm="Are You Sure?">🗑️</button>
+                            hx-confirm="Are You Sure?"><i class="fas fa-trash-alt" style="color: red;"></i></button>
                             {% endif %}
                         </div>
                         <form id="create_task_form_{{ column.id }}"

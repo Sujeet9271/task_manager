@@ -5,6 +5,8 @@ from django.forms import ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 
+from task_manager.utils import get_full_url
+
 
 class SoftDeleteManager(models.Manager):
     def get_queryset(self):
@@ -171,7 +173,7 @@ class Task(SoftDeleteModel):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='tasks')
-    updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
+    updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, blank=True)
     extra_data = models.JSONField(default=dict, null=True, blank=True)
     is_complete = models.BooleanField(default=False, db_index=True)
 
@@ -191,6 +193,9 @@ class Task(SoftDeleteModel):
         # If parent_task is itself a subtask, prevent nesting
         if self.parent_task and self.parent_task.parent_task is not None:
             raise ValidationError("Cannot assign a subtask as parent. Nested subtasks are not allowed.")
+        
+        if self.pk and not self.updated_by:
+            raise ValidationError({'updated_by','Updating user not specified'})
 
     def save(self, *args, **kwargs):
         self.full_clean()  # Enforces clean() during save

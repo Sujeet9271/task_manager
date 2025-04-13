@@ -1,71 +1,114 @@
+/* Define the primary color */
+:root {
+  --custom-primary-color: rgb(73, 101, 230); /* You can replace this with your desired primary color */
+}
+
+
 body {
-    background-color: #f8f9fa; /* subtle gray */
-    font-family: 'Inter', sans-serif; /* modern font */
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.card {
-    border: none;
-    border-radius: 1.25rem; /* rounded-4 */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    transition: all 0.2s ease;
+/* Apply the primary color */
+.text-primary {
+  color: var(--custom-primary-color) !important;
 }
 
-.card:hover {
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+.bg-primary {
+  background-color: var(--custom-primary-color) !important;
 }
 
-.card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
+.btn-primary {
+  background-color: var(--custom-primary-color) !important;
+  border-color: var(--custom-primary-color) !important; /* Ensure the border matches */
 }
 
-.card-text {
-    font-size: 0.9rem;
-    color: #6c757d;
-}
-
-.btn {
-    border-radius: 0.5rem;
-    font-size: 0.85rem;
+.btn-primary:hover {
+  background-color: var(--custom-primary-color) !important;
+  color: white !important; /* Override text color to white on hover */
 }
 
 .btn-outline-primary {
-    color: #4e5efc;
-    border-color: #4e5efc;
+  border-color: var(--custom-primary-color) !important;
+  color: var(--custom-primary-color) !important;
 }
 
 .btn-outline-primary:hover {
-    background-color: #4e5efc;
-    color: #fff;
+  background-color: var(--custom-primary-color) !important;
+  color: white !important; /* Ensure text color turns white on hover */
 }
 
-.btn-outline-secondary {
-    border-color: #adb5bd;
-    color: #495057;
+.navbar {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-bottom: 1px solid #dee2e6;
 }
 
-.btn-outline-secondary:hover {
-    background-color: #adb5bd;
-    color: #fff;
+.card-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn-outline-danger {
-    color: #fa5252;
-    border-color: #fa5252;
+.card-glass:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
-.btn-outline-danger:hover {
-    background-color: #fa5252;
-    color: #fff;
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.workspace .card-body {
-    padding-top: 1.2rem;
-    padding-bottom: 0.8rem;
+.border-dashed {
+  border: 2px dashed #ced4da !important;
+  color: #6c757d;
 }
 
-.card-footer {
-    background-color: transparent;
-    border-top: none;
-    padding-top: 0;
+.workspace-title {
+  font-weight: 600;
+  font-size: 1.1rem;
 }
+
+.navbar {
+  background-color: #f8f9fa;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #dee2e6;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar .text-primary {
+  color: #0d6efd;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.work-logout-btn {
+  border-radius: 50%;
+  /* padding: 8px 12px; */
+  font-size: 1.15rem;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  background-color: transparent;
+  border: 2px solid var(--custom-primary-color);
+  color: var(--custom-primary-color);
+}
+
+.work-logout-btn:hover {
+  background-color: var(--custom-primary-color);
+  color: white;
+  transform: scale(1.1);
+}
+
+
