@@ -33,9 +33,11 @@ def board_view(request, board_id):
     board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
     context['active_board'] = board
     if request.htmx:
+        context['board'] = board
         response = render(request, 'boards/components/board.html', context)
         response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
     else:
+        context['active_board'] = board
         context['boards'] = [board]
         context['workspace_id'] = board.workspace_id
         context['users'] = board.members.all()
