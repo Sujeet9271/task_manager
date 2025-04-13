@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 from accounts.models import Users
 from accounts.forms import CustomPasswordResetForm, CustomSetPasswordForm, UserSignupForm
 from workspace.models import Workspace
@@ -60,11 +61,13 @@ def email_login(request):
     return render(request,'accounts/login.html',context)
 
 
-@require_POST
+@require_http_methods(['DELETE'])
 @login_required
 def logout_user(request):
     try:
         logout(request)
+        if request.htmx:
+            return HttpResponseClientRedirect(reverse_lazy('accounts:login-user'))
         return redirect('accounts:login-user')
     except Exception as e:
         messages.error(request, e.args[0])

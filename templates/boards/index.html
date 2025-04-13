@@ -9,7 +9,8 @@
 		<title>TaskMaster</title>
 		<link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
 		<link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}" />
-		<link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/style.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/board.css' %}" />
 		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
 		<script src="{% static 'js/common.js' %}"></script>
 		<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -20,41 +21,31 @@
 		{% include "components/navbar.html" %}
 	
 		<div class="custom-container">
-			{% comment %} <div class="sidebar" id="boards-sidebar">
-				<div class="add" id="add-board-btn"
-					data-bs-toggle="modal"
-					data-bs-target="#createBoard"
-					>
-				+ Add New Board
-				</div>
-				<div id="boards">
-				{% for board in boards %}
-				{% include 'boards/components/board_list_item.html' with board=board %}
-				{% endfor %}
-				</div>
-				</div> {% endcomment %}
-			<div id="boards-sidebar" class="sidebar p-3 bg-white border-end shadow-sm h-100">
+			
+			<div id="boards-sidebar" class="sidebar bg-white border-end shadow-sm">
 				<!-- Add Board Button -->
-				<div class="mb-4">
-						<button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
-						data-bs-toggle="modal"
-						data-bs-target="#createBoard">
-						<i class="fa-solid fa-plus"></i> Add New Board
+				{% if not active_board %}
+				 <div class="mb-4">
+					 <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+					 data-bs-toggle="modal"
+					 data-bs-target="#createBoard">
+					 <i class="fa-solid fa-plus"></i> Add New Board
 					</button>
 				</div>
+				{% endif %}
 			
-			<!-- Boards List -->
-				<div class="d-flex flex-column gap-2" id="boards">
+				<!-- Boards List -->
+				<div class="d-flex flex-column gap-2 board_list horizontal-scroll-wrapper auto-hide-scrollbar" id="boards">
 					{% for board in boards %}
-					{% include 'boards/components/board_list_item.html' with board=board %}
+					{% include 'boards/components/board_list_item.html' with board=board active_board=active_board %}
 					{% endfor %}
 				</div>
 			</div>
 			  
 		
 			<div class="main-content" id="main-content">
-				{% if board %}
-				{% include "boards/components/board.html" with board=board %}
+				{% if active_board %}
+				{% include "boards/components/board.html" with board=active_board %}
 				{% else %}
 				<div class="welcome-illustration">
 					<img src="{% static 'images/welcome.svg' %}" alt="Welcome" />
@@ -288,9 +279,6 @@
 		// Call on initial page load too
 		document.addEventListener('DOMContentLoaded', initDragAndDrop);
 	
-		
-	
-		
 	</script>
 	
 	

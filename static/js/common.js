@@ -102,7 +102,7 @@ window.onload = function() {
     }, 100);
 	
     selectBoxes()
-	notification_list = document.querySelector('.notifications')
+	notification_list = document.querySelector('.notifications-btn')
 	if (notification_list){
 		notification_list.addEventListener('click', function() {
 			const dropdown = document.getElementById('notification-div');

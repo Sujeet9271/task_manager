@@ -22,7 +22,7 @@
           
                   <!-- Notifications -->
                 <div class="position-relative">
-                    <span class="btn btn-light rounded-circle shadow-sm notifications" title="Notifications">
+                    <span class="btn btn-light rounded-circle shadow-sm notifications-btn" title="Notifications">
                         <i class="fa-solid fa-bell text-primary"></i>
                         {% if unread_notification_count > 0 %}
                         <span id="unread_notification_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -31,15 +31,12 @@
                         {% endif %}
                     </span>
                 </div>
-        
-          
-                  <!-- Logout Button -->
-                <form method="post" action="{% url 'accounts:logout-user' %}" class="mb-0">
-                {% csrf_token %}
-                <button class="btn work-logout-btn d-flex align-items-center gap-2" type="submit" title="Logout">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
-                </form>
+                
+                <div class="position-relative">
+                    <span class="btn btn-light rounded-circle shadow-sm work-logout-btn" title="Logout" hx-delete="{% url 'accounts:logout-user' %}" hx-swap="none">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </span>
+                </div>
             </div>
         </div>
     </nav>
