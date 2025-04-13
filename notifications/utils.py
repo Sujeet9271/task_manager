@@ -10,7 +10,7 @@ from task_manager.logger import logger
 def get_notifications(user, page_number=1, context:dict=dict):
     notifications:QuerySet[Notification] = user.notifications.all()
     try:
-        paginator = Paginator(notifications,1)
+        paginator = Paginator(notifications,10)
         page_obj = paginator.get_page(page_number)
         context['notifications'] = page_obj.object_list
         if page_obj.has_next():
