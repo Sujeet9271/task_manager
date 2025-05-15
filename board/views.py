@@ -306,7 +306,7 @@ def edit_task(request, board_id, column_id, task_id):
 @require_http_methods(['POST'])
 @login_required
 def add_comment(request, task_id):
-    task = get_object_or_404(Task, pk=task_id, task__column__board__members=request.user, assigned_to=request.user)
+    task = get_object_or_404(Task, pk=task_id, column__board__members=request.user, assigned_to=request.user)
     form = CommentForm(data=request.POST)
     if form.is_valid():
         comment:Comments = form.save(commit=False)
