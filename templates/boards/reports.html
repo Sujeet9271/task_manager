@@ -1,0 +1,271 @@
+{% load static board_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" type="image/x-icon" href="{% static 'images/task_master.png' %}">
+		<title>TaskMaster</title>
+		<link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
+		<link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/style.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/board.css' %}" />
+		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
+		<script src="{% static 'js/common.js' %}"></script>
+		<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+		{% block head %}{% endblock head %}
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <style>
+            .chart-container {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                gap: 40px;
+                margin-top: 40px;
+            }
+            .chart-box {
+                width: 600px;
+                height: 400px;
+            }
+            h1 {
+                text-align: center;
+                margin-top: 20px;
+            }
+            .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            width: 170px;
+            padding: 10px 10px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.15);
+        }
+        .card h2 {
+            font-size: 2.8rem;
+            margin: 0;
+            color: #333;
+        }
+        .card p {
+            margin: 8px 0 0;
+            color: #777;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        </style>
+	</head>
+
+	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
+		
+		{% include "components/navbar.html" %}
+	
+		<div class="custom-container">
+			
+			<div id="boards-sidebar" class="sidebar bg-white border-end shadow-sm">
+
+				<!-- Boards List -->
+				<div class="d-flex flex-column gap-2 board_list horizontal-scroll-wrapper auto-hide-scrollbar" id="boards">
+					{% for board in boards %}
+					<div class="d-flex justify-content-between align-items-center p-2 rounded hover:bg-gray-100 {% if board.id == active_board.id %}active_board{% endif %}" id="board-{{ board.id }}" title="Board: {{board.name}}">
+                        <a href="{% url 'board:board-view' board.id %}" href="{% url 'board:board-view' board.id %}" class="text-decoration-none fw-bold text-black">
+                          {{ board.name }}
+                        </a>
+                        
+                        {% comment %} <div class="d-flex gap-2">
+                          <button class="btn btn-sm btn-outline-primary"
+                                  title="Add Column"
+                                  hx-get="{% url 'board:column-create' board.id %}"
+                                  hx-target="#modal-column-body"
+                                  hx-swap="innerHTML"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#createColumnModal">
+                            <i class="fa fa-plus"></i>
+                          </button>
+                      
+                          <!-- Dropdown for Edit/Delete -->
+                          <div class="dropdown">
+                            <button class="btn btn-outline-primary btn-sm"
+                                    title="Board Actions"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                              <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                              <li class="cursor pointer">
+                                <a class="dropdown-item"
+                                  title="Edit Board"
+                                   hx-get="{% url "workspace:board-actions" board.workspace_id board.id %}"
+                                   hx-target="#edit_board_modal"
+                                   hx-swap="innerHTML"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#editBoardModal">Edit</a>
+                              </li>
+                              <li class="cursor pointer">
+                                <a class="dropdown-item"
+                                  title="Board Reports"
+                                  href="{% url "board:board-reports" board.id %}">
+                                  Reports
+                                </a>
+                              </li>
+                              <li class="cursor pointer">
+                                <a class="dropdown-item text-danger"
+                                title="Delete Board"
+                                   hx-delete="{% url "workspace:board-actions" board.workspace_id board.id %}"
+                                   hx-confirm="Are you sure you want to delete this board?"
+                                   hx-target="#board-{{ board.id }}"
+                                   hx-swap="outerHTML">Delete</a>
+                              </li>
+                            </ul>
+                          </div>
+                        </div> {% endcomment %}
+                    </div>
+					{% endfor %}
+				</div>
+			</div>
+			  
+		
+			<div class="main-content" id="main-content">
+                <div class="m-1 d-flex gap-3">
+                    {% for title, count in task_summary.items %}
+                    <div class="card">
+                        <h2>{{ count }}</h2>
+                        <p>{{title|capitalize}}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+				<div class="chart-container m-2">
+                    <div id="priorityChart" class="chart-box"></div>
+                    <div id="columnChart" class="chart-box"></div>
+                </div>
+
+                <div class="container-fluid mt-3">
+                    <div id="chart"></div>
+                </div>
+                <div class="container-fluid mt-3">
+                    <div id="ganttChart" style="width:100%; height:600px;"></div>
+                </div>
+			</div>
+		</div>
+
+	</body>
+	<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+	<script src="{% static 'js/board_index.js' %}"></script>
+    <script>
+    // ========== PIE CHARTS ==========
+
+    function renderPieChart(elementId, labels, values, title) {
+        const data = [{
+            type: 'pie',
+            labels: labels,
+            values: values,
+            hole: 0.3
+        }];
+
+        const layout = { title };
+        Plotly.newPlot(elementId, data, layout);
+    }
+
+    // ========== GANTT CHART ==========
+
+    function renderGanttChart(elementId, tasks) {
+        const data = tasks.map(task => ({
+            type: 'line',
+            x: [new Date(task.Finish) - new Date(task.Start)],
+            y: [task.Task],
+            base: task.Start,
+            orientation: 'h',
+            name: task.Resource,
+            marker: {
+                color:
+                    task.Resource === 'High' ? '#d62728' :
+                    task.Resource === 'Medium' ? '#ff7f0e' : '#2ca02c'
+            },
+            hovertemplate: `Task: ${task.Task}<br>Column: ${task.Column}<br>Start: ${task.Start}<br>Finish: ${task.Finish}<extra></extra>`
+        }));
+
+        const layout = {
+            barmode: 'stack',
+            title: 'Gantt Chart of Tasks',
+            xaxis: { title: 'Date', type: 'date' },
+            yaxis: { title: 'Tasks', automargin: true },
+            height: 500,
+        };
+
+        Plotly.newPlot(elementId, data, layout);
+    }
+
+    // ========== BURNDOWN CHART ==========
+
+    function renderBurndownChart(elementId, rawData, totalTasks) {
+        const dates = rawData.map(item => item.date);
+        const remaining = rawData.map(item => item.remaining);
+
+        // Ideal burndown line
+        const ideal = [];
+        const step = totalTasks / (dates.length - 1);
+        for (let i = 0; i < dates.length; i++) {
+            ideal.push(totalTasks - i * step);
+        }
+
+        const trace_actual = {
+            x: dates,
+            y: remaining,
+            name: 'Actual Remaining Tasks',
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: { color: 'red', shape: 'linear' }
+        };
+
+        const trace_ideal = {
+            x: dates,
+            y: ideal,
+            name: 'Ideal Progress',
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: 'green', dash: 'dot' }
+        };
+
+        const layout = {
+            title: 'Task Burndown Chart From {{ sprint_start }} to {{ sprint_end }}',
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Remaining Tasks', rangemode: 'tozero' },
+            legend: { x: 0.05, y: 1 }
+        };
+
+        Plotly.newPlot(elementId, [trace_actual, trace_ideal], layout);
+    }
+
+    // ========== INIT CHARTS ==========
+
+    // Context-safe data from Django
+    const priorityLabels = {{ priority_labels|safe }};
+    const priorityValues = {{ priority_values|safe }};
+    const columnLabels = {{ column_labels|safe }};
+    const columnValues = {{ column_values|safe }};
+    const ganttTasks = {{ tasks|safe }};
+    const burndownData = {{ data|safe }};
+    const totalTasks = {{ total_tasks }};
+
+        // Render each chart
+        renderPieChart("priorityChart", priorityLabels, priorityValues, "Tasks by Priority");
+        renderPieChart("columnChart", columnLabels, columnValues, "Tasks by Column");
+        renderGanttChart("ganttChart", ganttTasks);
+        renderBurndownChart("chart", burndownData, totalTasks);
+    </script>
+
+</html>

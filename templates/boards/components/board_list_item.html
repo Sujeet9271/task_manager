@@ -25,7 +25,7 @@
                               <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                             <ul class="dropdown-menu">
-                              <li>
+                              <li class="cursor pointer">
                                 <a class="dropdown-item"
                                   title="Edit Board"
                                    hx-get="{% url "workspace:board-actions" board.workspace_id board.id %}"
@@ -34,7 +34,14 @@
                                    data-bs-toggle="modal"
                                    data-bs-target="#editBoardModal">Edit</a>
                               </li>
-                              <li>
+                              <li class="cursor pointer">
+                                <a class="dropdown-item"
+                                  title="Board Reports"
+                                  href="{% url "board:board-reports" board.id %}">
+                                  Reports
+                                </a>
+                              </li>
+                              <li class="cursor pointer">
                                 <a class="dropdown-item text-danger"
                                 title="Delete Board"
                                    hx-delete="{% url "workspace:board-actions" board.workspace_id board.id %}"

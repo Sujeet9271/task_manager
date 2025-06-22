@@ -1,9 +1,11 @@
+from datetime import date, timedelta
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Page
+from django.db.models import QuerySet, Count, Sum, Avg, Q
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,6 +24,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from workspace.models import Workspace
 
+import plotly.graph_objects as go
 import json
 import re
 
@@ -46,6 +49,84 @@ def board_view(request, board_id):
         context['view_name'] = 'Board'
         response = render(request, 'boards/index.html', context)
     return response
+
+@login_required
+def board_reports(request, board_id):
+    context:dict = {}
+    board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
+    context['active_board'] = board
+    context['boards'] = [board]
+    
+    board_tasks = Task.objects.filter(column__board=board)
+    tasks_by_priority = list(board_tasks.values('priority').annotate(count=Count('id')))
+    tasks_by_column = list(board_tasks.values('column__name').annotate(count=Count('id')))
+    
+    aggregates = board_tasks.aggregate(
+        total_tasks=Count('id'),
+        completed_tasks=Count('id', filter=Q(is_complete=True)),
+        incomplete_tasks=Count('id', filter=Q(is_complete=False)),
+        overdue_tasks=Count('id', filter=Q(is_complete=False, due_date__lt=date.today())),
+        high_priority_tasks=Count('id', filter=Q(priority='High')),
+    )
+    assigned_tasks = board_tasks.filter(assigned_to__isnull=False).distinct().count()
+    task_summary = { **aggregates, 'assigned_tasks': assigned_tasks}
+    logger.debug(f'{task_summary=}')
+    context['task_summary'] = task_summary
+    # Process data for Plotly
+    priority_labels = [item["priority"] for item in tasks_by_priority]
+    priority_values = [item["count"] for item in tasks_by_priority]
+
+    column_labels = [item["column__name"] for item in tasks_by_column]
+    column_values = [item["count"] for item in tasks_by_column]
+    tasks = board_tasks.filter(updated_at__isnull=False).values(
+        "title", "created_at", "updated_at", "priority", "column__name"
+    )
+
+    logger.debug(tasks)
+
+    task_list = []
+    for task in tasks:
+        task_list.append({
+            "Task": task["title"],
+            "Start": task["created_at"].strftime("%Y-%m-%d"),
+            "Finish": task["updated_at"].strftime("%Y-%m-%d"),
+            "Resource": task["priority"],
+            "Column": task["column__name"]
+        })
+
+
+    # Define the sprint range manually or dynamically
+    sprint_start = board.created_at
+    sprint_end = board.created_at + timedelta(days=5)
+
+    # Get all tasks created within the sprint
+    tasks = board_tasks.filter(created_at__date__lte=sprint_end)
+
+    total_tasks = tasks.count()
+
+    date_range = [sprint_start + timedelta(days=i) for i in range((sprint_end - sprint_start).days + 1)]
+    remaining_tasks = []
+
+    for current_date in date_range:
+        # Count tasks that are either incomplete or were completed *after* the current date
+        incomplete_or_future = tasks.filter(Q(is_complete=False) | Q(updated_at__date__gt=current_date)).count()
+        remaining_tasks.append({
+            "date": current_date.strftime("%Y-%m-%d"),
+            "remaining": incomplete_or_future
+        })
+    
+    context.update({
+        "priority_labels": json.dumps(priority_labels),
+        "priority_values": json.dumps(priority_values),
+        "column_labels": json.dumps(column_labels),
+        "column_values": json.dumps(column_values),
+        "tasks": json.dumps(task_list),
+        "data": json.dumps(remaining_tasks),
+        "total_tasks": total_tasks,
+        "sprint_start": sprint_start,
+        "sprint_end": sprint_end
+    })
+    return render(request,'boards/reports.html', context)
 
 
 

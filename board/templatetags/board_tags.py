@@ -45,3 +45,9 @@ def get_tasks_for_user(column:Column, user:Users):
 def get_board_full_url(board:Board, request):
     """Generate the full URL for the board view."""
     return get_full_url('board:board-view', args=[board.id])
+
+
+
+@register.filter
+def capitalize(value:str):
+    return value.replace('_', ' ').title()
