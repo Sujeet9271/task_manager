@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'django_htmx',
     'widget_tweaks',
     'django_crontab',
+    'hijack',
+    'hijack.contrib.admin',
 
     'accounts.apps.AccountsConfig',
     'board.apps.BoardConfig', 
@@ -69,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'hijack.middleware.HijackUserMiddleware',
 ]
 
 ROOT_URLCONF = 'task_manager.urls'
@@ -189,6 +192,8 @@ SITE_ID = 1
 CRONJOBS = [
         ('0 0 * * *', 'board.cronjob.overdue_tasks', '>> /app/over_due_tasks.log 2>&1'),
     ]
+
+LOGIN_REDIRECT_URL='/'
 
 if not DEBUG:
     CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(',')

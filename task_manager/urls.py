@@ -30,6 +30,7 @@ def index(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('hijack/', include('hijack.urls')),
     path('',index, name='index'),
     path('auth/', include((accounts_urls, 'accounts'), namespace='accounts')),
     path('board/', include((board_urls, 'board'), namespace='board')),

@@ -55,7 +55,8 @@ def board_reports(request, board_id):
     context:dict = {}
     board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
     context['active_board'] = board
-    context['boards'] = [board]
+    
+    context['boards'] = Board.objects.filter(workspace=board.workspace).only('id','name')
     
     board_tasks = Task.objects.filter(column__board=board)
     tasks_by_priority = list(board_tasks.values('priority').annotate(count=Count('id')))
