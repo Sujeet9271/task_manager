@@ -11,11 +11,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_htmx.http import HttpResponseClientRedirect
 from accounts.models import Users
-from board.forms import BoardForm, CommentForm, TaskCreateForm, TaskForm
-from board.models import Attachment, Board, Column, Comments, Task
+from board.forms import BoardForm, CommentForm, TaskCreateForm, TaskFilterForm, TaskForm
+from board.models import Attachment, Board, BoardFilter, Column, Comments, Task
 from board.permissions import IsBoardMemberOrReadOnly
 from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, BoardListSerializer
-
+from board.filters import TaskFilter
 from notifications.views import get_notifications
 from task_manager.logger import logger
 
@@ -30,6 +30,33 @@ import re
 
 
 
+def task_lists(board_id:int, user:Users):
+    board_filter = BoardFilter.objects.filter(board_id=board_id, user=user).only('filter').first()
+    if board_filter:
+        cd = board_filter.filter
+        filters = Q(column__board_id=board_id)
+        if cd.get('search'):
+            filters &= Q(title__icontains=cd['search']) | Q(description__icontains=cd['search'])
+        if cd.get('priority'):
+            filters &= Q(priority=cd['priority'])
+        if cd.get('is_complete') in ['true', 'false']:
+            filters &= Q(is_complete=(cd['is_complete'] == 'true'))
+        if cd.get('due_after'):
+            filters &= Q(due_date__gte=cd['due_after'])
+        if cd.get('due_before'):
+            filters &= Q(due_date__lte=cd['due_before'])
+        if cd.get('assigned_to'):
+            filters &= Q(assigned_to__in=cd['assigned_to'])
+        if cd.get('tags'):
+            filters &= Q(tags__in=cd['tags'])
+        logger.debug(f'{filters=}')
+        tasks = Task.objects.filter(filters).distinct()
+    else:
+        tasks = Task.objects.filter(column__board_id=board_id, assigned_to=user, parent_task__isnull=True) if not user.is_staff else Task.objects.filter(column__board_id=board_id, parent_task__isnull=True)
+    return tasks
+
+
+
 @login_required
 def board_view(request, board_id):
     context:dict = {}
@@ -37,8 +64,27 @@ def board_view(request, board_id):
     context['active_board'] = board
     if request.htmx:
         context['board'] = board
+        triggers = {}
+        triggers["boardLoaded"] = {"board_id":  board_id, "level": "info"}
+        board_filter, _ = BoardFilter.objects.get_or_create(board=board, user=request.user)
+        if request.method=='POST':
+            logger.debug(f'{request.POST=}')
+            board_filter.filter = request.POST.dict() if not request.POST.get('clear') else {}
+            board_filter.filter.pop('csrfmiddlewaretoken',None)
+            board_filter.save()
+            triggers["filterSubmitted"] = {"board_id":  board_id, "level": "info"}
+            triggers["closeModal"] = {"modal_id": "close_filterBoard", "level": "info"}
+        context['filter_form'] = TaskFilterForm(board=board, initial=board_filter.filter)
+        tasks = task_lists(board_id=board_id, user=request.user)
+        column_map:dict[Column,list[Task]] = {column:[] for column in board.columns.all()}
+        for task in tasks:
+            if task.column not in column_map:
+                column_map[task.column]=[]
+            column_map[task.column].append(task)
+        logger.debug(f'{column_map=}')
+        context['column_map'] = column_map
         response = render(request, 'boards/components/board.html', context)
-        response['HX-Trigger'] = json.dumps({"boardLoaded": {"board_id":  board_id, "level": "info"}})
+        response['HX-Trigger'] = json.dumps(triggers)
     else:
         context['active_board'] = board
         context['boards'] = [board]
@@ -325,7 +371,29 @@ def delete_column(request, board_id, column_id):
 @login_required
 def get_task_lists(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__members=request.user)
-    tasks = column.tasks.filter(assigned_to=request.user, parent_task__isnull=True) if not request.user.is_staff else column.tasks.filter(parent_task__isnull=True)
+    board_filter = BoardFilter.objects.filter(board_id=board_id, user=request.user).first()
+    logger.debug(f'{board_filter=}')
+    if board_filter:
+        cd = board_filter.filter
+        if cd.get('search'):
+            filters &= Q(title__icontains=cd['search']) | Q(description__icontains=cd['search'])
+        if cd.get('priority'):
+            filters &= Q(priority=cd['priority'])
+        if cd.get('is_complete') in ['true', 'false']:
+            filters &= Q(is_complete=(cd['is_complete'] == 'true'))
+        if cd.get('due_after'):
+            filters &= Q(due_date__gte=cd['due_after'])
+        if cd.get('due_before'):
+            filters &= Q(due_date__lte=cd['due_before'])
+        if cd.get('assigned_to'):
+            filters &= Q(assigned_to__in=cd['assigned_to'])
+        if cd.get('tags'):
+            filters &= Q(tags__in=cd['tags'])
+        logger.debug(f'{filters=}')
+        tasks = Task.objects.prefetch_related('tags',).filter(filters, column_id=column_id,).distinct()
+        # tasks = column.tasks.filter(assigned_to=request.user, parent_task__isnull=True) if not request.user.is_staff else column.tasks.filter(parent_task__isnull=True)
+    else:
+        tasks = column.tasks.filter(assigned_to=request.user, parent_task__isnull=True) if not request.user.is_staff else column.tasks.filter(parent_task__isnull=True)
     return render(request, 'boards/components/column.html', {'column': column,'tasks':tasks})
 
 
@@ -437,6 +505,7 @@ def edit_task(request, board_id, column_id, task_id):
     if request.method=='POST':
         if form.is_valid():
             assigned_to = form.cleaned_data.get('assigned_to')
+            tags = form.cleaned_data.get('tags')
             assigned_to_list = list(assigned_to)
 
             assigned_to_list.extend([task.created_by,request.user])
@@ -449,6 +518,7 @@ def edit_task(request, board_id, column_id, task_id):
             task.save()
 
             task.assigned_to.set(assigned_to_list)
+            task.tags.set(tags)
 
             files = request.FILES.getlist('attachments')
             urls = request.POST.getlist('urls')

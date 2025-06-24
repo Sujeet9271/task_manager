@@ -101,6 +101,7 @@ def post_save_task(sender, instance: Task, created: bool, **kwargs):
     # Convert instance to dict and clean it
     current_data = model_to_dict(instance, exclude=['id', 'created_at', 'updated_at'])
     current_data['assigned_to'] = list(instance.assigned_to.values_list('id', flat=True))
+    current_data['tags'] = list(instance.tags.values_list('id', flat=True))
     current_data = clean_for_json(current_data)
 
     current_hash = generate_hash(current_data)

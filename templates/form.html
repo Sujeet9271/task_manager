@@ -71,7 +71,7 @@
             {% if field.errors %}
             <div class="forFindClosestClass">
                 <div class="d-flex " style="justify-content : space-between; margin-bottom:10px" >
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{{ form.label_suffix }}</label>
+                    <p class="form-label">{{ field.label }}{{ form.label_suffix }}</p>
                     <label class="btn-select-all" data-label="{{ field.label }}" for="select_all_{{ field.auto_id }}_input" id="select_all_{{ field.auto_id }}_label">
                         <input type="checkbox" class="select_all"  name="select_all" id="select_all_{{ field.auto_id }}_input" onchange="toggleCheckboxes('{{ field.auto_id }}')"> 
                         <span id="select_all_{{ field.auto_id }}">Select All</span>
@@ -93,7 +93,7 @@
             {% else %}
             <div class="forFindClosestClass">
                 <div class="d-flex " style="justify-content : space-between; margin-bottom:10px">
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{{ form.label_suffix }}</label>
+                    <p class="form-label">{{ field.label }}{{ form.label_suffix }}</p>
                     <label class="btn-select-all" data-label="{{ field.label }}" for="select_all_{{ field.auto_id }}_input" id="select_all_{{ field.auto_id }}_label">
                         <input type="checkbox" class="select_all"  name="select_all" id="select_all_{{ field.auto_id }}_input" onchange="toggleCheckboxes('{{ field.auto_id }}')"> 
                         <span id="select_all_{{ field.auto_id }}">Select All</span>
@@ -113,7 +113,7 @@
         {% else %}
             <div class="forFindClosestClass">
                 <div class="d-flex " style="justify-content : space-between; margin-bottom:10px" for="select_all_{{ field.auto_id }}">
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{{ form.label_suffix }}</label>
+                    <p class="form-label">{{ field.label }}{{ form.label_suffix }}</p>
                     <label class="btn-select-all" data-label="{{ field.label }}" for="select_all_{{ field.auto_id }}_input" id="select_all_{{ field.auto_id }}_label">
                         <input type="checkbox" class="select_all"  name="select_all" id="select_all_{{ field.auto_id }}_input" onchange="toggleCheckboxes('{{ field.auto_id }}')"> 
                         <span id="select_all_{{ field.auto_id }}">Select All</span>

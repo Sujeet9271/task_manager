@@ -68,7 +68,7 @@
 							{% csrf_token %}
 							<div class="mb-3">
 								<label for="board_name" class="form-label">Board Name</label>
-								<input type="text" class="form-control" id="board_name" name="name" required>
+								<input type="text" class="form-control" id="board_name" name="name" autocomplete="false" required>
 								<input type="hidden" class="form-control" id="workspace_id" name="workspace_id" value="{{workspace_id}}">
 							</div>
 							<div class="modal-footer">
@@ -122,6 +122,22 @@
 				</div>
 			</div>
 		</div>
+		
+
+		<div class="modal fade" id="filterBoard" tabindex="-1" role="dialog" aria-labelledby="filterBoardLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+					<h5 class="modal-title" id="filterBoardLabel">Filter Board</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_filterBoard"></button>
+					</div>
+					<div class="modal-body" id="filter_board_modal">
+						Select Board to Filter
+					</div>
+				</div>
+			</div>
+		</div>
+
 	</body>
 	<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 	<script src="{% static 'js/board_index.js' %}"></script>

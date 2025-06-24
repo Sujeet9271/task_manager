@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Page
-from board.forms import BoardForm
+from board.forms import BoardForm, TaskFilterForm
 from board.models import Board
 from notifications.views import get_notifications
 from workspace.forms import WorkSpaceForm

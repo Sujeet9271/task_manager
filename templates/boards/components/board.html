@@ -2,8 +2,8 @@
 <div class="horizontal-scroll-wrapper auto-hide-scrollbar">
     <input id="board_id" value="{{board.id}}" type="hidden">
     <div class="row gx-2" id="columns">
-        {% if board.columns.exists %}
-        {% for column in board.columns.all %}
+        {% if column_map %}
+        {% for column, tasks in column_map.items %}
             <div class="m-1 column col-md-3" id="column_{{ column.id }}">
                 <div class="card">
                     <div class="card-header text-white px-3 py-2" style="background-color: rgb(73 101 230) !important;">
@@ -41,7 +41,7 @@
                         hx-swap="innerHTML" 
                         hx-trigger="load" 
                         hx-get="{% url 'board:get_task_lists' board.id column.id %}"{% endcomment %}>
-                        {% include 'boards/components/column.html' with column=column tasks=column|get_tasks_for_user:user %}
+                        {% include 'boards/components/column.html' with column=column tasks=tasks %}
                     </div>
                 </div>
             </div>
@@ -63,4 +63,27 @@
         </div>
         {% endif %}
     </div>
+</div>
+
+
+<button class="btn btn-sm btn-outline-primary" id="filter_board_btn"
+        title="Filters"
+        data-bs-toggle="modal"
+        data-bs-target="#filterBoard"
+        hx-swap-oob="true">
+    <i class="fa-solid fa-filter"></i>
+</button>
+
+
+<div class="modal-body" id="filter_board_modal" hx-swap-oob="true">
+    <form hx-post="{% url 'board:board-view' board.id %}" hx-target="#main-content" hx-swap="innerHTML" hx-indicator=".gif_loader">
+        {% csrf_token %}
+        {% include 'form.html' with form=filter_form %}
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            {% if filter_form.initial %}
+            <button type="submit" hx-params='{"clear":"true"}' name="clear" value="true" class="btn btn-danger">Clear</button>
+            {% endif %}
+        </div>
+    </form>
 </div>

@@ -154,6 +154,26 @@ class TaskManager(SoftDeleteManager):
         ).order_by('priority_order', 'order', '-created_at')
 
 
+class Tag(SoftDeleteModel):
+    name = models.CharField(max_length=50)
+    color = models.CharField(max_length=7, default='#FFFFFF')  # HEX code
+    created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='tags')
+
+    def __str__(self):
+        return f'#{self.name}'
+    
+    class Meta:
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Labels'
+        indexes = [
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['created_by']),
+        ]
+
+    
+
+
+
 class Task(SoftDeleteModel):
     column = models.ForeignKey(Column, on_delete=models.CASCADE, related_name='tasks', db_index=True)
     parent_task = models.ForeignKey(
@@ -177,6 +197,7 @@ class Task(SoftDeleteModel):
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, blank=True)
     extra_data = models.JSONField(default=dict, null=True, blank=True)
     is_complete = models.BooleanField(default=False, db_index=True)
+    tags = models.ManyToManyField(Tag, related_name='tasks', blank=True)
 
     objects = TaskManager()
 
@@ -253,9 +274,6 @@ class TaskHistory(SoftDeleteModel):
 
 
 
-    
-
-
 class Attachment(models.Model):
     workspace = models.ForeignKey('workspace.Workspace',on_delete=models.SET_NULL,null=True,blank=True, related_name='workspace_attachment')
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
@@ -328,3 +346,14 @@ class Comments(models.Model):
             models.Index(fields=['added_by']),
             models.Index(fields=['created_at']),
         ]
+
+
+class BoardFilter(models.Model):
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='filters')
+    user = models.ForeignKey('accounts.Users', on_delete=models.CASCADE, related_name='filters')
+    filter = models.JSONField(default=dict)
+
+    class Meta:
+        db_table = 'board_filter'
+        verbose_name = 'Board Filter'
+        verbose_name_plural = 'Board Filters'

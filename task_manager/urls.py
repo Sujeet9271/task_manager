@@ -21,7 +21,9 @@ from django.contrib.auth.decorators import login_required
 from board import urls as board_urls
 from accounts import urls as accounts_urls
 from notifications import urls as notification_urls
+from task_manager import settings
 from workspace import urls as workspace_urls
+from django.conf.urls.static import static
 
 
 @login_required
@@ -37,3 +39,8 @@ urlpatterns = [
     path('notification/', include((notification_urls, 'notifications'), namespace='notifications')),
     path('workspace/', include((workspace_urls, 'workspace'), namespace='workspace')),
 ]
+
+
+
+if settings.DEBUG:
+    urlpatterns+=static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,36 +1,70 @@
-<div class="task-card" id="task_{{ task.id }}" draggable="true" data-task-id="{{ task.id }}">
-  
-  <!-- Completion Checkbox -->
-  <input type="checkbox" id="task_toggle_{{task.id}}"
-         {% if task.is_complete %}checked{% endif %}
-         hx-post="{% url 'board:task-status-toggle' board_id=board_id column_id=task.column_id task_id=task.id %}"
-         hx-target="#task_{{ task.id }}"
-         hx-swap="outerHTML"
-         title="Mark as complete" />
 
-  <!-- Task Title (opens edit modal) -->
-  <p id="task_title_{{task.id}}"
-    class="task-title {% if task.is_complete %}completed-text{% endif %}"
-    hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}" 
-    hx-target="#edit_task_modal" 
-    hx-swap="innerHTML"
-    data-bs-toggle="modal"
-    data-bs-target="#editTaskModal">
-    {{ task.title }}
-  </p>
+<div class="task-card d-flex justify-content-between align-items-start p-3 mb-3 {% if task.is_complete %}bg-light{% else %}bg-white{% endif %} rounded shadow-sm border transition-shadow"
+     id="task_{{ task.id }}"
+     draggable="true"
+     data-task-id="{{ task.id }}"
+     style="transition: box-shadow 0.2s ease-in-out;"
+     onmouseover="this.classList.add('shadow-lg')"
+     onmouseout="this.classList.remove('shadow-lg')">
+
+  <!-- Left: Checkbox and Task Info -->
+  <div class="d-flex flex-column flex-grow-1">
+    
+    <!-- Title Row -->
+    <div class="d-flex align-items-center mb-2">
+      <input type="checkbox"
+             class="form-check-input me-2"
+             id="task_toggle_{{task.id}}"
+             {% if task.is_complete %}checked{% endif %}
+             hx-post="{% url 'board:task-status-toggle' board_id=board_id column_id=task.column_id task_id=task.id %}"
+             hx-target="#task_{{ task.id }}"
+             hx-swap="outerHTML"
+             title="Mark as complete" />
+
+      <p id="task_title_{{task.id}}"
+         class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
+         hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
+         hx-target="#edit_task_modal"
+         hx-swap="innerHTML"
+         data-bs-toggle="modal"
+         data-bs-target="#editTaskModal">
+         {{ task.title }}
+      </p>
+    </div>
+
+    <!-- Tags and Priority -->
+    <div class="mb-2">
+      {% for tag in task.tags.all %}
+        <span class="badge bg-secondary me-1">{{ tag }}</span>
+      {% endfor %}
+
+      {% if task.priority == 'High' %}
+        <span class="badge bg-danger me-1">High</span>
+      {% elif task.priority == 'Medium' %}
+        <span class="badge bg-warning text-dark me-1">Medium</span>
+      {% elif task.priority == 'Low' %}
+        <span class="badge bg-secondary me-1">Low</span>
+      {% else %}
+        <span class="badge bg-secondary me-1">{{ task.priority }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Updated Date -->
+    <div class="datetime text-muted small">
+      <span><i class="fa-regular fa-clock"></i></span> {{ task.updated_at|date:"M d, Y H:i" }}
+    </div>
+  </div>
 
   <!-- Delete Button -->
   {% if task.created_by == request.user %}
-    <div class="task-icons d-flex justify-content-end">
-      <button id="task_delete_{{task.id}}"
-              class="task-actions"
-              hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}" 
-              hx-target="#task_{{ task.id }}" 
-              hx-swap="delete"
-              hx-confirm="Are you sure?">
-        <i class="fas fa-trash-alt" style="color: red;"></i>
-      </button>
-    </div>
+    <button class="btn p-0 border-0 ms-3"
+            id="task_delete_{{task.id}}"
+            hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}"
+            hx-target="#task_{{ task.id }}"
+            hx-swap="delete"
+            hx-confirm="Are you sure?">
+      <i class="fas fa-trash-alt text-danger fs-5"></i>
+    </button>
   {% endif %}
 
 </div>
