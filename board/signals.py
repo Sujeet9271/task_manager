@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.db.models.signals import post_save, pre_save, m2m_changed, post_delete
 from django.forms.models import model_to_dict
-
+from django.utils import timezone
 from django.dispatch import receiver
 from board.models import Board, Column, Task, Comments, TaskHistory
 from notifications.models import Notification
@@ -10,7 +10,7 @@ from accounts.models import Users
 import hashlib
 import json
 
-from datetime import datetime,date
+from datetime import datetime,date, timedelta
 
 
 @receiver(m2m_changed, sender=Board.members.through)
@@ -81,8 +81,14 @@ def clean_for_json(data):
 
 @receiver(pre_save, sender=Task)
 def pre_save_task(sender, instance: Task, *args, **kwargs):
+    instance.updated_at = timezone.now()
     if not instance.pk and instance.created_by:
         instance.updated_by = instance.created_by
+
+    if not instance.due_date:
+        board = instance.column.board
+        instance.due_date = (board.created_at + timedelta(days=board.sprint_days)).date()
+
 
 def generate_hash(data):
     json_data = json.dumps(data, sort_keys=True)

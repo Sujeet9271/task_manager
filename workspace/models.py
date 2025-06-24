@@ -20,8 +20,8 @@ class Workspace(models.Model):
         'accounts.Users',
         related_name='workspaces'
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_deleted = models.BooleanField(default=False, db_index=True)  # often filtered
     deleted_at = models.DateTimeField(null=True, blank=True)
 

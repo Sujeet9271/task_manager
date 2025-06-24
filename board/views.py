@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -86,81 +86,134 @@ def board_reports(request, board_id):
     logger.debug(tasks)
     task_list:list[dict] = []
     today_date = date.today()
+
     for task in tasks:
-        created_str = task["created_at"].strftime("%Y-%m-%d")
-        updated_str = task["updated_at"].strftime("%Y-%m-%d")
+        created: datetime = task["created_at"]
+        updated: datetime = task["updated_at"]
+        due_date: date = task.get("due_date")
+
+        created_str = created.strftime("%Y-%m-%d")
+        updated_str = updated.strftime("%Y-%m-%d")
+        
         task_title = task["title"]
         column = task["column__name"]
         priority = task["priority"]
-        due_date = task.get("due_date")
 
         if task["is_complete"]:
-            # Completed Task
+            # Segment 1: Active work time
+            days = (updated.date() - created.date()).days
             task_list.append({
                 "Task": task_title,
                 "Start": created_str,
                 "Finish": updated_str,
                 "Resource": priority,
-                "Column": column
+                "Column": column,
+                "days": days,
             })
-        else:
+
             if due_date:
                 due_str = due_date.strftime("%Y-%m-%d")
+                updated_date = updated.date()
 
-                if today_date < due_date:
-                    # Normal phase
+                if updated_date < due_date:
+                    # Segment 2: Unused time (Completed early)
+                    days = (due_date - updated_date).days
                     task_list.append({
                         "Task": task_title,
-                        "Start": created_str,
-                        "Finish": today_date.strftime("%Y-%m-%d"),
-                        "Resource": priority,
-                        "Column": column
-                    })
-                    # Remaining phase
-                    task_list.append({
-                        "Task": task_title,
-                        "Start": today_date.strftime("%Y-%m-%d"),
+                        "Start": updated_str,
                         "Finish": due_str,
-                        "Resource": "Remaining",
-                        "Column": column
+                        "Resource": "Unused",
+                        "Column": column,
+                        "days": days
                     })
-                elif today_date > due_date:
-                    # Normal phase
-                    task_list.append({
-                        "Task": task_title,
-                        "Start": created_str,
-                        "Finish": due_str,
-                        "Resource": priority,
-                        "Column": column
-                    })
-                    # Overdue phase
+
+                elif updated_date > due_date:
+                    # Segment 2: Late time (Completed after due)
+                    days = (updated_date - due_date).days
                     task_list.append({
                         "Task": task_title,
                         "Start": due_str,
-                        "Finish": today_date.strftime("%Y-%m-%d"),
-                        "Resource": "Overdue",
-                        "Column": column
+                        "Finish": updated_str,
+                        "Resource": "Late",
+                        "Column": column,
+                        "days": days
                     })
-                else:
-                    # Today is due date
+
+        else:
+            # Task is incomplete
+            if due_date:
+                due_str = due_date.strftime("%Y-%m-%d")
+                today_str = today_date.strftime("%Y-%m-%d")
+
+                if today_date < due_date:
+                    # Segment 1: Work so far (Created to Today)
+                    days = (today_date - created.date()).days
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": created_str,
+                        "Finish": today_str,
+                        "Resource": priority,
+                        "Column": column,
+                        "days": days
+                    })
+
+                    # Segment 2: Time remaining (Today to Due)
+                    days = (due_date - today_date).days
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": today_str,
+                        "Finish": due_str,
+                        "Resource": "Remaining",
+                        "Column": column,
+                        "days": days
+                    })
+
+                elif today_date > due_date:
+                    # Segment 1: Expected duration (Created to Due)
+                    days = (due_date - created.date()).days
                     task_list.append({
                         "Task": task_title,
                         "Start": created_str,
                         "Finish": due_str,
                         "Resource": priority,
-                        "Column": column
+                        "Column": column,
+                        "days": days
                     })
+
+                    # Segment 2: Overdue duration
+                    days = (today_date - due_date).days
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": due_str,
+                        "Finish": today_str,
+                        "Resource": "Overdue",
+                        "Column": column,
+                        "days": days
+                    })
+
+                else:
+                    # Due today
+                    days = (due_date - created.date()).days
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": created_str,
+                        "Finish": due_str,
+                        "Resource": priority,
+                        "Column": column,
+                        "days": days
+                    })
+
             else:
-                # No due date
+                # No due date — only one segment
+                days = (updated.date() - created.date()).days
                 task_list.append({
                     "Task": task_title,
                     "Start": created_str,
                     "Finish": updated_str,
                     "Resource": priority,
-                    "Column": column
+                    "Column": column,
+                    "days": days
                 })
-
-
     # Define the sprint range manually or dynamically
     sprint_start:date = board.created_at.date()
     sprint_end:date = (board.created_at + timedelta(days=board.sprint_days)).date()
@@ -391,6 +444,7 @@ def edit_task(request, board_id, column_id, task_id):
 
             task:Task = form.save(commit=False)
             task.updated_by = request.user
+
             task.save()
 
             task.assigned_to.set(assigned_to_list)
@@ -477,7 +531,7 @@ def task_status_toggle(request, board_id, column_id, task_id):
         task.is_complete = False
     else:
         task.is_complete = True
-    task.save(update_fields=['is_complete'])
+    task.save(update_fields=['is_complete','updated_at'])
     response = render(request,'boards/components/task_card.html',{'task':task,"board_id":board_id,"column_id":column_id})
     return response
 

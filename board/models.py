@@ -4,7 +4,7 @@ from django.db.models import FileField, Manager, Case, When, Value, IntegerField
 from django.forms import ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
-
+from django.utils import timezone
 from task_manager.utils import get_full_url
 
 
@@ -17,14 +17,14 @@ class SoftDeleteManager(models.Manager):
 
 class SoftDeleteModel(models.Model):
     is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(default=timezone.now)
 
     objects = SoftDeleteManager()
     all_objects = models.Manager()  # For accessing all objects, including deleted ones
 
     def delete(self, *args, **kwargs):
         self.is_deleted = True
-        self.deleted_at = datetime.now()
+        self.deleted_at = timezone.now()
         self.save(update_fields=['is_deleted', 'deleted_at'])
         return self
 
@@ -37,8 +37,8 @@ class Board(SoftDeleteModel):
     description = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey('accounts.Users', on_delete=models.CASCADE, related_name='boards')
     members = models.ManyToManyField('accounts.Users', related_name='board_memberships', blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
     sprint_days = models.PositiveIntegerField(default=7)
 
@@ -68,8 +68,8 @@ class Column(SoftDeleteModel):
     order = models.PositiveIntegerField(default=0)  # for drag-and-drop
     created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='board_columns')
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.name} ({self.board.name})"
@@ -171,8 +171,8 @@ class Task(SoftDeleteModel):
         db_index=True
     )
     order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    updated_at = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='tasks')
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, blank=True)
     extra_data = models.JSONField(default=dict, null=True, blank=True)
@@ -233,8 +233,8 @@ class TaskHistory(SoftDeleteModel):
     snapshot = models.JSONField(default=dict, blank=True)
     hash = models.CharField(max_length=128, blank=True, db_index=True)  # assume hash is SHA-like
     
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f'History for Task #{self.task_id} by User #{self.updated_by_id}'
@@ -268,8 +268,8 @@ class Attachment(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True,blank=True)
     uploaded_by = models.ForeignKey("accounts.Users",on_delete=models.SET_NULL,null=True,blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def attachment_url(self):
         if self.type=='file' and self.file:
@@ -313,8 +313,8 @@ class Comments(models.Model):
     task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name="comments")
     comment = models.TextField()
     added_by = models.ForeignKey("accounts.Users", on_delete=models.SET_NULL, null=True, blank=True, related_name="comments")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     mentioned_users = models.ManyToManyField("accounts.Users", related_name='mentioned_in_comments', blank=True)
 
     def __str__(self):

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from django import forms
 from accounts.models import Users
 from board.models import Attachment, Board, Column, Comments, Task
@@ -81,22 +81,36 @@ class TaskForm(forms.ModelForm):
             self.auto_id='id_%s'
         self.workspace = workspace
         self.user = user
+        instance: Task = self.instance
         
-        if self.instance and self.instance.pk: 
-            exclude_users = [self.instance.created_by_id, user.id]
-            if self.instance.parent_task:
-                exclude_users.append(self.instance.parent_task.created_by_id)
-                self.fields['assigned_to'].queryset = self.instance.parent_task.assigned_to.all().exclude(id__in=exclude_users)
+        if instance and instance.pk: 
+            exclude_users = [instance.created_by_id, user.id]
+            if instance.parent_task:
+                exclude_users.append(instance.parent_task.created_by_id)
+                self.fields['assigned_to'].queryset = instance.parent_task.assigned_to.all().exclude(id__in=exclude_users)
             else:
-                self.fields['assigned_to'].queryset = self.instance.column.board.members.all().exclude(id__in=exclude_users)
+                self.fields['assigned_to'].queryset = instance.column.board.members.all().exclude(id__in=exclude_users)
         elif self.workspace:
             self.fields['assigned_to'].queryset = workspace.members.all().exclude(id=user.id)
         
+
+
         self.fields['due_date'].widget.attrs.update({'min':f"{str(date.today())}"})
-        if self.instance and self.instance.parent_task and self.instance.parent_task.due_date:
-            self.fields['due_date'].widget.attrs.update({'max':f"{str(self.instance.parent_task.due_date)}"})
-            if self.instance.parent_task.due_date == date.today():
-                self.fields['due_date'].widget.attrs.update({'value':f"{str(self.instance.parent_task.due_date)}"})
+        if instance:
+            if instance.parent_task and instance.parent_task.due_date:
+                self.fields['due_date'].widget.attrs.update({'max':f"{str(instance.parent_task.due_date)}"})
+                if instance.parent_task.due_date == date.today():
+                    self.fields['due_date'].widget.attrs.update({'value':f"{str(instance.parent_task.due_date)}"})
+            else:
+                board = instance.column.board
+                sprint_end = (board.created_at + timedelta(days=board.sprint_days)).date()
+                logger.debug(f'{sprint_end=}')
+                
+                self.fields['due_date'].widget.attrs.update({
+                                                            "value":f"{str(sprint_end)}",
+                                                            "max":f"{str(sprint_end)}"
+                                                        })
+
 
         
 
