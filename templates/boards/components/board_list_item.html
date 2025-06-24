@@ -34,6 +34,15 @@
                             <ul class="dropdown-menu">
                               <li class="cursor pointer">
                                 <a class="dropdown-item"
+                                  title="Board Reports"
+                                  target="_blank"
+                                  href="{% url "board:board-reports" board.id %}">
+                                  Reports
+                                </a>
+                              </li>
+                              {% if board.created_by == request.user %}
+                              <li class="cursor pointer">
+                                <a class="dropdown-item"
                                   title="Edit Board"
                                    hx-get="{% url "workspace:board-actions" board.workspace_id board.id %}"
                                    hx-target="#edit_board_modal"
@@ -41,14 +50,7 @@
                                    data-bs-toggle="modal"
                                    data-bs-target="#editBoardModal">Edit</a>
                               </li>
-                              <li class="cursor pointer">
-                                <a class="dropdown-item"
-                                  title="Board Reports"
-                                  target="_blank"
-                                  href="{% url "board:board-reports" board.id %}">
-                                  Reports
-                                </a>
-                              </li>
+                              
                               <li class="cursor pointer">
                                 <a class="dropdown-item text-danger"
                                 title="Delete Board"
@@ -57,6 +59,7 @@
                                    hx-target="#board-{{ board.id }}"
                                    hx-swap="outerHTML">Delete</a>
                               </li>
+                              {% endif %}
                             </ul>
                           </div>
                         </div>
