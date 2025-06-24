@@ -58,7 +58,8 @@ def board_reports(request, board_id):
     logger.debug(board.created_at)
     context['boards'] = Board.objects.filter(workspace=board.workspace).only('id','name')
     
-    board_tasks = Task.objects.filter(column__board=board, parent_task__isnull=True)
+    # board_tasks = Task.objects.filter(column__board=board, parent_task__isnull=True)
+    board_tasks = Task.objects.filter(column__board=board)
     tasks_by_priority = list(board_tasks.values('priority').annotate(count=Count('id')))
     tasks_by_column = list(board_tasks.values('column__name').annotate(count=Count('id')))
     
