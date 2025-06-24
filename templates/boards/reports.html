@@ -79,60 +79,11 @@
 				<!-- Boards List -->
 				<div class="d-flex flex-column gap-2 board_list horizontal-scroll-wrapper auto-hide-scrollbar" id="boards">
 					{% for board in boards %}
-					<div class="d-flex justify-content-between align-items-center p-2 rounded hover:bg-gray-100 {% if board.id == active_board.id %}active_board{% endif %}" id="board-{{ board.id }}" title="Board: {{board.name}}">
-                        <a href="{% url 'board:board-view' board.id %}" href="{% url 'board:board-view' board.id %}" class="text-decoration-none fw-bold text-black">
-                          {{ board.name }}
-                        </a>
-                        
-                        {% comment %} <div class="d-flex gap-2">
-                          <button class="btn btn-sm btn-outline-primary"
-                                  title="Add Column"
-                                  hx-get="{% url 'board:column-create' board.id %}"
-                                  hx-target="#modal-column-body"
-                                  hx-swap="innerHTML"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#createColumnModal">
-                            <i class="fa fa-plus"></i>
-                          </button>
-                      
-                          <!-- Dropdown for Edit/Delete -->
-                          <div class="dropdown">
-                            <button class="btn btn-outline-primary btn-sm"
-                                    title="Board Actions"
-                                    type="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                              <i class="fa-solid fa-ellipsis-vertical"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                              <li class="cursor pointer">
-                                <a class="dropdown-item"
-                                  title="Edit Board"
-                                   hx-get="{% url "workspace:board-actions" board.workspace_id board.id %}"
-                                   hx-target="#edit_board_modal"
-                                   hx-swap="innerHTML"
-                                   data-bs-toggle="modal"
-                                   data-bs-target="#editBoardModal">Edit</a>
-                              </li>
-                              <li class="cursor pointer">
-                                <a class="dropdown-item"
-                                  title="Board Reports"
-                                  href="{% url "board:board-reports" board.id %}">
-                                  Reports
-                                </a>
-                              </li>
-                              <li class="cursor pointer">
-                                <a class="dropdown-item text-danger"
-                                title="Delete Board"
-                                   hx-delete="{% url "workspace:board-actions" board.workspace_id board.id %}"
-                                   hx-confirm="Are you sure you want to delete this board?"
-                                   hx-target="#board-{{ board.id }}"
-                                   hx-swap="outerHTML">Delete</a>
-                              </li>
-                            </ul>
-                          </div>
-                        </div> {% endcomment %}
-                    </div>
+                    <a href="{% url 'board:board-reports' board.id %}" class="text-decoration-none fw-bold text-black">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded hover:bg-gray-100 {% if board.id == active_board.id %}active_board{% endif %}" id="board-{{ board.id }}" title="Board: {{board.name}}">
+                            {{ board.name }}
+                        </div>
+                    </a>
 					{% endfor %}
 				</div>
 			</div>
@@ -183,31 +134,52 @@
     // ========== GANTT CHART ==========
 
     function renderGanttChart(elementId, tasks) {
-        const data = tasks.map(task => ({
-            type: 'line',
-            x: [new Date(task.Finish) - new Date(task.Start)],
-            y: [task.Task],
-            base: task.Start,
-            orientation: 'h',
-            name: task.Resource,
-            marker: {
-                color:
-                    task.Resource === 'High' ? '#d62728' :
-                    task.Resource === 'Medium' ? '#ff7f0e' : '#2ca02c'
-            },
-            hovertemplate: `Task: ${task.Task}<br>Column: ${task.Column}<br>Start: ${task.Start}<br>Finish: ${task.Finish}<extra></extra>`
-        }));
+    const boardStartDate = new Date("{{active_board.created_at|date:'Y-m-d'}}");
+    const boardEndDate = new Date(boardStartDate);
+    boardEndDate.setDate(boardEndDate.getDate() + {{active_board.sprint_days}});
 
-        const layout = {
-            barmode: 'stack',
-            title: 'Gantt Chart of Tasks',
-            xaxis: { title: 'Date', type: 'date' },
-            yaxis: { title: 'Tasks', automargin: true },
-            height: 500,
-        };
+    // Group tasks by Resource
+    const groupedTasks = {};
+    tasks.forEach(task => {
+        if (!groupedTasks[task.Resource]) groupedTasks[task.Resource] = [];
+        groupedTasks[task.Resource].push(task);
+    });
 
-        Plotly.newPlot(elementId, data, layout);
-    }
+    const resourceColors = {
+        High: '#ED8936',
+        Medium: '#4299E1',
+        Low: '#A0AEC0',
+        Overdue: '#E53E3E',
+        Remaining: '#48BB78',
+    };
+
+    const data = Object.entries(groupedTasks).map(([resource, group]) => ({
+        type: 'bar',
+        orientation: 'h',
+        name: resource,
+        marker: { color: resourceColors[resource] || '#1f77b4' },
+        x: group.map(task => new Date(task.Finish) - new Date(task.Start)),
+        y: group.map(task => task.Task),
+        base: group.map(task => task.Start),
+        hovertemplate: group.map(task =>
+            `Task: ${task.Task}<br>Column: ${task.Column}<br>Start: ${task.Start}<br>Finish: ${task.Finish}<extra></extra>`
+        ),
+    }));
+
+    const layout = {
+        barmode: 'stack',
+        title: 'Gantt Chart of Tasks',
+        xaxis: {
+            title: 'Date',
+            type: 'date',
+            range: [boardStartDate.toISOString(), boardEndDate.toISOString()],
+        },
+        yaxis: { title: 'Tasks', automargin: true },
+        height: 500,
+    };
+
+    Plotly.newPlot(elementId, data, layout);
+}
 
     // ========== BURNDOWN CHART ==========
 

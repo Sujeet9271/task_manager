@@ -55,10 +55,10 @@ def board_reports(request, board_id):
     context:dict = {}
     board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
     context['active_board'] = board
-    
+    logger.debug(board.created_at)
     context['boards'] = Board.objects.filter(workspace=board.workspace).only('id','name')
     
-    board_tasks = Task.objects.filter(column__board=board)
+    board_tasks = Task.objects.filter(column__board=board, parent_task__isnull=True)
     tasks_by_priority = list(board_tasks.values('priority').annotate(count=Count('id')))
     tasks_by_column = list(board_tasks.values('column__name').annotate(count=Count('id')))
     
@@ -79,33 +79,97 @@ def board_reports(request, board_id):
 
     column_labels = [item["column__name"] for item in tasks_by_column]
     column_values = [item["count"] for item in tasks_by_column]
-    tasks = board_tasks.filter(updated_at__isnull=False).values(
-        "title", "created_at", "updated_at", "priority", "column__name"
+    tasks = board_tasks.values(
+        "title", "created_at", "updated_at", "priority", "column__name", "is_complete","due_date"
     )
 
     logger.debug(tasks)
-
-    task_list = []
+    task_list:list[dict] = []
+    today_date = date.today()
     for task in tasks:
-        task_list.append({
-            "Task": task["title"],
-            "Start": task["created_at"].strftime("%Y-%m-%d"),
-            "Finish": task["updated_at"].strftime("%Y-%m-%d"),
-            "Resource": task["priority"],
-            "Column": task["column__name"]
-        })
+        created_str = task["created_at"].strftime("%Y-%m-%d")
+        updated_str = task["updated_at"].strftime("%Y-%m-%d")
+        task_title = task["title"]
+        column = task["column__name"]
+        priority = task["priority"]
+        due_date = task.get("due_date")
+
+        if task["is_complete"]:
+            # Completed Task
+            task_list.append({
+                "Task": task_title,
+                "Start": created_str,
+                "Finish": updated_str,
+                "Resource": priority,
+                "Column": column
+            })
+        else:
+            if due_date:
+                due_str = due_date.strftime("%Y-%m-%d")
+
+                if today_date < due_date:
+                    # Normal phase
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": created_str,
+                        "Finish": today_date.strftime("%Y-%m-%d"),
+                        "Resource": priority,
+                        "Column": column
+                    })
+                    # Remaining phase
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": today_date.strftime("%Y-%m-%d"),
+                        "Finish": due_str,
+                        "Resource": "Remaining",
+                        "Column": column
+                    })
+                elif today_date > due_date:
+                    # Normal phase
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": created_str,
+                        "Finish": due_str,
+                        "Resource": priority,
+                        "Column": column
+                    })
+                    # Overdue phase
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": due_str,
+                        "Finish": today_date.strftime("%Y-%m-%d"),
+                        "Resource": "Overdue",
+                        "Column": column
+                    })
+                else:
+                    # Today is due date
+                    task_list.append({
+                        "Task": task_title,
+                        "Start": created_str,
+                        "Finish": due_str,
+                        "Resource": priority,
+                        "Column": column
+                    })
+            else:
+                # No due date
+                task_list.append({
+                    "Task": task_title,
+                    "Start": created_str,
+                    "Finish": updated_str,
+                    "Resource": priority,
+                    "Column": column
+                })
 
 
     # Define the sprint range manually or dynamically
-    sprint_start = board.created_at
-    sprint_end = board.created_at + timedelta(days=5)
+    sprint_start:date = board.created_at.date()
+    sprint_end:date = (board.created_at + timedelta(days=board.sprint_days)).date()
 
     # Get all tasks created within the sprint
     tasks = board_tasks.filter(created_at__date__lte=sprint_end)
 
     total_tasks = tasks.count()
-
-    date_range = [sprint_start + timedelta(days=i) for i in range((sprint_end - sprint_start).days + 1)]
+    date_range:list[date] = [sprint_start + timedelta(days=i) for i in range((sprint_end - sprint_start).days + 1)]
     remaining_tasks = []
 
     for current_date in date_range:
