@@ -4,7 +4,8 @@ from django.utils.html import mark_safe
 import re
 
 from accounts.models import Users
-from board.models import Board, Column
+from board.models import Board, Column, Task
+from task_manager.logger import logger
 from task_manager.utils import get_full_url
 
 register = template.Library()
@@ -51,3 +52,25 @@ def get_board_full_url(board:Board, request):
 @register.filter
 def capitalize(value:str):
     return value.replace('_', ' ').title()
+
+
+@register.filter(name='split')
+def split(value, key): 
+    if value:
+        return value.split(key)
+    return []
+
+
+@register.filter(name="assigned_users")
+def assigned_users(task:Task):
+    return task.assigned_to.all()[0:2] if task.assigned_to.exists() else [task.created_by]
+
+@register.filter
+def initials(value:str):
+    short_name = []
+    logger.debug(f'{value=}')
+    for part in value.split(' '):
+        logger.debug(f'{part=}')
+        if part:
+            short_name.append(part[0].capitalize())
+    return ''.join(short_name)

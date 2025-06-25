@@ -68,6 +68,7 @@ class Column(SoftDeleteModel):
     order = models.PositiveIntegerField(default=0)  # for drag-and-drop
     created_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True, related_name='board_columns')
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
+    draft_column = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
@@ -79,7 +80,7 @@ class Column(SoftDeleteModel):
         return self.tasks.filter(assigned_to=user, parent_task__isnull=True) if not user.is_staff else self.tasks.filter(parent_task__isnull=True)
     
     class Meta:
-        ordering = ['board','order']  # Order by the 'order' field
+        ordering = ['board','-draft_column','order']  # Order by the 'order' field
         verbose_name = 'Column'
         verbose_name_plural = 'Columns'
         indexes = [

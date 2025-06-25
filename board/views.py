@@ -50,9 +50,9 @@ def task_lists(board_id:int, user:Users):
         if cd.get('tags'):
             filters &= Q(tags__in=cd['tags'])
         logger.debug(f'{filters=}')
-        tasks = Task.objects.filter(filters).distinct()
+        tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters).distinct()
     else:
-        tasks = Task.objects.filter(column__board_id=board_id, assigned_to=user, parent_task__isnull=True) if not user.is_staff else Task.objects.filter(column__board_id=board_id, parent_task__isnull=True)
+        tasks = Task.objects.prefetch_related('tags','assigned_to').filter(column__board_id=board_id, assigned_to=user, parent_task__isnull=True) if not user.is_staff else Task.objects.filter(column__board_id=board_id, parent_task__isnull=True)
     return tasks
 
 
@@ -64,6 +64,7 @@ def board_view(request, board_id):
     context['active_board'] = board
     if request.htmx:
         context['board'] = board
+        context['task_form'] = TaskForm(workspace=board.workspace, user=request.user,)
         triggers = {}
         triggers["boardLoaded"] = {"board_id":  board_id, "level": "info"}
         board_filter, _ = BoardFilter.objects.get_or_create(board=board, user=request.user)
@@ -475,8 +476,8 @@ def create_sub_task(request, board_id, column_id, task_id):
 
 @require_POST
 @login_required
-def create_task(request, board_id, column_id):
-    column = get_object_or_404(Column, pk=column_id, board_id=board_id, board__members=request.user)
+def create_task(request, board_id,):
+    column = get_object_or_404(Column, board_id=board_id, board__members=request.user, draft_column=True)
     form = TaskCreateForm(data=request.POST)
     if form.is_valid():
         instance:Task = form.save(commit=False)
@@ -490,9 +491,12 @@ def create_task(request, board_id, column_id):
         instance.assigned_to.add(*assigned_to)
 
         response = render(request, 'boards/components/task_card.html', {'board_id': board_id, 'task': instance})
-        response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column_id}),'column_id':column_id,'board_id':board_id, "level": "info"}})
+        triggers = {}
+        triggers["reloadTaskList"] = {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column.id}),'column_id':column.id,'board_id':board_id, "level": "info"}
+        triggers["closeModal"] = {"modal_id": "close_addTaskModal", "level": "info"}
+        response['HX-Trigger'] = json.dumps(triggers)
         return response
-    return render(request,'boards/components/create.html',{'board_id':board_id,'column_id':column_id, 'form':form})
+    return render(request,'boards/components/create.html',{'board_id':board_id,'column_id':column.id, 'form':form})
 
 
 @require_http_methods(['GET','POST'])

@@ -92,7 +92,6 @@
   flex-grow: 1;
 } */
 
-
 .task-card {
   background: white;
   border-radius: 12px;
@@ -100,10 +99,10 @@
   margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.task-card .datetime{
+.task-card .datetime {
   font-size: 10px;
 }
 
@@ -125,7 +124,6 @@
   padding: 0.3em 0.6em;
   border-radius: 0.25rem;
 }
-
 
 .task-icons {
   display: flex;
@@ -395,7 +393,55 @@
   color: #fff;
 }
 
+#boards .btn-outline-primary.active {
+  background-color: var(--custom-primary-color);
+  color: #fff !important;
+}
+
 /* Gap between boards */
 #boards .d-flex + .d-flex {
   margin-top: 0.5rem;
+}
+
+.task-card .assigned_users {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+}
+
+.task-card .assigned_users .assigned_user {
+  background-color: var(--custom-primary-color);
+  color: #fff;
+  border-radius: 50%;
+  height: 25px;
+  width: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid white;
+  /* position: absolute;
+  left: 12.5px; */
+}
+
+.task-card .assigned_users .assigned_user.second {
+  z-index: 1;
+  margin-left: -8px;
+}
+
+.add_draft_task {
+  background-color: var(--custom-primary-color);
+  color: white;
+  border-radius: 50%;
+  /* height: 40px; */
+  width: 40px;
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
+  border: 1px solid white;
+}
+
+.add_draft_task:hover{
+  background-color: #1d34ff9c;
+  color: white;
+  border: 1px solid white;
 }

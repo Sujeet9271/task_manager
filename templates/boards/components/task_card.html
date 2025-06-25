@@ -1,5 +1,5 @@
-
-<div class="task-card d-flex justify-content-between align-items-start p-3 mb-3 {% if task.is_complete %}bg-light{% else %}bg-white{% endif %} rounded shadow-sm border transition-shadow"
+{% load board_tags %}
+<div class="task-card p-3 mb-3 {% if task.is_complete %}bg-light{% else %}bg-white{% endif %} rounded shadow-sm border transition-shadow"
      id="task_{{ task.id }}"
      draggable="true"
      data-task-id="{{ task.id }}"
@@ -20,51 +20,84 @@
              hx-target="#task_{{ task.id }}"
              hx-swap="outerHTML"
              title="Mark as complete" />
-
-      <p id="task_title_{{task.id}}"
-         class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
-         hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
-         hx-target="#edit_task_modal"
-         hx-swap="innerHTML"
-         data-bs-toggle="modal"
-         data-bs-target="#editTaskModal">
-         {{ task.title }}
-      </p>
-    </div>
-
-    <!-- Tags and Priority -->
-    <div class="mb-2">
-      {% for tag in task.tags.all %}
-        <span class="badge bg-secondary me-1">{{ tag }}</span>
-      {% endfor %}
-
-      {% if task.priority == 'High' %}
-        <span class="badge bg-danger me-1">High</span>
-      {% elif task.priority == 'Medium' %}
-        <span class="badge bg-warning text-dark me-1">Medium</span>
-      {% elif task.priority == 'Low' %}
-        <span class="badge bg-secondary me-1">Low</span>
-      {% else %}
-        <span class="badge bg-secondary me-1">{{ task.priority }}</span>
+            {% comment %} {% with task.description|default_if_none:'' as description %}
+              {% with description|split:" " as parts %}
+                <p id="task_title_{{task.id}}"
+                  class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
+                  hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
+                  hx-target="#edit_task_modal"
+                  hx-swap="innerHTML"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editTaskModal"
+                  title="{{parts|slice:4}}..."
+                  >
+                  {{ task.title }}
+                </p>
+              {% endwith %}
+            {% endwith %} {% endcomment %}
+            <p id="task_title_{{task.id}}"
+              class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
+              hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
+              hx-target="#edit_task_modal"
+              hx-swap="innerHTML"
+              data-bs-toggle="modal"
+              data-bs-target="#editTaskModal"
+              title="{{task.description}}"
+              >
+              {{ task.title }}
+            </p>
+      
+      <!-- Delete Button -->
+      {% if task.created_by == request.user %}
+      <button class="btn p-0 border-0 ms-3"
+              id="task_delete_{{task.id}}"
+              hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}"
+              hx-target="#task_{{ task.id }}"
+              hx-swap="delete"
+              hx-confirm="Are you sure?">
+        <i class="fas fa-trash-alt text-danger fs-5"></i>
+      </button>
       {% endif %}
     </div>
 
+    <!-- Tags and Priority -->
+    <div class="d-flex align-items-start g-1 mb-2">
+      {% if task.priority == 'High' %}
+        <span class="badge bg-danger me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
+      {% elif task.priority == 'Medium' %}
+        <span class="badge bg-warning me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
+      {% elif task.priority == 'Low' %}
+        <span class="badge bg-secondary me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
+      {% else %}
+        <span class="badge bg-secondary me-1 text-dark">{{ task.priority }}</span>
+      {% endif %}
+      {% for tag in task.tags.all %}
+        <span class="badge bg-secondary me-1" title="Tag: {{tag}}">{{ tag }}</span>
+      {% endfor %}
+    </div>
+
     <!-- Updated Date -->
-    <div class="datetime text-muted small">
-      <span><i class="fa-regular fa-clock"></i></span> {{ task.updated_at|date:"M d, Y H:i" }}
+    <div class="footer d-flex justify-content-between">
+      <div class="datetime text-muted small pt-2">
+        <span><i class="fa-regular fa-clock"></i></span> {{ task.updated_at|date:"M d, Y H:i" }}
+      </div>
+      <div class="assigned_users">
+        {% if task.assigned_to.exists %}
+        {% with task|assigned_users as users %}
+        {% for user in users %}
+        {% if user.name %}
+        <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.name}}">{{user.name|initials}}</div>
+        {% else %}
+        <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.email}}">{{user.email|initials}}</div>
+        {% endif %}
+        {% if forloop.last and forloop.counter != 1 %}
+        <div class="p-1 assigned_user second" title="Others">+</div>
+        {% endif %}
+        {% endfor %}
+        {% endwith %}
+        {% endif %}
+      </div>
+      
     </div>
   </div>
-
-  <!-- Delete Button -->
-  {% if task.created_by == request.user %}
-    <button class="btn p-0 border-0 ms-3"
-            id="task_delete_{{task.id}}"
-            hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}"
-            hx-target="#task_{{ task.id }}"
-            hx-swap="delete"
-            hx-confirm="Are you sure?">
-      <i class="fas fa-trash-alt text-danger fs-5"></i>
-    </button>
-  {% endif %}
-
 </div>

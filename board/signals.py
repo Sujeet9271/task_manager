@@ -140,3 +140,9 @@ def post_save_task(sender, instance: Task, created: bool, **kwargs):
             snapshot=current_data,
             hash=current_hash
         )
+
+
+@receiver(pre_save, sender=Column)
+def pre_save_column(sender, instance:Column, *args, **kwargs):
+    if not instance.pk and instance.board and not instance.board.columns.filter(draft_column=True).exists():
+        instance.draft_column = True

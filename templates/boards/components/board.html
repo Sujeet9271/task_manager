@@ -12,29 +12,27 @@
                             hx-post="{% url 'board:update_column_name' column.board_id column.id %}" 
                             hx-trigger="keyup changed delay:500ms"
                             />
-                            {% if request.user.is_staff or board.created_by == request.user or column.created_by == request.user %}
+                            {% if column.draft_column %}
+                            <button class="btn btn-sm add_draft_task" style="color:white;" 
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#addTaskModal"
+                                    title="Add Task"
+                                    >
+                                <i class="fa fa-plus"></i>
+                            </button>
+                            {% elif request.user.is_staff or board.created_by == request.user or column.created_by == request.user %}
                             <button class="btn btn-light fw-bold" 
                             hx-delete="{% url 'board:column-delete' column.board_id column.id %}" 
                             hx-target="#column_{{ column.id }}" 
                             hx-swap="delete" 
                             hx-confirm="Are You Sure?"><i class="fas fa-trash-alt" style="color: red;"></i></button>
                             {% endif %}
+                            
                         </div>
-                        <form id="create_task_form_{{ column.id }}"
-                            class="d-flex mt-2"
-                            hx-post="{% url 'board:task-create' column.board_id column.id %}" 
-                            hx-target="#tasks_list_{{ column.id }}" 
-                            hx-swap="beforeend"
-                        >
-                            {% csrf_token %}
-                            <input type="text" name="title" placeholder="New task" class="form-control me-2" required>
-                            <button type="submit" class="btn btn-light fw-bold">Add</button>
-                        </form>
-
                     </div>
 
                     <!-- Task List -->
-                    <div id="tasks_list_{{ column.id }}" 
+                    <div id="{% if column.draft_column %}draft_tasks_list_{{ board.id }}{% else %}tasks_list_{{ column.id }}{% endif %}"
                         class="card-body bg-white auto-hide-scrollbar dropzone" 
                         data-column-id="{{ column.id }}"
                         {% comment %} hx-target="this" 
@@ -66,7 +64,7 @@
 </div>
 
 
-<button class="btn btn-sm btn-outline-primary" id="filter_board_btn"
+<button class="btn btn-sm btn-outline-primary {% if filter_form.initial %}active{% endif %}" id="filter_board_btn"
         title="Filters"
         data-bs-toggle="modal"
         data-bs-target="#filterBoard"
@@ -87,3 +85,27 @@
         </div>
     </form>
 </div>
+
+
+<div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="addTaskModalLabel">Add Task</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_addTaskModal"></button>
+            </div>
+            <div class="modal-body" id="add_task_modal">
+                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#draft_tasks_list_{{ board.id }}" hx-swap="beforeend" hx-indicator=".gif_loader">
+                    {% csrf_token %}
+                    {% include 'form.html' with form=task_form %}
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
