@@ -141,8 +141,15 @@ def post_save_task(sender, instance: Task, created: bool, **kwargs):
             hash=current_hash
         )
 
+@receiver(post_save, sender=Board)
+def post_save_board(sender, instance:Board, created:bool, *args, **kwargs):
+    logger.debug(f'post_save_board')
+    if created:
+        Column.objects.create(board=instance,name="Pending", created_by=instance.created_by, draft_column=True)
 
 @receiver(pre_save, sender=Column)
 def pre_save_column(sender, instance:Column, *args, **kwargs):
+    logger.debug(f'pre_save_column')
     if not instance.pk and instance.board and not instance.board.columns.filter(draft_column=True).exists():
         instance.draft_column = True
+
