@@ -1,15 +1,15 @@
 from datetime import date
 from django.contrib.contenttypes.models import ContentType
-from board.models import Task
+from board.models import Tag, Task
 from notifications.models import Notification
 
 
 
 
 def overdue_tasks():
-    tasks = Task.objects.filter(due_date__lte=date.today(), is_complete=False)
+    tasks = Task.objects.filter(due_date__lt=date.today(), is_complete=False)
     content_type = ContentType.objects.get_for_model(Task)  # Corrected ContentType import
-
+    over_due_tag,_ = Tag.objects.get_or_create(name="overdue")
     notifications = []
     for task in tasks:
         if task.parent_task:
@@ -40,4 +40,5 @@ def overdue_tasks():
 
     # Bulk create notifications
     Notification.objects.bulk_create(notifications, batch_size=1000)
+    over_due_tag.tasks.add(*tasks)
 

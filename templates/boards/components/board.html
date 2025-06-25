@@ -33,7 +33,7 @@
 
                     <!-- Task List -->
                     <div id="{% if column.draft_column %}draft_tasks_list_{{ board.id }}{% else %}tasks_list_{{ column.id }}{% endif %}"
-                        class="card-body bg-white auto-hide-scrollbar dropzone" 
+                        class="card-body bg-white auto-hide-scrollbar {% if not column.draft_column %}dropzone{% endif %}" 
                         data-column-id="{{ column.id }}"
                         {% comment %} hx-target="this" 
                         hx-swap="innerHTML" 

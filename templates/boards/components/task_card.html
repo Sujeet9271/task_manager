@@ -11,8 +11,9 @@
   <div class="d-flex flex-column flex-grow-1">
     
     <!-- Title Row -->
-    <div class="d-flex align-items-center mb-2">
-      <input type="checkbox"
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <div class="d-flex">
+        <input type="checkbox"
              class="form-check-input me-2"
              id="task_toggle_{{task.id}}"
              {% if task.is_complete %}checked{% endif %}
@@ -20,32 +21,18 @@
              hx-target="#task_{{ task.id }}"
              hx-swap="outerHTML"
              title="Mark as complete" />
-            {% comment %} {% with task.description|default_if_none:'' as description %}
-              {% with description|split:" " as parts %}
-                <p id="task_title_{{task.id}}"
-                  class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
-                  hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
-                  hx-target="#edit_task_modal"
-                  hx-swap="innerHTML"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editTaskModal"
-                  title="{{parts|slice:4}}..."
-                  >
-                  {{ task.title }}
-                </p>
-              {% endwith %}
-            {% endwith %} {% endcomment %}
-            <p id="task_title_{{task.id}}"
-              class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
-              hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
-              hx-target="#edit_task_modal"
-              hx-swap="innerHTML"
-              data-bs-toggle="modal"
-              data-bs-target="#editTaskModal"
-              title="{{task.description}}"
-              >
-              {{ task.title }}
-            </p>
+        <p id="task_title_{{task.id}}"
+          class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
+          hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
+          hx-target="#edit_task_modal"
+          hx-swap="innerHTML"
+          data-bs-toggle="modal"
+          data-bs-target="#editTaskModal"
+          title="{{task.description}}"
+          >
+          {{ task.title }}
+        </p>
+      </div>
       
       <!-- Delete Button -->
       {% if task.created_by == request.user %}
@@ -54,7 +41,9 @@
               hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}"
               hx-target="#task_{{ task.id }}"
               hx-swap="delete"
-              hx-confirm="Are you sure?">
+              hx-confirm="Are you sure?"
+              title="Delete Task"
+              >
         <i class="fas fa-trash-alt text-danger fs-5"></i>
       </button>
       {% endif %}
