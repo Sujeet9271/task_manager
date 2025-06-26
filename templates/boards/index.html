@@ -66,11 +66,8 @@
 					<div class="modal-body" id="modal-board-body">
 						<form hx-post="{% url 'board:board-create' %}" hx-target="#boards" hx-swap="beforeend" id="create_board_form" method="POST" action="{% url 'board:board-create' %}">
 							{% csrf_token %}
-							<div class="mb-3">
-								<label for="board_name" class="form-label">Board Name</label>
-								<input type="text" class="form-control" id="board_name" name="name" autocomplete="false" required>
-								<input type="hidden" class="form-control" id="workspace_id" name="workspace_id" value="{{workspace_id}}">
-							</div>
+							{% include 'form.html' with form=board_create_form %}
+							<input type="hidden" class="form-control" id="workspace_id" name="workspace_id" value="{{workspace_id}}">
 							<div class="modal-footer">
 								<button type="submit" class="btn btn-primary">Create</button>
 							</div>

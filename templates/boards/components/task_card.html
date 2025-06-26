@@ -79,8 +79,8 @@
         {% else %}
         <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.email}}">{{user.email|initials}}</div>
         {% endif %}
-        {% if forloop.last and forloop.counter != 1 %}
-        <div class="p-1 assigned_user second" title="Others">+</div>
+        {% if forloop.last and forloop.counter > 2 %}
+        <div class="p-1 assigned_user second" title="Check task details to view assigned users">+</div>
         {% endif %}
         {% endfor %}
         {% endwith %}

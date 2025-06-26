@@ -12,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_htmx.http import HttpResponseClientRedirect
 from accounts.models import Users
-from board.forms import BoardForm, CommentForm, TaskCreateForm, TaskFilterForm, TaskForm
+from board.forms import BoardCreateForm, BoardForm, CommentForm, TaskCreateForm, TaskFilterForm, TaskForm
 from board.models import Attachment, Board, BoardFilter, Column, Comments, Task
 from board.permissions import IsBoardMemberOrReadOnly
 from board.serializers import BoardSerializer, ColumnSerializer, TaskSerializer, BoardListSerializer
@@ -121,6 +121,8 @@ def board_view(request, board_id):
         context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
         context:dict = get_notifications(user=request.user, page_number=1, context=context)
         context['view_name'] = 'Board'
+        context['board_create_form'] = BoardCreateForm(user=request.user)
+        logger.debug(context)
         response = render(request, 'boards/index.html', context)
     return response
 
@@ -327,22 +329,30 @@ def board_reports(request, board_id):
 @login_required
 def create_board(request):
     logger.info(request.session.get('workspace'))
-    data = {
-        'name': request.POST.get('name'),
-        'description': request.POST.get('description'),
-        'created_by': request.user,
-    }
-    if request.POST.get('workspace_id'):
-        data['workspace']=Workspace.objects.filter(id=request.POST['workspace_id']).first()
-    board = Board.objects.create(**data)
-    if board.workspace:
-        board.members.add(*board.workspace.members.all())
+
+    form = BoardCreateForm(data=request.POST, user=request.user)
+    board = None
+    if form.is_valid():
+        board:Board = form.save(commit=False)
+        board.created_by = form.user
+        if request.POST.get('workspace_id'):
+            board.workspace=Workspace.objects.filter(id=request.POST['workspace_id']).first()
+            board.save()
+            if not board.private:
+                board.members.add(*board.workspace.members.all())
+            else:
+                board.members.add(request.user)
+        else:
+            board = form.save()
+            board.members.add(request.user)
+        response = render(request,'boards/components/board_list_item.html',{'board':board})
+        if request.htmx:
+            board_url = reverse('board:board-view',kwargs={'board_id':board.id}) 
+            response['HX-Trigger']=json.dumps({"boardCreated":{"message":board_url,"level":"info"}})
     else:
-        board.members.add(request.user)
-    response = render(request,'boards/components/board_list_item.html',{'board':board})
-    if request.htmx:
-        board_url = reverse('board:board-view',kwargs={'board_id':board.id}) 
-        response['HX-Trigger']=json.dumps({"boardCreated":{"message":board_url,"level":"info"}})
+        logger.error(f'{form.errors.as_json()}')
+        response = JsonResponse(form.errors.as_json(),safe=False)
+        response['HX-Reswap'] = 'none'
     return response
 
 
@@ -353,6 +363,33 @@ def delete_board(request, board_id,):
     board = get_object_or_404(Board, pk=board_id, created_by=request.user)
     board.delete()
     return JsonResponse(data={'detail':'Board Deleted'},safe=False,status=200)  # Renders nothing for removal
+
+
+
+@login_required
+def board_invite_view(request, board_uuid):
+    try:
+        board = Board.objects.get(uuid=board_uuid)
+        user = request.user
+
+        if user not in board.workspace.members.all():
+            return redirect('workspace:index')
+        
+        if user in board.members.all():
+            # Already a member, redirect to board index
+            return redirect('board:board-view', board_id=board.id)
+
+        if request.method == 'POST':
+            # User confirms joining
+            board.members.add(user)
+            return redirect('board:board-view', board_id=board.id)
+
+        # Show confirmation page
+        return render(request, 'boards/invite_confirmation.html', {
+            'board': board
+        })
+    except Board.DoesNotExist:
+        return redirect('board:index')
 
 
 
@@ -783,3 +820,6 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
+
+
+

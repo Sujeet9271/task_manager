@@ -49,6 +49,20 @@ class SubTaskCreateForm(forms.ModelForm):
         }
 
 
+class BoardCreateForm(forms.ModelForm):
+
+    def __init__(self, user:Users, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.auto_id='edit_%s'
+        else:
+            self.auto_id='id_%s'
+        self.user = user
+                
+    class Meta:
+        model = Board
+        fields = ['name','sprint_days','private']
+
 class BoardForm(forms.ModelForm):
     members = forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple(),queryset=Users.objects.none(),label='Assign Users')
 
@@ -65,7 +79,7 @@ class BoardForm(forms.ModelForm):
         
     class Meta:
         model = Board
-        fields = ['name','sprint_days','members']
+        fields = ['name','sprint_days','members','private']
     
 
 
@@ -91,13 +105,23 @@ class TaskForm(forms.ModelForm):
             exclude_users = [instance.created_by_id, user.id]
             if instance.parent_task:
                 exclude_users.append(instance.parent_task.created_by_id)
-                self.fields['assigned_to'].queryset = instance.parent_task.assigned_to.all().exclude(id__in=exclude_users)
+                if instance.created_by == user:
+                    self.fields['assigned_to'].queryset = instance.parent_task.assigned_to.all().exclude(id__in=exclude_users)
+                else:
+                    self.fields['assigned_to'].queryset = instance.assigned_to.all()
+                    self.fields['assigned_to'].widget.attrs['readonly'] = True
+                    self.fields['assigned_to'].disabled = True
                 if instance.parent_task.due_date:
                     self.fields['due_date'].widget.attrs.update({'max':f"{str(instance.parent_task.due_date)}"})
                     if instance.parent_task.due_date == date.today():
                         self.fields['due_date'].widget.attrs.update({'value':f"{str(instance.parent_task.due_date)}"})
             else:
-                self.fields['assigned_to'].queryset = instance.column.board.members.all().exclude(id__in=exclude_users)
+                if instance.created_by == user:
+                    self.fields['assigned_to'].queryset = instance.column.board.members.all().exclude(id__in=exclude_users)
+                else:
+                    self.fields['assigned_to'].queryset = instance.assigned_to.all()
+                    self.fields['assigned_to'].widget.attrs['readonly'] = True
+                    self.fields['assigned_to'].disabled = True
 
                 board = instance.column.board
                 sprint_end = (board.created_at + timedelta(days=board.sprint_days)).date()
@@ -109,10 +133,6 @@ class TaskForm(forms.ModelForm):
                                                         })
         elif self.workspace:
             self.fields['assigned_to'].queryset = workspace.members.all().exclude(id=user.id)
-                    
-
-
-        
 
     def clean(self):
         super().clean()

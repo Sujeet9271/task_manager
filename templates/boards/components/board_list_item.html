@@ -34,6 +34,16 @@
                             </button>
                             <ul class="dropdown-menu">
                               <li class="cursor pointer">
+                                <button class="dropdown-item"
+                                  title="Invite User to Join Board"
+                                  target="_blank"
+                                  data-copy="{{board.get_invite_link}}"
+                                  onclick="copyToClipboard(this)">
+                                  <i class="fa-solid fa-link"></i>
+                              </button>
+                              </li>
+                              
+                              <li class="cursor pointer">
                                 <a class="dropdown-item"
                                   title="Board Reports"
                                   target="_blank"
@@ -41,6 +51,7 @@
                                   Reports
                                 </a>
                               </li>
+                              
                               {% if board.created_by == request.user %}
                               <li class="cursor pointer">
                                 <a class="dropdown-item"

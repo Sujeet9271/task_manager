@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Page
-from board.forms import BoardForm, TaskFilterForm
+from board.forms import BoardCreateForm, BoardForm, TaskFilterForm
 from board.models import Board
 from notifications.views import get_notifications
 from workspace.forms import WorkSpaceForm
@@ -55,6 +55,7 @@ def get_workspace_boards(request,workspace_id):
         context['workspace_id'] = workspace_id
         context['users'] = workspace.members.all()
         context['view_name'] = 'Board'
+        context['board_create_form'] = BoardCreateForm(user=request.user)
         context:dict = get_notifications(user=request.user, page_number=1, context=context)
         return render(request,'boards/index.html',context)
     except Workspace.DoesNotExist:
@@ -130,4 +131,29 @@ def board_actions(request,workspace_id,board_id):
         if request.htmx:
             redirect_url = reverse('workspace:index')
             return HttpResponseClientRedirect(redirect_to=redirect_url)
+        return redirect('workspace:index')
+
+
+
+
+@login_required
+def workspace_invite_view(request, workspace_uuid):
+    try:
+        workspace = Workspace.objects.get(uuid=workspace_uuid)
+        user = request.user
+
+        if user in workspace.members.all():
+            # Already a member, redirect to workspace index
+            return redirect('workspace:get_workspace_boards', workspace_id=workspace.id)
+
+        if request.method == 'POST':
+            # User confirms joining
+            workspace.members.add(user)
+            return redirect('workspace:get_workspace_boards', workspace_id=workspace.id)
+
+        # Show confirmation page
+        return render(request, 'workspace/invite_confirmation.html', {
+            'workspace': workspace
+        })
+    except Workspace.DoesNotExist:
         return redirect('workspace:index')

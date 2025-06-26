@@ -1,6 +1,10 @@
 from datetime import datetime
 from django.db import models
 from accounts.models import Users
+from uuid import uuid4
+from django.contrib.sites.models import Site
+
+from django.urls import reverse
 # Create your models here.
 
 from django.db import models
@@ -24,6 +28,7 @@ class Workspace(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
     is_deleted = models.BooleanField(default=False, db_index=True)  # often filtered
     deleted_at = models.DateTimeField(null=True, blank=True)
+    uuid       = models.UUIDField(default=uuid4, unique=True,)
 
     def __str__(self):
         return self.name
@@ -33,6 +38,12 @@ class Workspace(models.Model):
         self.deleted_at = timezone.now()
         self.save(update_fields=['is_deleted', 'deleted_at', 'updated_at'])
         return self
+    
+    def get_invite_link(self):
+        relativeLink = reverse('workspace:workspace-invite', kwargs={'workspace_uuid': self.uuid})
+        baseurl = Site.objects.get_current().domain
+        invite_link = f"{baseurl}{relativeLink}"
+        return invite_link
 
     class Meta:
         indexes = [

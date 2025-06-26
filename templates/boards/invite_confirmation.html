@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Boards</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'images/task_master.png' %}"
+    />
+    <link
+      href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}"
+      rel="stylesheet"
+    />
+    <link
+      href="{% static 'assets/fontawesome/css/all.min.css' %}"
+      rel="stylesheet"
+    />
+    <link href="{% static 'css/workspace.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
+    <script src="{% static 'js/common.js' %}"></script>
+    <style>
+      <style>
+  /* Hover effect on the card */
+  .container > div:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Button hover effect */
+  .join-btn {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .join-btn:hover {
+    background-color: #0a58ca;
+    transform: scale(1.05);
+  }
+</style>
+    </style>
+  </head>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
+
+    {% include "components/navbar.html" %}
+		
+
+    <!-- Content -->
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+      <div class="text-center p-4 shadow rounded bg-white" style="max-width: 500px; width: 100%; transition: transform 0.3s ease;">
+        {% comment %} <img src="{% static 'images/logo.png' %}" alt="Logo" class="mb-4" style="height: 50px;"> {% endcomment %}
+
+        <h2 class="fw-bold mb-3">Join Board: {{ board.name }}</h2>
+        <p class="mb-4 text-muted">You're not a member of this Board yet. Would you like to join?</p>
+
+        <form method="POST">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary join-btn px-4 py-2">Join Board</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  </body>
+</html>

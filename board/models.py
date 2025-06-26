@@ -1,12 +1,14 @@
 from datetime import datetime
+import site
+from uuid import uuid4
 from django.db import models
 from django.db.models import FileField, Manager, Case, When, Value, IntegerField
 from django.forms import ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils import timezone
-from task_manager.utils import get_full_url
-
+from django.contrib.sites.models import Site
+from django.urls import reverse
 
 class SoftDeleteManager(models.Manager):
     def get_queryset(self):
@@ -41,6 +43,8 @@ class Board(SoftDeleteModel):
     updated_at = models.DateTimeField(default=timezone.now)
     updated_by = models.ForeignKey('accounts.Users', on_delete=models.SET_NULL, null=True)
     sprint_days = models.PositiveIntegerField(default=7)
+    private = models.BooleanField(default=False)
+    uuid       = models.UUIDField(default=uuid4, unique=True,)
 
     def __str__(self):
         return self.name
@@ -50,6 +54,13 @@ class Board(SoftDeleteModel):
         """Generate the full URL for the board view."""
         relative_url = reverse('board:board-view', args=[self.id])
         return request.build_absolute_uri(relative_url)
+    
+
+    def get_invite_link(self):
+        relativeLink = reverse('board:board-invite', kwargs={'board_uuid': self.uuid})
+        baseurl = Site.objects.get_current().domain
+        invite_link = f"{baseurl}{relativeLink}"
+        return invite_link
     
     class Meta:
         verbose_name = 'Board'
@@ -227,6 +238,7 @@ class Task(SoftDeleteModel):
     class Meta:
         verbose_name = 'Task'
         verbose_name_plural = 'Tasks'
+        ordering = ['column','-updated_at']
         indexes = [
             models.Index(fields=['is_deleted']),
             models.Index(fields=['column', 'order']),

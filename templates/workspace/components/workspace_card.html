@@ -37,6 +37,9 @@
           <a role="button" href="{% url 'workspace:get_workspace_boards' workspace.id %}" class="btn btn-outline-primary btn-icon" title="View Workspace">
             <i class="fas fa-arrow-right"></i>
           </a>
+          <button onclick="copyToClipboard(this)" data-copy="{{workspace.get_invite_link}}" class="btn btn-outline-primary btn-icon" title="Invite Link">
+            <i class="fa-solid fa-link"></i>
+          </button>
           {% if workspace.created_by == request.user %}
           <button class="btn btn-outline-secondary btn-icon" title="Edit Workspace"
                 hx-get="{% url 'workspace:workspace_actions' workspace.id %}"
