@@ -76,6 +76,8 @@ const editTaskModal = document.getElementById("editTaskModal");
 		let previous_board = document.querySelector(".active_board")
 		if (previous_board) {
 			previous_board.classList.remove("active_board");
+			board_id = previous_board.dataset.boardId
+			document.getElementById(`filter_board_${board_id}_btn`).classList.add('d-none')
 		}
 		let current_board = document.getElementById(`board-${evt.detail.board_id}`)
 		current_board.classList.add("active_board");
@@ -93,10 +95,11 @@ const editTaskModal = document.getElementById("editTaskModal");
 	htmx.on("reloadTaskList", function (evt) {
 		board_id = evt.detail.board_id;
 		column_id = evt.detail.column_id;
-		document.getElementById(`create_task_form_${column_id}`).reset();
+		// document.getElementById(`create_task_form_${column_id}`).reset();
+		document.getElementById('create_task_form').reset();
 		get_task_lists = evt.detail.get_task_lists;
-		
 		//htmx.ajax("GET", get_task_lists, { target: `#tasks_list_${column_id}`, swap: "innerHTML" });
+		
 	});
 
 	htmx.on("subTaskCreated", function (evt) {

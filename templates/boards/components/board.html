@@ -32,7 +32,7 @@
                     </div>
 
                     <!-- Task List -->
-                    <div id="{% if column.draft_column %}draft_tasks_list_{{ board.id }}{% else %}tasks_list_{{ column.id }}{% endif %}"
+                    <div id="{% if column.draft_column %}draft_tasks_list{% else %}tasks_list_{{ column.id }}{% endif %}"
                         class="card-body bg-white auto-hide-scrollbar {% if not column.draft_column %}dropzone{% endif %}" 
                         data-column-id="{{ column.id }}"
                         {% comment %} hx-target="this" 
@@ -64,7 +64,7 @@
 </div>
 
 
-<button class="btn btn-sm btn-outline-primary {% if filter_form.initial %}active{% endif %}" id="filter_board_btn"
+<button class="btn btn-sm btn-outline-primary {% if filter_form.initial %}active{% endif %}" id="filter_board_{{board.id}}_btn"
         title="Filters"
         data-bs-toggle="modal"
         data-bs-target="#filterBoard"
@@ -95,7 +95,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_addTaskModal"></button>
             </div>
             <div class="modal-body" id="add_task_modal">
-                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#draft_tasks_list_{{ board.id }}" hx-swap="beforeend" hx-indicator=".gif_loader">
+                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#draft_tasks_list" hx-swap="beforeend" hx-indicator=".gif_loader" id="create_task_form">
                     {% csrf_token %}
                     {% include 'form.html' with form=task_form %}
                     <div class="modal-footer">

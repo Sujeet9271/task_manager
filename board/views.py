@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
+from django.http import QueryDict
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Page
@@ -32,9 +33,10 @@ import re
 
 def task_lists(board_id:int, user:Users):
     board_filter = BoardFilter.objects.filter(board_id=board_id, user=user).only('filter').first()
-    if board_filter:
+    filters = Q(column__board_id=board_id, parent_task__isnull=True)
+    if board_filter.filter:
         cd = board_filter.filter
-        filters = Q(column__board_id=board_id)
+        user_filter = Q()
         if cd.get('search'):
             filters &= Q(title__icontains=cd['search']) | Q(description__icontains=cd['search'])
         if cd.get('priority'):
@@ -46,16 +48,31 @@ def task_lists(board_id:int, user:Users):
         if cd.get('due_before'):
             filters &= Q(due_date__lte=cd['due_before'])
         if cd.get('assigned_to'):
-            filters &= Q(assigned_to__in=cd['assigned_to'])
+            user_filter &= Q(assigned_to__in=cd['assigned_to'])
         if cd.get('tags'):
             filters &= Q(tags__in=cd['tags'])
         logger.debug(f'{filters=}')
-        tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters).distinct()
+        if user_filter:
+            logger.debug(f'{user_filter=}')
+            tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters, user_filter).distinct()
+        else:
+            tasks = user.assigned_tasks.prefetch_related('tags','assigned_to').filter(filters)
+    elif user.is_staff:
+        tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters)
     else:
-        tasks = Task.objects.prefetch_related('tags','assigned_to').filter(column__board_id=board_id, assigned_to=user, parent_task__isnull=True) if not user.is_staff else Task.objects.filter(column__board_id=board_id, parent_task__isnull=True)
+        tasks = user.assigned_tasks.prefetch_related('tags','assigned_to').filter(filters)
     return tasks
 
-
+def normalize_querydict(querydict: QueryDict) -> dict:
+    """
+    Converts a QueryDict to a standard dict:
+    - Flattens single-item lists
+    - Preserves multi-item lists
+    """
+    return {
+        key: values if len(values) > 1 else values[0]
+        for key, values in querydict.lists()
+    }
 
 @login_required
 def board_view(request, board_id):
@@ -70,8 +87,18 @@ def board_view(request, board_id):
         board_filter, _ = BoardFilter.objects.get_or_create(board=board, user=request.user)
         if request.method=='POST':
             logger.debug(f'{request.POST=}')
-            board_filter.filter = request.POST.dict() if not request.POST.get('clear') else {}
-            board_filter.filter.pop('csrfmiddlewaretoken',None)
+            if not request.POST.get('clear'):
+                filter_form = TaskFilterForm(board=board, data=request.POST)
+                q = QueryDict('', mutable=True)
+                q.update(filter_form.data)
+                logger.debug(f'{q=}')
+                data = normalize_querydict(q)
+
+                logger.debug(f'{data=}')
+                board_filter.filter = data
+            else:
+                board_filter.filter = {}
+                board_filter.filter.pop('csrfmiddlewaretoken',None)
             board_filter.save()
             triggers["filterSubmitted"] = {"board_id":  board_id, "level": "info"}
             triggers["closeModal"] = {"modal_id": "close_filterBoard", "level": "info"}
@@ -478,12 +505,13 @@ def create_sub_task(request, board_id, column_id, task_id):
 @login_required
 def create_task(request, board_id,):
     column = get_object_or_404(Column, board_id=board_id, board__members=request.user, draft_column=True)
-    form = TaskCreateForm(data=request.POST)
+    form = TaskForm(workspace=column.board.workspace,user=request.user,data=request.POST)
     if form.is_valid():
         instance:Task = form.save(commit=False)
         instance.column = column
         instance.created_by = request.user
         instance.save()
+        form.save_m2m()
 
         assigned_to = [instance.created_by]
         if instance.parent_task:

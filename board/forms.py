@@ -190,8 +190,8 @@ class TaskFilterForm(forms.Form):
         logger.debug(f'{kwargs=}')
         self.board = board
         self.auto_id = 'filter_%s'
-        self.fields['assigned_to'].queryset = board.members.all()
 
+        self.fields['assigned_to'].queryset = board.members.all()
         self.fields['due_after'].widget.attrs.update({'min':f"{str(board.created_at.date())}"})
         sprint_end = (board.created_at + timedelta(days=board.sprint_days)).date()                
         self.fields['due_before'].widget.attrs.update({
