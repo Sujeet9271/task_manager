@@ -73,4 +73,4 @@ def initials(value:str):
         logger.debug(f'{part=}')
         if part:
             short_name.append(part[0].capitalize())
-    return ''.join(short_name)
+    return ''.join(short_name[:1])

@@ -440,8 +440,12 @@
   border: 1px solid white;
 }
 
-.add_draft_task:hover{
+.add_draft_task:hover {
   background-color: #1d34ff9c;
   color: white;
   border: 1px solid white;
+}
+
+.board_column {
+  width: 30% !important;
 }

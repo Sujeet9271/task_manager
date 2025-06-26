@@ -50,24 +50,24 @@
     </div>
 
     <!-- Tags and Priority -->
-    <div class="d-flex align-items-start g-1 mb-2">
+    <div class="d-flex align-items-start g-1 mb-2 flex-wrap">
       {% if task.priority == 'High' %}
-        <span class="badge bg-danger me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
+        <span class="m-1 badge bg-danger me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
       {% elif task.priority == 'Medium' %}
-        <span class="badge bg-warning me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
+        <span class="m-1 badge bg-warning me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
       {% elif task.priority == 'Low' %}
-        <span class="badge bg-secondary me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
+        <span class="m-1 badge bg-secondary me-1 text-dark" title="Priority: {{task.priority}}">{{task.priority}}</span>
       {% else %}
-        <span class="badge bg-secondary me-1 text-dark">{{ task.priority }}</span>
+        <span class="m-1 badge bg-secondary me-1 text-dark">{{ task.priority }}</span>
       {% endif %}
       {% for tag in task.tags.all %}
-        <span class="badge bg-secondary me-1" title="Tag: {{tag}}">{{ tag }}</span>
+        <span class="m-1 badge bg-secondary me-1" title="Tag: {{tag}}">{{ tag }}</span>
       {% endfor %}
     </div>
 
     <!-- Updated Date -->
     <div class="footer d-flex justify-content-between">
-      <div class="datetime text-muted small pt-2">
+      <div class="datetime text-muted small pt-2" title="Last Updated">
         <span><i class="fa-regular fa-clock"></i></span> {{ task.updated_at|date:"M d, Y H:i" }}
       </div>
       <div class="assigned_users">
@@ -79,7 +79,7 @@
         {% else %}
         <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.email}}">{{user.email|initials}}</div>
         {% endif %}
-        {% if forloop.last and forloop.counter != 2 %}
+        {% if forloop.last and forloop.counter != 1 %}
         <div class="p-1 assigned_user second" title="Others">+</div>
         {% endif %}
         {% endfor %}
