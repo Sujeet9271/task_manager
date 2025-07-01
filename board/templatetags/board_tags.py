@@ -35,7 +35,7 @@ def notification_title(notification_title:str):
 @register.filter
 def notification_trim(notification_text:str):
     words = notification_text.split(' ')[:10]
-    return f"{" ".join(words)}..."
+    return f"{' '.join(words)}..."
 
 
 @register.filter

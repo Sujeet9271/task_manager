@@ -4,8 +4,9 @@
      draggable="true"
      data-task-id="{{ task.id }}"
      style="transition: box-shadow 0.2s ease-in-out;"
-     onmouseover="this.classList.add('shadow-lg')"
-     onmouseout="this.classList.remove('shadow-lg')">
+     onmouseover="showCompleteTaskCheckBox(this)"
+     onmouseout="showCompleteTaskCheckBox(this)"
+     >
 
   <!-- Left: Checkbox and Task Info -->
   <div class="d-flex flex-column flex-grow-1">
@@ -14,7 +15,7 @@
     <div class="d-flex align-items-center justify-content-between mb-2">
       <div class="d-flex">
         <input type="checkbox"
-             class="form-check-input me-2"
+             class="form-check-input me-2 complete_task d-none"
              id="task_toggle_{{task.id}}"
              {% if task.is_complete %}checked{% endif %}
              hx-post="{% url 'board:task-status-toggle' board_id=board_id column_id=task.column_id task_id=task.id %}"
@@ -36,7 +37,7 @@
       
       <!-- Delete Button -->
       {% if task.created_by == request.user %}
-      <button class="btn p-0 border-0 ms-3"
+      <button class="btn p-0 border-0 ms-3 delete_task d-none"
               id="task_delete_{{task.id}}"
               hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}"
               hx-target="#task_{{ task.id }}"
@@ -65,27 +66,31 @@
       {% endfor %}
     </div>
 
-    <!-- Updated Date -->
-    <div class="footer d-flex justify-content-between">
-      <div class="datetime text-muted small pt-2" title="Last Updated">
+    <!-- Footer -->
+    <div class="footer d-flex justify-content-between align-items-center">
+
+      <div class="datetime text-muted small" title="Last Updated">
         <span><i class="fa-regular fa-clock"></i></span> {{ task.updated_at|date:"M d, Y H:i" }}
       </div>
+
+      {% if task.total_sub_tasks > 0 %}
+      <div class="check-counter" title="Sub Tasks Counter">
+        <i class="far fa-square-check"></i> {{task.completed_sub_tasks}}/{{task.total_sub_tasks}}
+      </div>
+      {% endif %}
+
+      {% if task.assigned_to.exists %}
       <div class="assigned_users">
-        {% if task.assigned_to.exists %}
         {% with task|assigned_users as users %}
         {% for user in users %}
-        {% if user.name %}
-        <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.name}}">{{user.name|initials}}</div>
-        {% else %}
-        <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.email}}">{{user.email|initials}}</div>
-        {% endif %}
+        <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.username}} ({{user.email}})">{{user.username|initials}}</div>
         {% if forloop.last and forloop.counter > 2 %}
         <div class="p-1 assigned_user second" title="Check task details to view assigned users">+</div>
         {% endif %}
         {% endfor %}
         {% endwith %}
-        {% endif %}
       </div>
+      {% endif %}
       
     </div>
   </div>

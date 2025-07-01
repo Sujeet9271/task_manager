@@ -1,4 +1,4 @@
-<div class="d-flex  gap-2">
+<div class="d-flex gap-1">
     <div class="container py-3" id="form_div" style="width:50%;">
         <div class="task-container">
             {% include 'boards/components/edit_form.html' with task=task form=form sub_tasks=sub_tasks board_id=board_id column_id=task.column_id %}
@@ -14,9 +14,9 @@
                     >
                     {% csrf_token %}
                     <input type="text" name="title" placeholder="New Sub task" class="form-control me-2" required>
-                    <button type="submit" class="btn btn-light fw-bold">Add</button>
+                    <button type="submit" class="btn btn-light fw-bold add-sub-task">Add</button>
                 </form>
-                <div id="sub_task_container" class="p-2">
+                <div id="sub_task_container" class="p-3">
                     {% for sub_task in sub_tasks %}
                     {% include 'boards/components/sub_task_card.html' with sub_task=sub_task %}
                     {% endfor %}

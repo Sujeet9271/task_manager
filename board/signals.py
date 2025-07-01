@@ -115,6 +115,9 @@ def post_save_task(sender, instance: Task, created: bool, **kwargs):
             snapshot=current_data,
             hash=current_hash
         )
+        if created and instance.parent_task:
+            instance.parent_task.total_sub_tasks += 1
+            instance.parent_task.save(update_fields=['total_sub_tasks'])
         return
 
     if latest_history.hash == current_hash:
@@ -141,6 +144,18 @@ def post_save_task(sender, instance: Task, created: bool, **kwargs):
             hash=current_hash
         )
 
+
+@receiver(post_delete, sender=Task)
+def post_delete_task(sender, instance:Task, *args, **kwargs):
+    logger.debug('post_delete_task')
+    if instance.parent_task:
+        instance.parent_task.total_sub_tasks -= 1
+        if instance.is_complete:
+            instance.parent_task.completed_sub_tasks -= 1
+        instance.parent_task.save(update_fields=['total_sub_tasks','completed_sub_tasks'])
+
+
+
 @receiver(post_save, sender=Board)
 def post_save_board(sender, instance:Board, created:bool, *args, **kwargs):
     logger.debug(f'post_save_board')
@@ -152,4 +167,3 @@ def pre_save_column(sender, instance:Column, *args, **kwargs):
     logger.debug(f'pre_save_column')
     if not instance.pk and instance.board and not instance.board.columns.filter(draft_column=True).exists():
         instance.draft_column = True
-

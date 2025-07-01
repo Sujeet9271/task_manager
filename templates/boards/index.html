@@ -14,6 +14,67 @@
 		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
 		<script src="{% static 'js/common.js' %}"></script>
 		<script src="{% static 'assets/sortable/sortable.min.js' %}"></script>
+		<style>
+			.task-detail-container {
+  padding: 24px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  max-width: 700px;
+  margin: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.task-detail-container h2 {
+  margin-top: 0;
+}
+.task-tags .tag {
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: #fff;
+  margin-right: 6px;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+.task-meta, .task-users, .task-comments, .task-attachments, .task-subtask-info {
+  margin-top: 15px;
+}
+.task-comments ul, .task-users ul, .task-attachments ul {
+  list-style: none;
+  padding-left: 0;
+}
+.comment-header {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.comment-body {
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 8px;
+  border-radius: 6px;
+}
+.mention {
+  background-color: #dbeafe;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 4px;
+}
+.attachment-meta {
+  font-size: 0.8em;
+  color: #555;
+  margin-left: 8px;
+}
+.priority.low {
+  color: green;
+}
+.priority.medium {
+  color: orange;
+}
+.priority.high {
+  color: red;
+}
+
+		</style>
+
 	</head>
 
 	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
@@ -43,7 +104,7 @@
 			</div>
 			  
 		
-			<div class="main-content" id="main-content">
+			<div class="main-content p-2 m-1" id="main-content">
 				{% if active_board %}
 				{% include "boards/components/board.html" with board=active_board %}
 				{% else %}
@@ -84,10 +145,9 @@
 						<h5 class="modal-title" id="createColumnModalLabel">Add New Column</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_createColumnModal"></button>
 					</div>
-					<div class="modal-body" id="modal-column-body">
+					<div class="modal-body" id="add-column-body">
 						
 					</div>
-					
 				</div>
 			</div>
 		</div>
@@ -145,6 +205,18 @@
 				dropover.classList.toggle('d-none');
 			}
 		}
+
+		function showCompleteTaskCheckBox(task_card){
+			task_card.classList.toggle('shadow-lg')
+			checkbox = task_card.querySelector('.complete_task');
+			checkbox.classList.toggle('d-none')
+
+			delete_task = task_card.querySelector('.delete_task')
+			if(delete_task){
+				delete_task.classList.toggle('d-none')
+			}
+		}
+
 		htmx.on('htmx:afterSwap', (evt) => {
 			if(evt.target.id=="notification-list"){
 				var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'))

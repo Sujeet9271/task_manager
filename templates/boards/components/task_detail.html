@@ -1,0 +1,131 @@
+<div class="container py-4">
+  <div class="row g-4">
+    <!-- Left: Task Details -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h2 class="card-title mb-1 fw-semibold">{{ task.title }}</h2>
+              <p class="text-muted mb-0">{{ task.description|linebreaksbr }}</p>
+            </div>
+            {% if task.priority %}
+              <span class="badge fs-6 {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                {{ task.priority }}
+              </span>
+            {% endif %}
+          </div>
+
+          <hr>
+
+          <div class="row mb-4">
+            <div class="col-md-6 small text-secondary">
+              <p><strong>📅 Due:</strong> {{ task.due_date|date:"M d, Y" }}</p>
+              <p><strong>📌 Status:</strong> {{ task.is_complete|yesno:"✅ Completed,❌ Incomplete" }}</p>
+              {% if task.parent_task %}
+                <p><strong>🧩 Parent Task:</strong> {{ task.parent_task.title }}</p>
+              {% endif %}
+              <p><strong>🗂️ Column:</strong> {{ task.column.name }}</p>
+            </div>
+            <div class="col-md-6 small text-secondary">
+              <p><strong>👤 Created by:</strong> {{ task.created_by.username }} ({{ task.created_by.email }})</p>
+              <p><strong>🛠️ Updated by:</strong> {{ task.updated_by.username }} ({{ task.updated_by.email }})</p>
+              <p><strong>🕓 Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
+              <p><strong>🔄 Updated:</strong> {{ task.updated_at|date:"M d, Y H:i" }}</p>
+            </div>
+          </div>
+
+          {% if task.assigned_to.exists %}
+          <hr>
+          <div class="mb-4">
+            <h5 class="fw-semibold">👥 Assigned Users</h5>
+            <ul class="list-group list-group-flush">
+              {% for user in task.assigned_to.all %}
+                <li class="list-group-item bg-transparent px-0 py-1">
+                  <i class="bi bi-person me-1"></i> {{ user.username }} <small class="text-muted">({{ user.email }})</small>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          {% if task.tags.exists %}
+          <hr>
+          <div class="mb-4">
+            <h5 class="fw-semibold">🏷️ Tags</h5>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              {% for tag in task.tags.all %}
+                <span class="badge rounded-pill px-3 py-2 text-white" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if task.total_sub_tasks > 0 %}
+          <hr>
+          <div class="mb-4">
+            <h5 class="fw-semibold">🧾 Subtasks <small class="text-muted">({{ task.completed_sub_tasks }}/{{ task.total_sub_tasks }})</small></h5>
+            <ul class="list-group list-group-flush">
+              {% for sub_task in task.sub_tasks.all %}
+                <li class="list-group-item bg-transparent px-0 py-1" title="{{ sub_task.description }}">
+                  <i class="bi bi-check2-square me-1"></i>{{ sub_task.title }}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          {% if task.attachments.exists %}
+          <hr>
+          <div class="mb-2">
+            <h5 class="fw-semibold">📎 Attachments</h5>
+            <ul class="list-unstyled">
+              {% for a in task.attachments.all %}
+                <li class="mb-2">
+                  <a href="{{ a.attachment_url }}" class="text-decoration-none" target="_blank">
+                    <i class="bi bi-paperclip me-1"></i>{{ a.attachment_name }}
+                  </a>
+                  <br>
+                  <small class="text-muted">({{ a.file_size }}) by {{ a.uploaded_by.name }} on {{ a.created_at|date:"M d, Y" }}</small>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Comments -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <h5 class="fw-semibold mb-3">💬 Comments</h5>
+          {% if task.comments.all %}
+            <div class="overflow-auto" style="max-height: 500px;">
+              <ul class="list-unstyled">
+                {% for c in task.comments.all %}
+                <li class="mb-4 border-bottom pb-3">
+                  <div class="fw-medium">{{ c.added_by.username }}</div>
+                  <p class="mt-2 mb-1 small">{{ c.comment|linebreaks }}</p>
+                  {% if c.mentioned_users.all %}
+                    <div class="small text-muted">
+                      Mentioned:
+                      {% for u in c.mentioned_users.all %}
+                        <span class="badge bg-light text-dark">@{{ u.name }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <small class="text-muted">{{ c.created_at|date:"M d, Y H:i" }}</small>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% else %}
+            <p class="text-muted fst-italic">No comments</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

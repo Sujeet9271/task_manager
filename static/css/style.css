@@ -76,6 +76,7 @@ body {
   background-color: transparent;
   border: 2px solid var(--custom-primary-color);
   color: var(--custom-primary-color);
+  transform: scale(1);
 }
 
 .notifications-btn:hover {
@@ -176,8 +177,8 @@ body {
   padding: 4px;
   border-radius: 6px;
   margin-bottom: 10px;
-  margin: 4px 0;
-  margin-left: 4px;
+  /* margin: 4px 0;
+  margin-left: 4px; */
   border: 1px solid black;
   outline: none;
 }
@@ -263,9 +264,15 @@ form input[type="checkbox"] {
   background-color: var(--custom-primary-color) !important;
 }
 
-.badge {
+.notification-badge {
   font-size: 0.6rem;
-  padding: 0.35em 0.5em;
+  color: white;
+  font-size: 0.7rem;
+  margin-right: 0.25rem;
+  padding: 0.2em 0.6em;
+  border-radius: 0.25rem;
+  height: 20px;
+  width: 20px;
 }
 
 .btn-light:hover {
@@ -350,12 +357,12 @@ form input[type="checkbox"] {
 
 .notification-dropdown.show {
   display: block;
+  width: 560px;
 }
 
 .unread {
   background-color: rgb(230 230 230);
 }
-
 
 .loader {
   width: 48px;

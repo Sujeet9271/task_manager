@@ -182,9 +182,6 @@ class Tag(SoftDeleteModel):
             models.Index(fields=['created_by']),
         ]
 
-    
-
-
 
 class Task(SoftDeleteModel):
     column = models.ForeignKey(Column, on_delete=models.CASCADE, related_name='tasks', db_index=True)
@@ -211,6 +208,9 @@ class Task(SoftDeleteModel):
     is_complete = models.BooleanField(default=False, db_index=True)
     tags = models.ManyToManyField(Tag, related_name='tasks', blank=True)
 
+    total_sub_tasks = models.PositiveIntegerField(default=0)
+    completed_sub_tasks = models.PositiveIntegerField(default=0)
+
     objects = TaskManager()
 
     def __str__(self):
@@ -230,6 +230,18 @@ class Task(SoftDeleteModel):
         
         if self.pk and not self.updated_by:
             raise ValidationError({'updated_by','Updating user not specified'})
+        
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['is_deleted', 'deleted_at'])
+        
+        if self.parent_task:
+            self.parent_task.total_sub_tasks -= 1
+            if self.is_complete:
+                self.parent_task.completed_sub_tasks -= 1
+            self.parent_task.save(update_fields=['total_sub_tasks','completed_sub_tasks'])
+        return self
 
     def save(self, *args, **kwargs):
         self.full_clean()  # Enforces clean() during save
@@ -245,45 +257,7 @@ class Task(SoftDeleteModel):
             models.Index(fields=['created_by']),
             models.Index(fields=['priority']),
             models.Index(fields=['is_complete']),
-        ]
-
-    
-
-class TaskHistory(SoftDeleteModel):
-    task = models.ForeignKey(
-        'Task',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='history',
-    )
-    updated_by = models.ForeignKey(
-        'accounts.Users',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
-    changes = models.JSONField(default=dict, blank=True)
-    snapshot = models.JSONField(default=dict, blank=True)
-    hash = models.CharField(max_length=128, blank=True, db_index=True)  # assume hash is SHA-like
-    
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f'History for Task #{self.task_id} by User #{self.updated_by_id}'
-    
-    class Meta:
-        verbose_name = 'Task History'
-        verbose_name_plural = 'Task Histories'
-        ordering = ['-created_at']  # show recent changes first
-        indexes = [
-            models.Index(fields=['is_deleted']),
-            models.Index(fields=['task']),
-            models.Index(fields=['updated_by']),
-            models.Index(fields=['hash']),
-            models.Index(fields=['-created_at']),
-        ]
+        ] 
 
 
 
@@ -338,7 +312,6 @@ class Attachment(models.Model):
             models.Index(fields=['uploaded_by']),
         ]
 
-    
 
 class Comments(models.Model):
     task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name="comments")
@@ -359,6 +332,45 @@ class Comments(models.Model):
             models.Index(fields=['added_by']),
             models.Index(fields=['created_at']),
         ]
+
+
+
+class TaskHistory(SoftDeleteModel):
+    task = models.ForeignKey(
+        'Task',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='history',
+    )
+    updated_by = models.ForeignKey(
+        'accounts.Users',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    changes = models.JSONField(default=dict, blank=True)
+    snapshot = models.JSONField(default=dict, blank=True)
+    hash = models.CharField(max_length=128, blank=True, db_index=True)  # assume hash is SHA-like
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f'History for Task #{self.task_id} by User #{self.updated_by_id}'
+    
+    class Meta:
+        verbose_name = 'Task History'
+        verbose_name_plural = 'Task Histories'
+        ordering = ['-created_at']  # show recent changes first
+        indexes = [
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['task']),
+            models.Index(fields=['updated_by']),
+            models.Index(fields=['hash']),
+            models.Index(fields=['-created_at']),
+        ]
+
 
 
 class BoardFilter(models.Model):

@@ -263,6 +263,7 @@
   align-items: center;
   background-color: #cbd2d938;
 
+  border: 1px solid lightgrey;
   border-radius: 16px;
   padding: 0.75rem 1.25rem;
   box-shadow: 0 2px 10px rgb(0 0 0 / 30%);
@@ -270,9 +271,7 @@
   transition: box-shadow 0.3s ease;
   cursor: pointer;
   margin-bottom: 10px;
-}
 
-.sub-task-card {
   padding: 12px;
   background-color: #ffffff;
   border-radius: 8px;
@@ -326,7 +325,7 @@
 
 /* Sidebar Container */
 .sidebar {
-  width: 350px;
+  min-width: 350px;
   background-color: #ffffff;
   border-right: 1px solid #eaeaea;
   padding: 1.5rem 1rem;
@@ -448,4 +447,34 @@
 
 .board_column {
   width: 30% !important;
+}
+
+.check-counter {
+  display: flex;
+  align-items: center;
+  font-family: sans-serif;
+  color: #c0c0c0; /* light grey like in dark mode */
+  font-size: 14px;
+}
+
+.check-counter i {
+  margin-right: 4px;
+}
+
+.add-column {
+  height: 10vh;
+  width: 20vw;
+  justify-content: flex-start;
+  border-radius: 8px;
+  border: 1px solid #80008042;
+  background-color: #acb3f0;
+  padding: 15px;
+}
+
+.add-column span {
+  font-size: 20px;
+}
+
+.add-sub-task{
+  border:1px solid grey;
 }

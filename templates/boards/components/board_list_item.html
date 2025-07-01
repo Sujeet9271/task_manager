@@ -5,15 +5,7 @@
                         </a>
                         
                         <div class="d-flex gap-2">
-                          <button class="btn btn-sm btn-outline-primary"
-                                  title="Add Column"
-                                  hx-get="{% url 'board:column-create' board.id %}"
-                                  hx-target="#modal-column-body"
-                                  hx-swap="innerHTML"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#createColumnModal">
-                            <i class="fa fa-plus"></i>
-                          </button>
+                          
 
                           <button class="btn btn-sm btn-outline-primary filter_board d-none" id="filter_board_{{board.id}}_btn"
                                   title="Filters"
@@ -24,14 +16,14 @@
                           </button>
                       
                           <!-- Dropdown for Edit/Delete -->
+                          <button class="btn btn-outline-primary btn-sm"
+                                  title="Actions"
+                                  type="button"
+                                  data-bs-toggle="dropdown"
+                                  aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                          </button>
                           <div class="dropdown">
-                            <button class="btn btn-outline-primary btn-sm"
-                                    title="Actions"
-                                    type="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                              <i class="fa-solid fa-ellipsis-vertical"></i>
-                            </button>
                             <ul class="dropdown-menu">
                               <li class="cursor pointer">
                                 <button class="dropdown-item"

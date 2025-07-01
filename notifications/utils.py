@@ -6,7 +6,6 @@ from notifications.models import Notification
 
 from task_manager.logger import logger
 
-
 def get_notifications(user, page_number=1, context:dict=dict):
     notifications:QuerySet[Notification] = user.notifications.all()
     try:

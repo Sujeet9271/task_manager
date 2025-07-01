@@ -44,6 +44,15 @@
                 </div>
             </div>
         {% endfor %}
+        <div class="m-1 add-column" id="add-column" title="Add Column"
+            hx-get="{% url 'board:column-create' board.id %}"
+            hx-target="#add-column-body"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal"
+            data-bs-target="#createColumnModal"
+            onmouseover="this.classList.toggle('shadow-lg')" onmouseout="this.classList.toggle('shadow-lg')">
+            <span class="fw-bold text-white cursor pointer">+ Add new column</span>
+        </div>
         {% else %}
         <div class="col-md-12 text-center">
             <div class="welcome-illustration">
@@ -51,7 +60,7 @@
                 <p>No columns available. Please create a column.</p>
                 <button class="btn btn-primary" 
                 hx-get="{% url 'board:column-create' board.id %}"
-                hx-target="#modal-column-body"
+                hx-target="#add-column-body"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal" 
                 data-bs-target="#createColumnModal" 

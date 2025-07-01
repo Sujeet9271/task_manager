@@ -567,81 +567,83 @@ def create_task(request, board_id,):
 @require_http_methods(['GET','POST'])
 @login_required
 def edit_task(request, board_id, column_id, task_id):
-    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, assigned_to=request.user)
+    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user,)
     context = {'task':task,'board_id':board_id,'column_id':column_id}
-    form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
-    context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
-    if request.method=='POST':
-        if form.is_valid():
-            assigned_to = form.cleaned_data.get('assigned_to')
-            tags = form.cleaned_data.get('tags')
-            assigned_to_list = list(assigned_to)
+    if task.assigned_to.filter(id=request.user.id).exists():
+        form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
+        context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
+        if request.method=='POST':
+            if form.is_valid():
+                assigned_to = form.cleaned_data.get('assigned_to')
+                tags = form.cleaned_data.get('tags')
+                assigned_to_list = list(assigned_to)
 
-            assigned_to_list.extend([task.created_by,request.user])
-            if task.parent_task:
-                assigned_to_list.append(task.parent_task.created_by)
+                assigned_to_list.extend([task.created_by,request.user])
+                if task.parent_task:
+                    assigned_to_list.append(task.parent_task.created_by)
 
-            task:Task = form.save(commit=False)
-            task.updated_by = request.user
+                task:Task = form.save(commit=False)
+                task.updated_by = request.user
 
-            task.save()
+                task.save()
 
-            task.assigned_to.set(assigned_to_list)
-            task.tags.set(tags)
+                task.assigned_to.set(assigned_to_list)
+                task.tags.set(tags)
 
-            files = request.FILES.getlist('attachments')
-            urls = request.POST.getlist('urls')
-            url_names = request.POST.getlist('url_names')
-            attachment_list = []
-            # Upload files
-            for file in files:
-                attachment_list.append(
-                Attachment(
-                    workspace=form.workspace,
-                    task=task,
-                    file=file,
-                    type='file',
-                    uploaded_by=request.user
-                ))
-
-            # Store links
-            for url, name in zip(urls, url_names):
-                if url.strip():  # skip blanks
+                files = request.FILES.getlist('attachments')
+                urls = request.POST.getlist('urls')
+                url_names = request.POST.getlist('url_names')
+                attachment_list = []
+                # Upload files
+                for file in files:
                     attachment_list.append(
                     Attachment(
                         workspace=form.workspace,
                         task=task,
-                        type='url',
-                        url=url.strip(),
-                        name=name.strip() or None,
+                        file=file,
+                        type='file',
                         uploaded_by=request.user
                     ))
 
-            if attachment_list:
-                Attachment.objects.bulk_create(attachment_list)
+                # Store links
+                for url, name in zip(urls, url_names):
+                    if url.strip():  # skip blanks
+                        attachment_list.append(
+                        Attachment(
+                            workspace=form.workspace,
+                            task=task,
+                            type='url',
+                            url=url.strip(),
+                            name=name.strip() or None,
+                            uploaded_by=request.user
+                        ))
+
+                if attachment_list:
+                    Attachment.objects.bulk_create(attachment_list)
+                if request.htmx:
+                    context['form'] = form
+                    response = render(request,'boards/components/edit_form.html',context)
+                    triggers = {"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}}
+                    if not task.parent_task:
+                        triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
+                    response['HX-Trigger'] = json.dumps(triggers)
+                    return response
+        
+            logger.info(f'{form.errors.as_json()=}')
             if request.htmx:
                 context['form'] = form
                 response = render(request,'boards/components/edit_form.html',context)
-                triggers = {"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}}
-                if not task.parent_task:
-                    triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
-                response['HX-Trigger'] = json.dumps(triggers)
                 return response
-    
-        logger.info(f'{form.errors.as_json()=}')
-        if request.htmx:
-            context['form'] = form
-            response = render(request,'boards/components/edit_form.html',context)
-            return response
 
-    comments = Comments.objects.select_related('added_by').filter(task=task).order_by('created_at')
-    comment_form = CommentForm()
-    context['form'] = form
-    context['comments'] = comments
-    context['comment_form'] = comment_form
-    if not task.parent_task:
-        context = sub_task_list(user=request.user, task=task, context=context)
-    return render(request,'boards/components/edit.html',context)
+        comments = Comments.objects.select_related('added_by').filter(task=task).order_by('created_at')
+        comment_form = CommentForm()
+        context['form'] = form
+        context['comments'] = comments
+        context['comment_form'] = comment_form
+        if not task.parent_task:
+            context = sub_task_list(user=request.user, task=task, context=context)
+        return render(request,'boards/components/task_edit.html',context)
+    return render(request,'boards/components/task_detail.html',context)
 
 @require_http_methods(['POST'])
 @login_required
@@ -672,7 +674,10 @@ def task_status_toggle(request, board_id, column_id, task_id):
     else:
         task.is_complete = True
     task.save(update_fields=['is_complete','updated_at'])
-    response = render(request,'boards/components/task_card.html',{'task':task,"board_id":board_id,"column_id":column_id})
+    if task.parent_task:
+        response = render(request,'boards/components/sub_task_card.html',{'sub_task':task,"board_id":board_id,"column_id":column_id})
+    else:
+        response = render(request,'boards/components/task_card.html',{'task':task,"board_id":board_id,"column_id":column_id})
     return response
 
 @require_http_methods(['DELETE'])
