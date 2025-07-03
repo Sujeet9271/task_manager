@@ -11,6 +11,7 @@ urlpatterns = [
     path('<int:board_id>/columns/<int:column_id>/', views.get_task_lists, name='get_task_lists'),
     path('<int:board_id>/columns/<int:column_id>/update_name/', views.update_column_name, name='update_column_name'),
     path('<int:board_id>/columns/<int:column_id>/delete/', views.delete_column, name='column-delete'),
+    path('<int:board_id>/columns/<int:column_id>/tasks/<int:task_id>/detail/', views.detail_task, name='task-detail'),
     path('<int:board_id>/columns/<int:column_id>/tasks/<int:task_id>/edit/', views.edit_task, name='task-edit'),
     path('<int:board_id>/columns/<int:column_id>/tasks/<int:task_id>/delete/', views.delete_task, name='task-delete'),
     path('<int:board_id>/columns/<int:column_id>/tasks/<int:task_id>/toggle/', views.task_status_toggle, name='task-status-toggle'),

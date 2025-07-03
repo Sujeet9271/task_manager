@@ -69,9 +69,12 @@ def workspace_actions(request,workspace_id):
         workspace = Workspace.objects.get(id=workspace_id, created_by=request.user)
         if request.method=='DELETE':
             workspace.delete()
-            return HttpResponse(status=200)
-            redirect_url = reverse('workspace:index')
-            return HttpResponseClientRedirect(redirect_to=redirect_url)
+            response = HttpResponse(status=200)
+            triggers = {}
+            triggers["showToast"] = {"message":"Workspace Deleted", "level":"danger"}
+            response['HX-Trigger'] = json.dumps(triggers)
+            return response
+        
         form = WorkSpaceForm(user=request.user,instance=workspace, data=request.POST or None)
         if request.method == 'POST' and form.is_valid():
             members = form.cleaned_data.get('members')
@@ -87,7 +90,9 @@ def workspace_actions(request,workspace_id):
             instance.members.set(members_list)  # assuming it's a ManyToMany field
 
             response = render(request, "workspace/components/workspace_card.html", {"workspace": instance})
-            response['HX-Trigger'] = 'workspaceEdited'
+            triggers = {'workspaceEdited':{'message':'Workspace Edited', 'level':'info'}}
+            triggers["showToast"] = {"message":"Workspace Edited", "level":"success"}
+            response['HX-Trigger'] = json.dumps(triggers)
             return response
         return render(request,'workspace/components/edit.html',{'form':form})
     except Exception as e:
@@ -106,7 +111,11 @@ def board_actions(request,workspace_id,board_id):
         board:Board = Board.objects.get(workspace_id=workspace_id,id=board_id, created_by=request.user)
         if request.method=='DELETE':
             board.delete()
-            return HttpResponseClientRefresh()
+            response = HttpResponseClientRefresh()
+            triggers = {}
+            triggers["showToast"] = {"message":"Board Deleted", "level":"danger"}
+            response['HX-Trigger'] = json.dumps(triggers)
+            return response
             
         form = BoardForm(workspace=board.workspace,user=request.user, instance=board, data=request.POST or None)
         if request.method == 'POST' and form.is_valid():
@@ -123,6 +132,7 @@ def board_actions(request,workspace_id,board_id):
             response = render(request,'boards/components/board_list_item.html',{'board':instance})
             triggers = {}
             triggers["closeModal"] = {"modal_id": "close_editBoardModal", "level": "info"}
+            triggers["showToast"] = {"message":"Board Detail Edited", "level":"success"}
             response['HX-Trigger'] = json.dumps(triggers)
             return response
         return render(request,'boards/components/board_edit.html',{'form':form})

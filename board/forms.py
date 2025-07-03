@@ -102,6 +102,7 @@ class TaskForm(forms.ModelForm):
         
         instance: Task = self.instance
         if instance and instance.pk: 
+            self.fields['due_date'].widget.attrs.update({'min':f"{str(instance.created_at.date())}"})
             exclude_users = [instance.created_by_id, user.id]
             if instance.parent_task:
                 exclude_users.append(instance.parent_task.created_by_id)
@@ -222,3 +223,13 @@ class TaskFilterForm(forms.Form):
     class Meta:
         model = Task
         fields = ['search','due_after','due_before','assigned_to','tags','priority','is_complete']
+
+
+
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+        widgets = {
+            'color': forms.TextInput(attrs={'type': 'color'}),
+        }

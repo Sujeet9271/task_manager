@@ -30,12 +30,12 @@ def create_board_member_notification(sender, instance: Board, action, reverse, m
 
 
 @receiver(m2m_changed, sender=Task.assigned_to.through)
-def create_task_member_notification(sender, instance: Task, action, reverse, model, pk_set, **kwargs):
+def create_task_member_notification(sender, instance: Task, action, reverse, model, pk_set:set, **kwargs):
     """Signal handler to create notifications when users are added or removed from a task."""
     logger.info(f'{action=}, {sender=}, {model=}, {instance=}, {pk_set=}')
-    if instance.created_by_id in pk_set:
-        return
-    if action == 'post_add':  # Users are added            
+    if action == 'post_add':  # Users are added        
+        if instance.created_by in pk_set:    
+            pk_set.remove(instance.created_by_id)
         if instance.due_date:
             message = f"You've been assigned to the task: '{instance.title}' (ID: {instance.id}) in the board: '{instance.column.board.name}'. The task is due on {instance.due_date}. Please make sure to complete it on time."
         else:

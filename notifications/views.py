@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET
@@ -33,5 +34,6 @@ def read_notification(request,id):
         notification.save(update_fields=['read','updated_at'])
     context['notification'] = notification
     response = render(request,'notifications/notification_card.html',context)
-    response['HX-Trigger'] = 'notificationRead'
+    triggers = {'notificationRead':{'message':'Notification Read', 'level':'info'}}
+    response['HX-Trigger'] = json.dumps(triggers)
     return response

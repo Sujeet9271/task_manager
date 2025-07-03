@@ -270,6 +270,7 @@ class Attachment(models.Model):
         max_upload_size=10485760
     )
     type = models.CharField(max_length=10, choices=[('file','File'),('url','URL')],default='file')
+    file_type = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True,blank=True)
     uploaded_by = models.ForeignKey("accounts.Users",on_delete=models.SET_NULL,null=True,blank=True)

@@ -50,20 +50,7 @@ const editTaskModal = document.getElementById("editTaskModal");
 	});
 
 
-	htmx.on("notificationRead", function (evt) {
-		try{
-			unread_counts = document.getElementById('unread_notification_count').innerHTML
-			count = parseInt(unread_counts) - 1
-			if (count){
-				document.getElementById('unread_notification_count').innerHTML = count
-			}else{
-				document.getElementById('unread_notification_count').remove()
-			}
-		}catch(error){
-			console.log(error)
-		}
-
-	});
+	
 
 	htmx.on("columnUpdated", function (evt) {
 		board_id = evt.detail.board_id;

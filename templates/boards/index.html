@@ -15,63 +15,7 @@
 		<script src="{% static 'js/common.js' %}"></script>
 		<script src="{% static 'assets/sortable/sortable.min.js' %}"></script>
 		<style>
-			.task-detail-container {
-  padding: 24px;
-  background: #f9f9f9;
-  border-radius: 12px;
-  font-family: 'Segoe UI', sans-serif;
-  max-width: 700px;
-  margin: auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.task-detail-container h2 {
-  margin-top: 0;
-}
-.task-tags .tag {
-  padding: 4px 10px;
-  border-radius: 8px;
-  color: #fff;
-  margin-right: 6px;
-  font-size: 0.85rem;
-  display: inline-block;
-}
-.task-meta, .task-users, .task-comments, .task-attachments, .task-subtask-info {
-  margin-top: 15px;
-}
-.task-comments ul, .task-users ul, .task-attachments ul {
-  list-style: none;
-  padding-left: 0;
-}
-.comment-header {
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-.comment-body {
-  background: #fff;
-  border: 1px solid #eee;
-  padding: 8px;
-  border-radius: 6px;
-}
-.mention {
-  background-color: #dbeafe;
-  padding: 2px 6px;
-  border-radius: 6px;
-  margin-left: 4px;
-}
-.attachment-meta {
-  font-size: 0.8em;
-  color: #555;
-  margin-left: 8px;
-}
-.priority.low {
-  color: green;
-}
-.priority.medium {
-  color: orange;
-}
-.priority.high {
-  color: red;
-}
+			
 
 		</style>
 
@@ -160,7 +104,7 @@
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_editTaskModal"></button>
 					</div>
 					<div class="modal-body" id="edit_task_modal">
-						Editing task content here.
+						Task Detail content here.
 					</div>
 				</div>
 			</div>
@@ -195,6 +139,21 @@
 			</div>
 		</div>
 
+		<!-- Toasts will be injected here -->
+		<div id="htmx-toast-container" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+
+
+		<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+			<div id="htmx-toast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+				<div class="d-flex">
+					<div class="toast-body" id="htmx-toast-body">
+						<!-- Error message will go here -->
+					</div>
+					<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+				</div>
+			</div>
+		</div>
+
 	</body>
 	<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 	<script src="{% static 'js/board_index.js' %}"></script>
@@ -207,13 +166,24 @@
 		}
 
 		function showCompleteTaskCheckBox(task_card){
-			task_card.classList.toggle('shadow-lg')
+			task_card.classList.add('shadow-lg')
 			checkbox = task_card.querySelector('.complete_task');
-			checkbox.classList.toggle('d-none')
+			checkbox.classList.remove('d-none')
 
 			delete_task = task_card.querySelector('.delete_task')
 			if(delete_task){
-				delete_task.classList.toggle('d-none')
+				delete_task.classList.remove('d-none')
+			}
+		}
+
+		function hideCompleteTaskCheckBox(task_card){
+			task_card.classList.remove('shadow-lg')
+			checkbox = task_card.querySelector('.complete_task');
+			checkbox.classList.add('d-none')
+
+			delete_task = task_card.querySelector('.delete_task')
+			if(delete_task){
+				delete_task.classList.add('d-none')
 			}
 		}
 
@@ -323,6 +293,7 @@
 					}).then(data => {
 						const taskCard = document.querySelector(`[data-task-id="${current_task_id}"]`);
 						zone.appendChild(taskCard);
+						showToast('Task Moved to new column','success')
 					
 						// Assuming data.urls is an object like { "edit": { id: 1, url: "/edit/1/" }, ... }
 						Object.keys(data.urls).forEach(key => {
@@ -337,7 +308,7 @@
 						});
 					}).catch(error => {
 						console.error(error);
-						alert('Failed to move task');
+						showToast('Failed to move task')
 					}).finally(() => {
 						zone.classList.remove('bg-light');
 					});					

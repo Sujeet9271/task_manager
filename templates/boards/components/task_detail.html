@@ -1,3 +1,4 @@
+{% load board_tags %}
 <div class="container py-4">
   <div class="row g-4">
     <!-- Left: Task Details -->
@@ -5,17 +6,41 @@
       <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h2 class="card-title mb-1 fw-semibold">{{ task.title }}</h2>
+            <!-- Title, Description, Priority Badge -->
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h2 class="card-title mb-0 fw-semibold">{{ task.title }}</h2>
+                {% if task.priority %}
+                  <span class="badge fs-6 {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                    {{ task.priority }}
+                  </span>
+                {% endif %}
+              </div>
               <p class="text-muted mb-0">{{ task.description|linebreaksbr }}</p>
             </div>
-            {% if task.priority %}
-              <span class="badge fs-6 {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                {{ task.priority }}
-              </span>
-            {% endif %}
-          </div>
 
+            <!-- Edit & Delete Buttons -->
+            <div class="d-flex gap-2 ms-3">
+              <!-- Edit -->
+              <button class="btn btn-outline-primary btn-sm"
+                hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
+                hx-target="#edit_task_modal"
+                hx-swap="innerHTML"
+                title="Edit Task">
+                <i class="fa-regular fa-pen-to-square"></i>
+              </button>
+
+              <!-- Delete -->
+              <button class="btn btn-outline-danger btn-sm"
+                hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}?from=task_detail"
+                hx-confirm="Are you sure you want to delete this task?"
+                hx-target="#task_{{ task.id }}"
+                hx-swap="delete"
+                title="Delete Task">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
           <hr>
 
           <div class="row mb-4">
@@ -23,13 +48,18 @@
               <p><strong>📅 Due:</strong> {{ task.due_date|date:"M d, Y" }}</p>
               <p><strong>📌 Status:</strong> {{ task.is_complete|yesno:"✅ Completed,❌ Incomplete" }}</p>
               {% if task.parent_task %}
-                <p><strong>🧩 Parent Task:</strong> {{ task.parent_task.title }}</p>
+              <p class="cursor pointer"
+                hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.parent_task_id %}"
+                hx-target="#edit_task_modal"
+                hx-swap="innerHTML">
+                <strong>🧩 Parent Task:</strong> {{ task.parent_task.title }}
+              </p>
               {% endif %}
               <p><strong>🗂️ Column:</strong> {{ task.column.name }}</p>
             </div>
             <div class="col-md-6 small text-secondary">
-              <p><strong>👤 Created by:</strong> {{ task.created_by.username }} ({{ task.created_by.email }})</p>
-              <p><strong>🛠️ Updated by:</strong> {{ task.updated_by.username }} ({{ task.updated_by.email }})</p>
+              <p><strong>👤 Created by:</strong> {{ task.created_by.name|default:task.created_by.username }} ({{ task.created_by.email }})</p>
+              <p><strong>🛠️ Updated by:</strong> {{ task.updated_by.name|default:task.updated_by.username }} ({{ task.updated_by.email }})</p>
               <p><strong>🕓 Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
               <p><strong>🔄 Updated:</strong> {{ task.updated_at|date:"M d, Y H:i" }}</p>
             </div>
@@ -42,7 +72,7 @@
             <ul class="list-group list-group-flush">
               {% for user in task.assigned_to.all %}
                 <li class="list-group-item bg-transparent px-0 py-1">
-                  <i class="bi bi-person me-1"></i> {{ user.username }} <small class="text-muted">({{ user.email }})</small>
+                  <i class="bi bi-person me-1"></i> {{ user.name|default:user.username }} <small class="text-muted">({{ user.email }})</small>
                 </li>
               {% endfor %}
             </ul>
@@ -67,8 +97,16 @@
             <h5 class="fw-semibold">🧾 Subtasks <small class="text-muted">({{ task.completed_sub_tasks }}/{{ task.total_sub_tasks }})</small></h5>
             <ul class="list-group list-group-flush">
               {% for sub_task in task.sub_tasks.all %}
-                <li class="list-group-item bg-transparent px-0 py-1" title="{{ sub_task.description }}">
-                  <i class="bi bi-check2-square me-1"></i>{{ sub_task.title }}
+                <li class="list-group-item cursor pointer bg-transparent px-2 py-1" title="{{ sub_task.description }}"
+                  hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=sub_task.id %}"
+                  hx-target="#edit_task_modal"
+                  hx-swap="innerHTML">
+                  {% if sub_task.is_complete %}
+                  <i class="fa-regular fa-square-check"></i>
+                  {% else %}
+                  <i class="fa-regular fa-square"></i> 
+                  {% endif %}
+                  {{ sub_task.title }}
                 </li>
               {% endfor %}
             </ul>
@@ -79,18 +117,20 @@
           <hr>
           <div class="mb-2">
             <h5 class="fw-semibold">📎 Attachments</h5>
-            <ul class="list-unstyled">
+            <div class="d-flex flex-wrap gap-3 mt-3">
               {% for a in task.attachments.all %}
-                <li class="mb-2">
-                  <a href="{{ a.attachment_url }}" class="text-decoration-none" target="_blank">
-                    <i class="bi bi-paperclip me-1"></i>{{ a.attachment_name }}
-                  </a>
-                  <br>
-                  <small class="text-muted">({{ a.file_size }}) by {{ a.uploaded_by.name }} on {{ a.created_at|date:"M d, Y" }}</small>
-                </li>
+                <a href="{{ a.attachment_url }}" target="_blank" class="text-decoration-none attachment-card position-relative">
+                  <div class="card shadow-sm border-0 rounded-3 bg-light text-center p-3">
+                    <i class="fa-solid {{ a|fa_icon_from_type }} fa-2x"></i>
+                  </div>
+                  <div class="attachment-hover-text">
+                    {{ a.attachment_name }}
+                  </div>
+                </a>
               {% endfor %}
-            </ul>
+            </div>
           </div>
+
           {% endif %}
         </div>
       </div>
@@ -98,34 +138,41 @@
 
     <!-- Right: Comments -->
     <div class="col-lg-4">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-body">
+      <div class="card border-0 shadow-sm rounded-4 d-flex flex-column">
+        <div class="card-body d-flex flex-column">
           <h5 class="fw-semibold mb-3">💬 Comments</h5>
-          {% if task.comments.all %}
-            <div class="overflow-auto" style="max-height: 500px;">
-              <ul class="list-unstyled">
-                {% for c in task.comments.all %}
-                <li class="mb-4 border-bottom pb-3">
-                  <div class="fw-medium">{{ c.added_by.username }}</div>
-                  <p class="mt-2 mb-1 small">{{ c.comment|linebreaks }}</p>
-                  {% if c.mentioned_users.all %}
-                    <div class="small text-muted">
-                      Mentioned:
-                      {% for u in c.mentioned_users.all %}
-                        <span class="badge bg-light text-dark">@{{ u.name }}</span>
-                      {% endfor %}
-                    </div>
-                  {% endif %}
-                  <small class="text-muted">{{ c.created_at|date:"M d, Y H:i" }}</small>
-                </li>
-                {% endfor %}
-              </ul>
+
+          <div class="d-flex flex-column">
+            <!-- Scrollable Messages Section -->
+            <div id="chatMessages" class="chat-messages mb-3 overflow-scroll d-flex flex-column">
+              {% for comment in task.comments.all %}
+                {% include 'boards/components/comment.html' with comment=comment %}
+              {% endfor %}
             </div>
-          {% else %}
-            <p class="text-muted fst-italic">No comments</p>
-          {% endif %}
+
+            <!-- Input Form -->
+            <input type="hidden" value="{{mentionable_users}}" id="mentionable_users">
+            <form id="comment_form" class="d-flex gap-1 chat-input"
+                  hx-post="{% url 'board:add_comment' task.id %}"
+                  hx-target="#chatMessages"
+                  hx-swap="beforeend">
+              <div class="input-group">
+                <div class="position-relative w-100">
+                  <input name="comment" type="text" id="chatInput"
+                        class="form-control"
+                        placeholder="Type a message..." required>
+                  <ul id="mentionSuggestions"
+                      class="list-group position-absolute d-none w-100"
+                      style="top: 100%; left: 0; z-index: 1000;"></ul>
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit">Send</button>
+            </form>
+          </div>
+
         </div>
       </div>
     </div>
+
   </div>
 </div>

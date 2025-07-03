@@ -5,7 +5,7 @@
      data-task-id="{{ task.id }}"
      style="transition: box-shadow 0.2s ease-in-out;"
      onmouseover="showCompleteTaskCheckBox(this)"
-     onmouseout="showCompleteTaskCheckBox(this)"
+     onmouseout="hideCompleteTaskCheckBox(this)"
      >
 
   <!-- Left: Checkbox and Task Info -->
@@ -24,7 +24,7 @@
              title="Mark as complete" />
         <p id="task_title_{{task.id}}"
           class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
-          hx-get="{% url 'board:task-edit' board_id=board_id column_id=task.column_id task_id=task.id %}"
+          hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}"
           hx-target="#edit_task_modal"
           hx-swap="innerHTML"
           data-bs-toggle="modal"
@@ -62,7 +62,7 @@
         <span class="m-1 badge bg-secondary me-1 text-dark">{{ task.priority }}</span>
       {% endif %}
       {% for tag in task.tags.all %}
-        <span class="m-1 badge bg-secondary me-1" title="Tag: {{tag}}">{{ tag }}</span>
+        <span class="m-1 badge text-white me-1" title="Tag: {{tag}}" style="background-color:{{tag.color}}">{{ tag }}</span>
       {% endfor %}
     </div>
 
@@ -83,7 +83,7 @@
       <div class="assigned_users">
         {% with task|assigned_users as users %}
         {% for user in users %}
-        <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.username}} ({{user.email}})">{{user.username|initials}}</div>
+        <div class="p-1 assigned_user {% if forloop.counter != 1 %}second{% endif %}" title="{{user.name|default:user.username}} ({{user.email}})">{{user|initials}}</div>
         {% if forloop.last and forloop.counter > 2 %}
         <div class="p-1 assigned_user second" title="Check task details to view assigned users">+</div>
         {% endif %}

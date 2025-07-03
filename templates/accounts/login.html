@@ -64,10 +64,10 @@
   <div class="login-container">
     <img src="{% static 'images/task_master.png' %}" alt="TaskMaster Logo" class="logo">
     <h2>Login to TaskMaster</h2>
-    <form method="POST" action="">
+    <form method="POST" action="" autocomplete="false">
       {% csrf_token %}
-      <input name="username" type="text" placeholder="Email" required />
-      <input name="password" type="password" placeholder="Password" required />
+      <input name="username" type="text" placeholder="Email" autocomplete="false" required />
+      <input name="password" type="password" placeholder="Password" autocomplete="false" required />
       <button type="submit">Login</button>
       <div class="forget-password-text">
           <a href="{% url "accounts:password_reset" %}" style="">I forgot my password</a>

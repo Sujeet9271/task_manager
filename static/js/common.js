@@ -90,7 +90,21 @@ function initializeSearch(divId) {
     showAllUsers();
 }
 
+htmx.on("notificationRead", function (evt) {
+		console.debug(evt)
+		try{
+			unread_counts = document.getElementById('unread_notification_count').innerHTML
+			count = parseInt(unread_counts) - 1
+			if (count){
+				document.getElementById('unread_notification_count').innerHTML = count
+			}else{
+				document.getElementById('unread_notification_count').remove()
+			}
+		}catch(error){
+			console.error(error)
+		}
 
+	});
 
 htmx.on('htmx:afterSwap', (evt) => {
     selectBoxes()
@@ -131,3 +145,68 @@ function copyToClipboard(element) {
     // Optional: You can add a notification here, such as an alert or a message
     alert('URL copied to clipboard!');
 }
+
+
+const MAX_TOASTS = 3;
+  		const TOAST_DELAY = 2000; // 5 seconds
+
+		htmx.on("htmx:responseError", function (event) {
+			if (event.detail.xhr.status >= 400) {
+				const responseText = event.detail.xhr.responseText;
+
+				// Optional: Try to parse as JSON
+				try {
+					const data = JSON.parse(responseText);
+					console.debug('responseError: ',data)
+					showToast(data.message || "Something went wrong!");
+				} catch(error) {
+					console.error(error)
+					showToast(responseText);
+				}
+			}
+		});
+
+		
+
+		function showToast(message, level = 'danger') {
+			const container = document.getElementById('htmx-toast-container');
+
+			// Remove oldest toast if too many
+			while (container.children.length >= MAX_TOASTS) {
+			container.children[0].remove();
+			}
+
+			// Create unique ID
+			const toastId = 'toast-' + Date.now();
+
+			// Create toast element
+			const toast = document.createElement('div');
+			toast.className = `toast align-items-center text-bg-${level} border-0 mb-2`;
+			toast.role = 'alert';
+			toast.ariaLive = 'assertive';
+			toast.ariaAtomic = 'true';
+			toast.id = toastId;
+			toast.setAttribute('data-bs-delay', TOAST_DELAY);
+			toast.setAttribute('data-bs-autohide', 'true');
+
+			toast.innerHTML = `
+			<div class="d-flex">
+				<div class="toast-body">${message}</div>
+				<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+			</div>
+			`;
+
+			// Append and show
+			container.appendChild(toast);
+			const toastInstance = new bootstrap.Toast(toast);
+			toastInstance.show();
+
+			// Auto-remove after hidden
+			toast.addEventListener('hidden.bs.toast', () => {
+			toast.remove();
+			});
+		}
+
+		htmx.on("showToast", function(evt){
+			showToast(evt.detail.message, evt.detail.level)
+		})

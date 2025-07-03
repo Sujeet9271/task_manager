@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.db.models import ForeignKey, ManyToManyField
 from django.apps import apps
+from django.utils.html import format_html
+from board.forms import TagForm
+from board.models import Tag
 from task_manager.logger import logger
 import sys
 
@@ -33,6 +36,24 @@ class MyModelAdmin(admin.ModelAdmin):
 
         self.filter_horizontal = [field.name for field in model._meta.get_fields() if isinstance(field, ManyToManyField)]
 
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    form = TagForm 
+
+    list_display = ('colored_name', 'created_by', 'is_deleted')
+    list_filter = ('created_by', 'is_deleted')
+    search_fields = ('name', 'created_by__username', 'created_by__email')
+    ordering = ('name',)
+    list_per_page = 25
+
+    def colored_name(self, obj):
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">#{}</span>',
+            obj.color,
+            obj.name
+        )
+    colored_name.short_description = 'Name'
 
 
 for model in app_config.get_models():

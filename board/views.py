@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
@@ -96,9 +97,12 @@ def board_view(request, board_id):
 
                 logger.debug(f'{data=}')
                 board_filter.filter = data
+                triggers["showToast"] = {"message":"Task Filtered", "level":"success"}
             else:
                 board_filter.filter = {}
                 board_filter.filter.pop('csrfmiddlewaretoken',None)
+                triggers["showToast"] = {"message":"Task Filter Cleared", "level":"danger"}
+            
             board_filter.save()
             triggers["filterSubmitted"] = {"board_id":  board_id, "level": "info"}
             triggers["closeModal"] = {"modal_id": "close_filterBoard", "level": "info"}
@@ -134,8 +138,8 @@ def board_reports(request, board_id):
     logger.debug(board.created_at)
     context['boards'] = Board.objects.filter(workspace=board.workspace).only('id','name')
     
-    # board_tasks = Task.objects.filter(column__board=board, parent_task__isnull=True)
-    board_tasks = Task.objects.filter(column__board=board)
+    board_tasks = Task.objects.filter(column__board=board, parent_task__isnull=True)
+    # board_tasks = Task.objects.filter(column__board=board)
     tasks_by_priority = list(board_tasks.values('priority').annotate(count=Count('id')))
     tasks_by_column = list(board_tasks.values('column__name').annotate(count=Count('id')))
     
@@ -299,15 +303,30 @@ def board_reports(request, board_id):
     tasks = board_tasks.filter(created_at__date__lte=sprint_end)
 
     total_tasks = tasks.count()
-    date_range:list[date] = [sprint_start + timedelta(days=i) for i in range((sprint_end - sprint_start).days + 1)]
+
+    # Pre-fetch necessary fields
+    task_data = tasks.values("is_complete", "updated_at")
+
+    # Prepare task updated dates per day
+    updated_count_by_day = defaultdict(int)
+    incomplete_count = 0
+
+    for task in task_data:
+        if not task["is_complete"]:
+            incomplete_count += 1
+        updated_date = task["updated_at"].date()
+        updated_count_by_day[updated_date] += 1
+
+    # Precompute remaining tasks per date in reverse
+    date_range = [sprint_start + timedelta(days=i) for i in range((sprint_end - sprint_start).days + 1)]
     remaining_tasks = []
+    current_remaining = incomplete_count + sum(updated_count_by_day.values())
 
     for current_date in date_range:
-        # Count tasks that are either incomplete or were completed *after* the current date
-        incomplete_or_future = tasks.filter(Q(is_complete=False) | Q(updated_at__date__gt=current_date)).count()
+        current_remaining -= updated_count_by_day.get(current_date, 0)
         remaining_tasks.append({
             "date": current_date.strftime("%Y-%m-%d"),
-            "remaining": incomplete_or_future
+            "remaining": current_remaining
         })
     
     context.update({
@@ -348,7 +367,9 @@ def create_board(request):
         response = render(request,'boards/components/board_list_item.html',{'board':board})
         if request.htmx:
             board_url = reverse('board:board-view',kwargs={'board_id':board.id}) 
-            response['HX-Trigger']=json.dumps({"boardCreated":{"message":board_url,"level":"info"}})
+            triggers = {"boardCreated":{"message":board_url,"level":"info"}}
+            triggers["showToast"] = {"message":"New Board Created", "level":"success"}
+            response['HX-Trigger']=json.dumps(triggers)
     else:
         logger.error(f'{form.errors.as_json()}')
         response = JsonResponse(form.errors.as_json(),safe=False)
@@ -362,7 +383,7 @@ def create_board(request):
 def delete_board(request, board_id,):
     board = get_object_or_404(Board, pk=board_id, created_by=request.user)
     board.delete()
-    return JsonResponse(data={'detail':'Board Deleted'},safe=False,status=200)  # Renders nothing for removal
+    return HttpResponse(content='Board Deleted', status=200)  # Renders nothing for removal
 
 
 
@@ -402,7 +423,9 @@ def create_column(request, board_id):
         response = render(request,'boards/components/column_list_item.html',{'column':column,'board_id':board_id})
         if request.htmx:
             board_url = reverse('board:board-view',kwargs={'board_id':board_id}) 
-            response['HX-Trigger']=json.dumps({"columnCreated":{"message":board_url,"level":"info"}})
+            triggers = {"columnCreated":{"message":board_url,"level":"info"}}
+            triggers["showToast"] = {"message":"New Column Added", "level":"success"}
+            response['HX-Trigger']=json.dumps(triggers)
         return response
     return render(request, 'boards/components/column_create.html', {'board': board,})
 
@@ -415,9 +438,11 @@ def update_column_name(request, board_id, column_id):
         column.name = name
         column.updated_by = request.user
         column.save(update_fields=['name','updated_by','updated_at'])
-    response = JsonResponse(data={'detail':'Column Name Updated'},safe=False,status=200)  # Renders nothing for removal
+    response = HttpResponse(content='Column Name Updated', status=200)  # Renders nothing for removal
     if request.htmx:
-        response['HX-Trigger'] = json.dumps({"columnUpdated": {"level": "info","column_id":column_id,"board_id":board_id, "column_name": column.name}})
+        triggers = {"columnUpdated": {"level": "info","column_id":column_id,"board_id":board_id, "column_name": column.name}}
+        triggers['showToast'] = {'message':'Column name updated', 'level':'success'}
+        response['HX-Trigger'] = json.dumps(triggers)
     return response
 
 
@@ -426,9 +451,11 @@ def update_column_name(request, board_id, column_id):
 def delete_column(request, board_id, column_id):
     column = get_object_or_404(Column, pk=column_id, board_id=board_id, created_by=request.user)
     column.delete()    
-    response = JsonResponse(data={'detail':'Column Deleted'},safe=False,status=200)  # Renders nothing for removal
+    response = HttpResponse(content='Column Deleted', status=200)  # Renders nothing for removal
     if request.htmx:
-        response['HX-Trigger'] = json.dumps({"columnDeleted": {"level": "info","create_column_url":reverse('board:column-create',kwargs={'board_id':board_id}), "column_list_item": f"board_{board_id}_column_{column_id}"}})
+        triggers = {"columnDeleted": {"level": "info","create_column_url":reverse('board:column-create',kwargs={'board_id':board_id}), "column_list_item": f"board_{board_id}_column_{column_id}"}}
+        triggers['showToast'] = {'message':'Column Deleted', 'level':'danger'}
+        response['HX-Trigger'] = json.dumps(triggers)
     return response
 
 
@@ -514,27 +541,31 @@ def create_sub_task(request, board_id, column_id, task_id):
 
         context['sub_task'] = instance
         response = render(request, 'boards/components/sub_task_card.html', context)
-        response['HX-Trigger'] = json.dumps({
+        triggers = {
             'subTaskCreated': {
                 "level": "info",
                 "column_id": column_id,
                 "board_id": board_id,
                 "task_id": task_id
             }
-        })
+        }
+        triggers["showToast"] = {"message":"Sub Task Added", "level":"success"}
+        response['HX-Trigger'] = json.dumps(triggers)
         return response
 
     # If form is invalid
     context['form'] = form
     response = render(request, 'boards/components/sub_task_create.html', context)
-    response['HX-Trigger'] = json.dumps({
+    triggers = {
         'subTaskCreateFailed': {
             "level": "info",
             "column_id": column_id,
             "board_id": board_id,
             "task_id": task_id
         }
-    })
+    }
+    triggers["showToast"] = {"message":"Failed to add Sub Task", "level":"danger"}
+    response['HX-Trigger'] = json.dumps(triggers)
     return response
 
 
@@ -559,9 +590,23 @@ def create_task(request, board_id,):
         triggers = {}
         triggers["reloadTaskList"] = {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column.id}),'column_id':column.id,'board_id':board_id, "level": "info"}
         triggers["closeModal"] = {"modal_id": "close_addTaskModal", "level": "info"}
+        triggers["showToast"] = {"message":"New Task Created", "level":"success"}
         response['HX-Trigger'] = json.dumps(triggers)
         return response
-    return render(request,'boards/components/create.html',{'board_id':board_id,'column_id':column.id, 'form':form})
+    response = render(request,'boards/components/create.html',{'board_id':board_id,'column_id':column.id, 'form':form})
+    triggers = {}
+    triggers["showToast"] = {"message":"Failed to create New Task", "level":"danger"}
+    response['HX-Trigger'] = json.dumps(triggers)
+    return response
+
+
+@require_http_methods(['GET','POST'])
+@login_required
+def detail_task(request, board_id, column_id, task_id):
+    task = Task.objects.prefetch_related('tags','assigned_to','comments').filter(pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user,).first()
+    context = {'task':task,'board_id':board_id,'column_id':column_id}
+    context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
+    return render(request,'boards/components/task_detail.html',context)
 
 
 @require_http_methods(['GET','POST'])
@@ -569,81 +614,91 @@ def create_task(request, board_id,):
 def edit_task(request, board_id, column_id, task_id):
     task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user,)
     context = {'task':task,'board_id':board_id,'column_id':column_id}
-    if task.assigned_to.filter(id=request.user.id).exists():
-        form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
-        context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
-        if request.method=='POST':
-            if form.is_valid():
-                assigned_to = form.cleaned_data.get('assigned_to')
-                tags = form.cleaned_data.get('tags')
-                assigned_to_list = list(assigned_to)
+    if task.created_by!=request.user or not task.assigned_to.filter(id=request.user.id).exists():
+        response = render(request,'boards/components/task_detail.html', context)
+        triggers = {}
+        triggers["showToast"] = {"message":"You've no access to edit this task", "level":"danger"}
+        response['HX-Trigger'] = json.dumps(triggers)
+        return response
+    form = TaskForm(workspace=task.column.board.workspace, user=request.user,instance=task, data=request.POST or None)
+    context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
+    if request.method=='POST':
+        if form.is_valid():
+            assigned_to = form.cleaned_data.get('assigned_to')
+            tags = form.cleaned_data.get('tags')
+            assigned_to_list = list(assigned_to)
 
-                assigned_to_list.extend([task.created_by,request.user])
-                if task.parent_task:
-                    assigned_to_list.append(task.parent_task.created_by)
+            assigned_to_list.extend([task.created_by,request.user])
+            if task.parent_task:
+                assigned_to_list.append(task.parent_task.created_by)
 
-                task:Task = form.save(commit=False)
-                task.updated_by = request.user
+            task:Task = form.save(commit=False)
+            task.updated_by = request.user
 
-                task.save()
+            task.save()
 
-                task.assigned_to.set(assigned_to_list)
-                task.tags.set(tags)
+            task.assigned_to.set(assigned_to_list)
+            task.tags.set(tags)
 
-                files = request.FILES.getlist('attachments')
-                urls = request.POST.getlist('urls')
-                url_names = request.POST.getlist('url_names')
-                attachment_list = []
-                # Upload files
-                for file in files:
+            files = request.FILES.getlist('attachments')
+            urls = request.POST.getlist('urls')
+            url_names = request.POST.getlist('url_names')
+            attachment_list = []
+            # Upload files
+            for file in files:
+                attachment_list.append(
+                Attachment(
+                    workspace=form.workspace,
+                    task=task,
+                    file=file,
+                    type='file',
+                    file_type=file.content_type,
+                    uploaded_by=request.user
+                ))
+
+            # Store links
+            for url, name in zip(urls, url_names):
+                if url.strip():  # skip blanks
                     attachment_list.append(
                     Attachment(
                         workspace=form.workspace,
                         task=task,
-                        file=file,
-                        type='file',
+                        type='url',
+                        url=url.strip(),
+                        name=name.strip() or None,
                         uploaded_by=request.user
                     ))
 
-                # Store links
-                for url, name in zip(urls, url_names):
-                    if url.strip():  # skip blanks
-                        attachment_list.append(
-                        Attachment(
-                            workspace=form.workspace,
-                            task=task,
-                            type='url',
-                            url=url.strip(),
-                            name=name.strip() or None,
-                            uploaded_by=request.user
-                        ))
-
-                if attachment_list:
-                    Attachment.objects.bulk_create(attachment_list)
-                if request.htmx:
-                    context['form'] = form
-                    response = render(request,'boards/components/edit_form.html',context)
-                    triggers = {"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}}
-                    if not task.parent_task:
-                        triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
-                    response['HX-Trigger'] = json.dumps(triggers)
-                    return response
-        
-            logger.info(f'{form.errors.as_json()=}')
+            if attachment_list:
+                Attachment.objects.bulk_create(attachment_list)
             if request.htmx:
                 context['form'] = form
                 response = render(request,'boards/components/edit_form.html',context)
+                triggers = {"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}}
+                triggers["showToast"] = {"message":"Sub Task Saved", "level":"success"}
+                if not task.parent_task:
+                    triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
+                    triggers["showToast"] = {"message":"Task Saved", "level":"success"}
+                response['HX-Trigger'] = json.dumps(triggers)
                 return response
+    
+        logger.info(f'{form.errors.as_json()=}')
+        if request.htmx:
+            context['form'] = form
+            response = render(request,'boards/components/edit_form.html',context)
+            return response
 
-        comments = Comments.objects.select_related('added_by').filter(task=task).order_by('created_at')
-        comment_form = CommentForm()
-        context['form'] = form
-        context['comments'] = comments
-        context['comment_form'] = comment_form
-        if not task.parent_task:
-            context = sub_task_list(user=request.user, task=task, context=context)
-        return render(request,'boards/components/task_edit.html',context)
-    return render(request,'boards/components/task_detail.html',context)
+    comments = Comments.objects.select_related('added_by').filter(task=task).order_by('created_at')
+    comment_form = CommentForm()
+    context['form'] = form
+    context['comments'] = comments
+    context['comment_form'] = comment_form
+    if not task.parent_task:
+        context = sub_task_list(user=request.user, task=task, context=context)
+    return render(request,'boards/components/task_edit.html',context)
+    
+    
+
 
 @require_http_methods(['POST'])
 @login_required
@@ -660,15 +715,28 @@ def add_comment(request, task_id):
             mentioned_users = Users.objects.filter(username__in=mentions)
             comment.mentioned_users.set(mentioned_users)
         response = render(request,'boards/components/comment.html',{'comment':comment})
-        response['HX-Trigger'] = 'commentAdded'
+        triggers = {
+                        'commentAdded': {
+                            "level": "info",
+                            "message": 'Comment Added',
+                        }
+                    }
+        response['HX-Trigger'] = json.dumps(triggers)
         return response
-    return JsonResponse(data=form.errors.as_json(), status=400)
+    return HttpResponse(content=form.errors.as_json(), status=400)
 
 
 @require_http_methods(['POST'])
 @login_required
 def task_status_toggle(request, board_id, column_id, task_id):
-    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, assigned_to=request.user)
+    task:Task = Task.objects.filter(pk=task_id, column_id=column_id, column__board_id=board_id,).first()
+    triggers = {}
+    if task.created_by != request.user or not task.assigned_to.filter(id=request.user.id).exists():
+        triggers["showToast"] = {"message":"You have no permission to complete this task", "level":"danger"}
+        response = HttpResponse(content='Access Denied',status=403)
+        response['HX-Trigger'] = json.dumps(triggers)
+        return response
+    
     if task.is_complete:
         task.is_complete = False
     else:
@@ -676,24 +744,47 @@ def task_status_toggle(request, board_id, column_id, task_id):
     task.save(update_fields=['is_complete','updated_at'])
     if task.parent_task:
         response = render(request,'boards/components/sub_task_card.html',{'sub_task':task,"board_id":board_id,"column_id":column_id})
+        triggers["showToast"] = {"message":"Sub-Task marked as complete" if task.is_complete else "Sub-Task marked as incomplete", "level":"success" if task.is_complete else "danger"}
     else:
         response = render(request,'boards/components/task_card.html',{'task':task,"board_id":board_id,"column_id":column_id})
+        triggers["showToast"] = {"message":"Task marked as complete" if task.is_complete else "Task marked as incomplete", "level":"success" if task.is_complete else "danger"}
+    response['HX-Trigger'] = json.dumps(triggers)
     return response
 
 @require_http_methods(['DELETE'])
 @login_required
 def delete_task(request, board_id, column_id, task_id):
-    task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, created_by=request.user)
-    task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, created_by=request.user)
+    task:Task = Task.objects.filter(pk=task_id, column_id=column_id, column__board_id=board_id,).first()
+    triggers = {}
+    if task.created_by != request.user or not task.assigned_to.filter(id=request.user.id).exists():
+        triggers["showToast"] = {"message":"You have no permission to delete this task", "level":"danger"}
+        response = HttpResponse(content='Access Denied',status=403)
+        response['HX-Trigger'] = json.dumps(triggers)
+        return response
+    
     task.delete()
-    return JsonResponse(data={'detail':'Task Deleted'},safe=False,status=200)  # Renders nothing for removal
+    triggers = {}
+    triggers["showToast"] = {"message":"Task Deleted", "level":"success"}
+    if request.GET.get('from') and request.GET['from'] == 'task_detail':
+        triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
+
+    response = HttpResponse(content='Task Deleted',status=200)  # Renders nothing for removal
+    response['HX-Trigger'] = json.dumps(triggers)
+    return response
 
 @require_POST
 @login_required
 def move_task(request, task_id):
     new_column_id = request.POST.get('column_id')
     try:
-        task = Task.objects.get(id=task_id)
+        task = Task.objects.get(id=task_id,)
+        triggers = {}
+        if task.created_by != request.user or not task.assigned_to.filter(id=request.user.id).exists():
+            response = HttpResponse(status=403)
+            triggers["showToast"] = {"message":"You have no access to move this task", "level":"danger"}
+            response['HX-Trigger'] = json.dumps(triggers)
+            return response
+        
         old_column_id = task.column_id
         column = Column.objects.get(id=new_column_id)
         kwargs = {
@@ -712,10 +803,17 @@ def move_task(request, task_id):
         task.column = column
         task.save()
         response = JsonResponse({'success': True,'urls':urls})
-        # response['HX-Trigger'] = json.dumps({"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': column.board_id,'column_id':old_column_id}),'column_id':old_column_id,'board_id':column.board_id, "level": "info"}})
+        triggers["showToast"] = {"message":"Task moved successfully", "level":"success"}
+        response['HX-Trigger'] = json.dumps(triggers)
+        # triggers = {"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': column.board_id,'column_id':old_column_id}),'column_id':old_column_id,'board_id':column.board_id, "level": "info"}}
+        # response['HX-Trigger'] = json.dumps(triggers)
         return response
     except (Task.DoesNotExist, Column.DoesNotExist):
-        return JsonResponse({'success': False}, status=400)
+        response = JsonResponse({'success': False}, status=400)
+        triggers = {}
+        triggers["showToast"] = {"message":"Something went wrong", "level":"success"}
+        response['HX-Trigger'] = json.dumps(triggers)
+        return response
 
 class BoardViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()
