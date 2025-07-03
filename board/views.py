@@ -614,7 +614,7 @@ def detail_task(request, board_id, column_id, task_id):
 def edit_task(request, board_id, column_id, task_id):
     task:Task = get_object_or_404(Task, pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user,)
     context = {'task':task,'board_id':board_id,'column_id':column_id}
-    if task.created_by!=request.user or not task.assigned_to.filter(id=request.user.id).exists():
+    if task.created_by!=request.user and not task.assigned_to.filter(id=request.user.id).exists():
         response = render(request,'boards/components/task_detail.html', context)
         triggers = {}
         triggers["showToast"] = {"message":"You've no access to edit this task", "level":"danger"}
@@ -731,7 +731,7 @@ def add_comment(request, task_id):
 def task_status_toggle(request, board_id, column_id, task_id):
     task:Task = Task.objects.filter(pk=task_id, column_id=column_id, column__board_id=board_id,).first()
     triggers = {}
-    if task.created_by != request.user or not task.assigned_to.filter(id=request.user.id).exists():
+    if task.created_by != request.user and not task.assigned_to.filter(id=request.user.id).exists():
         triggers["showToast"] = {"message":"You have no permission to complete this task", "level":"danger"}
         response = HttpResponse(content='Access Denied',status=403)
         response['HX-Trigger'] = json.dumps(triggers)
@@ -756,7 +756,7 @@ def task_status_toggle(request, board_id, column_id, task_id):
 def delete_task(request, board_id, column_id, task_id):
     task:Task = Task.objects.filter(pk=task_id, column_id=column_id, column__board_id=board_id,).first()
     triggers = {}
-    if task.created_by != request.user or not task.assigned_to.filter(id=request.user.id).exists():
+    if task.created_by != request.user and not task.assigned_to.filter(id=request.user.id).exists():
         triggers["showToast"] = {"message":"You have no permission to delete this task", "level":"danger"}
         response = HttpResponse(content='Access Denied',status=403)
         response['HX-Trigger'] = json.dumps(triggers)
@@ -779,7 +779,10 @@ def move_task(request, task_id):
     try:
         task = Task.objects.get(id=task_id,)
         triggers = {}
-        if task.created_by != request.user or not task.assigned_to.filter(id=request.user.id).exists():
+        logger.debug(f'{task.created_by=}')
+        logger.debug(f'{request.user=}')
+        logger.debug(f'{task.assigned_to.filter(id=request.user.id)=}')
+        if task.created_by != request.user and not task.assigned_to.filter(id=request.user.id).exists():
             response = HttpResponse(status=403)
             triggers["showToast"] = {"message":"You have no access to move this task", "level":"danger"}
             response['HX-Trigger'] = json.dumps(triggers)
