@@ -17,9 +17,14 @@ RUN apt-get update && apt-get install -y \
 # Upgrade pip
 RUN pip install --upgrade pip
 
+RUN pip install uv
+
 # Install Python dependencies listed in the requirements.txt
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+
+COPY requirements.lock .
+
+RUN uv pip sync requirements.lock
 
 # Copy the rest of the application files into the container
 COPY . /app/
