@@ -16,6 +16,9 @@ class WorkSpaceForm(forms.ModelForm):
         self.user = user
         if self.user: 
             self.fields['members'].queryset = Users.objects.all().exclude(id=self.user.id)
+
+
+        self.fields['members'].label_from_instance = lambda obj: f"{obj.name}" if obj.name else f"{obj.username}"
     
     def save(self, commit=True):
         """

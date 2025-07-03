@@ -74,7 +74,7 @@ class BoardForm(forms.ModelForm):
             self.auto_id='id_%s'
         self.workspace = workspace
         self.user = user
-        
+        self.fields['members'].label_from_instance = lambda obj: f"{obj.name}" if obj.name else f"{obj.username}"
         self.fields['members'].queryset = workspace.members.all().exclude(id=user.id)
         
     class Meta:
@@ -96,10 +96,11 @@ class TaskForm(forms.ModelForm):
             self.auto_id='id_%s'
         self.workspace = workspace
         self.user = user
-        
+
+        self.fields['assigned_to'].label_from_instance = lambda obj: f"{obj.name}" if obj.name else f"{obj.username}"
+
         self.fields['due_date'].widget.attrs.update({'min':f"{str(date.today())}"})
         self.fields['due_date'].widget.attrs.update({'value':f"{str(date.today())}"})
-        
         instance: Task = self.instance
         if instance and instance.pk: 
             self.fields['due_date'].widget.attrs.update({'min':f"{str(instance.created_at.date())}"})
@@ -213,6 +214,8 @@ class TaskFilterForm(forms.Form):
         self.auto_id = 'filter_%s'
 
         self.fields['assigned_to'].queryset = board.members.all()
+        self.fields['assigned_to'].label_from_instance = lambda obj: f"{obj.name}" if obj.name else f"{obj.username}"
+
         self.fields['due_after'].widget.attrs.update({'min':f"{str(board.created_at.date())}"})
         sprint_end = (board.created_at + timedelta(days=board.sprint_days)).date()                
         self.fields['due_before'].widget.attrs.update({
