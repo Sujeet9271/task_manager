@@ -18,10 +18,11 @@
                                     data-bs-target="#addTaskModal"
                                     title="Add Task"
                                     >
-                                <i class="fa fa-plus"></i>
+                                {% comment %} <i class="fa fa-plus"></i> {% endcomment %}
+                                <i class="fa-solid fa-plus"></i>
                             </button>
                             {% elif request.user.is_staff or board.created_by == request.user or column.created_by == request.user %}
-                            <button class="btn btn-light fw-bold" 
+                            <button class="btn btn-light fw-bold del_column" 
                             hx-delete="{% url 'board:column-delete' column.board_id column.id %}" 
                             hx-target="#column_{{ column.id }}" 
                             hx-swap="delete" 

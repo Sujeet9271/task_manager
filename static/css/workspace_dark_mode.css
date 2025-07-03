@@ -1,0 +1,168 @@
+/*
+  Dark Mode Stylesheet for Workspace Page
+  Includes base styles and specific styles for workspace cards.
+*/
+
+/* --- THEME COLOR PALETTE --- */
+:root {
+  --dark-bg-primary: #1e1e2d;     /* Main background */
+  --dark-bg-secondary: #27293d;  /* Nav, sidebars, cards */
+  --dark-bg-tertiary: #3a3c53;   /* Task cards, modals, hover states */
+  --dark-border-color: #4a4c68;
+  --dark-text-primary: #f0f0f0;
+  --dark-text-secondary: #a0a0a0;
+  --dark-accent-primary: #7986cb;
+  --dark-input-bg: #3a3c53;
+}
+
+/* --- GENERAL & BODY --- */
+body.dark-mode {
+  background-color: var(--dark-bg-primary);
+  color: var(--dark-text-primary);
+}
+body.dark-mode .text-muted {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* --- NAVBAR (Same as before) --- */
+body.dark-mode .navbar.bg-white {
+  background-color: var(--dark-bg-secondary) !important;
+  border-bottom: 1px solid var(--dark-border-color);
+  box-shadow: none !important;
+}
+body.dark-mode .navbar-brand .text-primary,
+body.dark-mode .btn-light .text-primary {
+  color: var(--dark-accent-primary) !important;
+}
+body.dark-mode .btn-light {
+  background-color: var(--dark-bg-tertiary);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color);
+  box-shadow: none !important;
+}
+body.dark-mode #darkModeToggle {
+  background: var(--dark-bg-tertiary);
+  border: 1px solid var(--dark-border-color);
+  border-radius: 5px;
+}
+body.dark-mode .border-dashed{
+    border: 2px dashed #4b4c67 !important;
+    color: #6c757d;
+}
+/* --- NOTIFICATIONS (Same as before) --- */
+body.dark-mode .notification-dropdown {
+  background-color: var(--dark-bg-secondary);
+  border: 1px solid var(--dark-border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+body.dark-mode .notification-item {
+  border-bottom: 1px solid var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+body.dark-mode .notification-item.unread {
+  background-color: var(--dark-bg-tertiary);
+}
+body.dark-mode .notification-item:hover {
+  background-color: var(--dark-accent-primary) !important;
+  color: #fff;
+}
+
+/* 
+===============================================
+  NEW: WORKSPACE PAGE SPECIFIC STYLES 
+===============================================
+*/
+
+/* Style for all workspace cards */
+body.dark-mode .card-glass {
+  background-color: var(--dark-bg-secondary);
+  box-shadow: none !important;
+  border: 1px solid var(--dark-border-color);
+  color: var(--dark-text-primary);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Style for the "Create Workspace" card */
+body.dark-mode .card-glass.border-dashed {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: var(--dark-border-color);
+}
+body.dark-mode .card-glass.border-dashed:hover {
+  background-color: var(--dark-bg-tertiary);
+  border-color: var(--dark-accent-primary);
+}
+body.dark-mode .card-glass.border-dashed .fa-plus-circle {
+  color: var(--dark-text-secondary);
+}
+
+/* Style for the existing workspace cards */
+body.dark-mode .workspace-title {
+  color: var(--dark-text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Outline buttons on workspace cards */
+body.dark-mode .btn-outline-primary {
+  color: var(--dark-accent-primary);
+  border-color: var(--dark-accent-primary);
+}
+body.dark-mode .btn-outline-primary:hover {
+  background-color: var(--dark-accent-primary);
+  color: #fff;
+}
+body.dark-mode .btn-outline-secondary {
+  color: var(--dark-text-secondary);
+  border-color: var(--dark-text-secondary);
+}
+body.dark-mode .btn-outline-secondary:hover {
+  background-color: var(--dark-text-secondary);
+  color: var(--dark-bg-secondary);
+}
+body.dark-mode .btn-outline-danger:hover {
+    color: #fff;
+}
+
+/* 
+===============================================
+  MODALS & FORMS (Same as before)
+===============================================
+*/
+body.dark-mode .modal-content {
+  background-color: var(--dark-bg-secondary);
+  color: var(--dark-text-primary);
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode .modal-header {
+  border-bottom: 1px solid var(--dark-border-color);
+}
+body.dark-mode .modal-footer {
+  border-top: 1px solid var(--dark-border-color);
+}
+body.dark-mode .btn-close {
+  filter: invert(1) grayscale(100) brightness(200%);
+}
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode .searchInput {
+  background-color: var(--dark-input-bg);
+  color: var(--dark-text-primary);
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  background-color: var(--dark-input-bg);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-accent-primary);
+  box-shadow: 0 0 0 0.25rem rgba(121, 134, 203, 0.25);
+}
+body.dark-mode label,
+body.dark-mode .form-check-label,
+body.dark-mode .form-label {
+  color: var(--dark-text-primary);
+}
+body.dark-mode #checkboxselectmultiple > div {
+  background-color: var(--dark-input-bg) !important;
+  border-color: var(--dark-border-color) !important;
+}

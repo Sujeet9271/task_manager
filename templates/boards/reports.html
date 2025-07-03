@@ -11,6 +11,7 @@
 		<link rel="stylesheet" href="{% static 'assets/fontawesome/css/all.min.css' %}" />
 		<link rel="stylesheet" href="{% static 'css/style.css' %}" />
 		<link rel="stylesheet" href="{% static 'css/board.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/report_dark_mode.css' %}" />
 		<script src="{% static 'assets/htmx/js/htmx.min.js' %}"></script>
 		<script src="{% static 'js/common.js' %}"></script>
 		<script src="{% static 'assets/sortable/sortable.min.js' %}"></script>
@@ -21,11 +22,11 @@
                 display: flex;
                 justify-content: center;
                 align-items: flex-start;
-                gap: 40px;
+                gap: 10px;
                 margin-top: 40px;
             }
             .chart-box {
-                width: 600px;
+                width: 564.5px;
                 height: 400px;
             }
             h1 {
@@ -33,37 +34,37 @@
                 margin-top: 20px;
             }
             .cards-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            max-width: 1500px;
-            margin: 0 auto;
-        }
-        .card {
-            background-color: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 10px;
-            width: 170px;
-            padding: 10px 10px;
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0,0,0,0.15);
-        }
-        .card h2 {
-            font-size: 2.8rem;
-            margin: 0;
-            color: #333;
-        }
-        .card p {
-            margin: 8px 0 0;
-            color: #777;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                max-width: 1500px;
+                margin: 0 auto;
+            }
+            .card {
+                background-color: white;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                border-radius: 10px;
+                width: 170px;
+                padding: 10px 10px;
+                text-align: center;
+                transition: transform 0.2s ease;
+            }
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 15px rgba(0,0,0,0.15);
+            }
+            .card h2 {
+                font-size: 2.8rem;
+                margin: 0;
+                color: #333;
+            }
+            .card p {
+                margin: 8px 0 0;
+                color: #777;
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
 
         </style>
 	</head>
@@ -87,9 +88,8 @@
 					{% endfor %}
 				</div>
 			</div>
-			  
-		
-			<div class="main-content" id="main-content">
+
+			<div class="main-content" id="main-content" style="overflow:scroll;">
                 <div class="m-1 d-flex gap-3">
                     {% for title, count in task_summary.items %}
                     <div class="card">
@@ -113,139 +113,234 @@
                 </div>
                 
 			</div>
+
 		</div>
 
 	</body>
 	<script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-	<script src="{% static 'js/board_index.js' %}"></script>
+	{% comment %} <script src="{% static 'js/board_index.js' %}"></script> {% endcomment %}
     <script>
-    // ========== PIE CHARTS ==========
 
-    function renderPieChart(elementId, labels, values, title) {
-        const data = [{
-            type: 'pie',
-            labels: labels,
-            values: values,
-            hole: 0.3
-        }];
+        var plotlyDarkLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)', // Transparent outer background
+            plot_bgcolor: 'rgba(0,0,0,0)',  // Transparent plotting area
+            font: {
+                color: '#f0f0f0' // Light text for titles, labels, etc.
+            },
+            xaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.1)', // Faint white grid lines
+                linecolor: 'rgba(255, 255, 255, 0.2)'
+            },
+            yaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.1)',
+                linecolor: 'rgba(255, 255, 255, 0.2)'
+            },
+            legend: {
+                bgcolor: 'rgba(0,0,0,0)',
+                bordercolor: 'rgba(0,0,0,0)'
+            }
+        };
+        // ========== PIE CHARTS ==========
 
-        const layout = { title };
-        Plotly.newPlot(elementId, data, layout);
-    }
+        function renderPieChart(elementId, labels, values, title, darkMode=false) {
+            const data = [{
+                type: 'pie',
+                labels: labels,
+                values: values,
+                hole: 0.3
+            }];
 
-    // ========== GANTT CHART ==========
-
-    function renderGanttChart(elementId, tasks) {
-    const boardStartDate = new Date("{{active_board.created_at|date:'Y-m-d'}}");
-    const boardEndDate = new Date(boardStartDate);
-    boardEndDate.setDate(boardEndDate.getDate() + {{active_board.sprint_days}});
-
-    // Group tasks by Resource
-    const groupedTasks = {};
-    tasks.forEach(task => {
-        if (!groupedTasks[task.Resource]) groupedTasks[task.Resource] = [];
-        groupedTasks[task.Resource].push(task);
-    });
-
-    const resourceColors = {
-        High: '#ED8936',        // Orange
-        Medium: '#4299E1',      // Blue
-        Low: '#A0AEC0',         // Gray
-        Overdue: '#E53E3E',     // Red
-        Remaining: '#48BB78',   // Green
-        Early: '#9F7AEA',       // Purple (optional, not used now)
-        Late: '#FF6DB3',        // Pink
-        Unused: '#BEE3F8',      // Light Blue
-        OnTime: '#CBD5E0'       // Light Gray (optional)
-    };
-
-
-
-    const data = Object.entries(groupedTasks).map(([resource, group]) => ({
-        type: 'bar',
-        orientation: 'h',
-        name: resource,
-        marker: { color: resourceColors[resource] || '#1f77b4' },
-        x: group.map(task => new Date(task.Finish) - new Date(task.Start)),
-        y: group.map(task => task.Task),
-        base: group.map(task => task.Start),
-        hovertemplate: group.map(task =>
-            `Task: ${task.Task}<br>Column: ${task.Column}<br>Start: ${task.Start}<br>Finish: ${task.Finish}<br>Days: ${task.days}<extra></extra>`
-        ),
-    }));
-
-    const layout = {
-        barmode: 'stack',
-        title: 'Gantt Chart of Tasks',
-        xaxis: {
-            title: 'Date',
-            type: 'date',
-            range: [boardStartDate.toISOString(), boardEndDate.toISOString()],
-        },
-        yaxis: { title: 'Tasks', automargin: true },
-        height: 500,
-    };
-
-    Plotly.newPlot(elementId, data, layout);
-}
-
-    // ========== BURNDOWN CHART ==========
-
-    function renderBurndownChart(elementId, rawData, totalTasks) {
-        const dates = rawData.map(item => item.date);
-        const remaining = rawData.map(item => item.remaining);
-
-        // Ideal burndown line
-        const ideal = [];
-        const step = totalTasks / (dates.length - 1);
-        for (let i = 0; i < dates.length; i++) {
-            ideal.push(totalTasks - i * step);
+            let layout = { title };
+            // Apply dark theme if active
+            if (document.body.classList.contains('dark-mode')) {
+                layout = { ...layout, ...plotlyDarkLayout };
+            }
+            Plotly.newPlot(elementId, data, layout);
         }
 
-        const trace_actual = {
-            x: dates,
-            y: remaining,
-            name: 'Actual Remaining Tasks',
-            type: 'scatter',
-            mode: 'lines+markers',
-            line: { color: 'red', shape: 'linear' }
-        };
+        // ========== GANTT CHART ==========
 
-        const trace_ideal = {
-            x: dates,
-            y: ideal,
-            name: 'Ideal Progress',
-            type: 'scatter',
-            mode: 'lines',
-            line: { color: 'green', dash: 'dot' }
-        };
+        function renderGanttChart(elementId, tasks, dakrMode=false) {
+            const boardStartDate = new Date("{{active_board.created_at|date:'Y-m-d'}}");
+            const boardEndDate = new Date(boardStartDate);
+            boardEndDate.setDate(boardEndDate.getDate() + {{active_board.sprint_days}});
 
-        const layout = {
-            title: 'Task Burndown Chart From {{ sprint_start }} to {{ sprint_end }}',
-            xaxis: { title: 'Date' },
-            yaxis: { title: 'Remaining Tasks', rangemode: 'tozero' },
-            legend: { x: 0.05, y: 1 }
-        };
+            // Group tasks by Resource
+            const groupedTasks = {};
+            tasks.forEach(task => {
+                if (!groupedTasks[task.Resource]) groupedTasks[task.Resource] = [];
+                groupedTasks[task.Resource].push(task);
+            });
 
-        Plotly.newPlot(elementId, [trace_actual, trace_ideal], layout);
-    }
+            const resourceColors = {
+                High: '#ED8936',        // Orange
+                Medium: '#4299E1',      // Blue
+                Low: '#A0AEC0',         // Gray
+                Overdue: '#E53E3E',     // Red
+                Remaining: '#48BB78',   // Green
+                Early: '#9F7AEA',       // Purple (optional, not used now)
+                Late: '#FF6DB3',        // Pink
+                Unused: '#BEE3F8',      // Light Blue
+                OnTime: '#CBD5E0'       // Light Gray (optional)
+            };
 
-    // ========== INIT CHARTS ==========
 
-    // Context-safe data from Django
-    const priorityLabels = {{ priority_labels|safe }};
-    const priorityValues = {{ priority_values|safe }};
-    const columnLabels = {{ column_labels|safe }};
-    const columnValues = {{ column_values|safe }};
-    const ganttTasks = {{ tasks|safe }};
-    const burndownData = {{ data|safe }};
-    const totalTasks = {{ total_tasks }};
 
-        // Render each chart
-        renderPieChart("priorityChart", priorityLabels, priorityValues, "Tasks by Priority");
-        renderPieChart("columnChart", columnLabels, columnValues, "Tasks by Column");
-        renderGanttChart("ganttChart", ganttTasks);
-        renderBurndownChart("chart", burndownData, totalTasks);
+            const data = Object.entries(groupedTasks).map(([resource, group]) => ({
+                type: 'bar',
+                orientation: 'h',
+                name: resource,
+                marker: { color: resourceColors[resource] || '#1f77b4' },
+                x: group.map(task => new Date(task.Finish) - new Date(task.Start)),
+                y: group.map(task => task.Task),
+                base: group.map(task => task.Start),
+                hovertemplate: group.map(task =>
+                    `Task: ${task.Task}<br>Column: ${task.Column}<br>Start: ${task.Start}<br>Finish: ${task.Finish}<br>Days: ${task.days}<extra></extra>`
+                ),
+            }));
+
+            let layout = {
+                barmode: 'stack',
+                title: 'Gantt Chart of Tasks',
+                xaxis: {
+                    title: 'Date',
+                    type: 'date',
+                    range: [boardStartDate.toISOString(), boardEndDate.toISOString()],
+                },
+                yaxis: { title: 'Tasks', automargin: true },
+                height: 500,
+            };
+
+            if (darkMode) {
+                plotlyDarkLayout = {
+                    paper_bgcolor: 'rgba(0,0,0,0)', // Transparent outer background
+                    plot_bgcolor: 'rgba(0,0,0,0)',  // Transparent plotting area
+                    font: {
+                        color: '#f0f0f0' // Light text for titles, labels, etc.
+                    },
+                    xaxis: {
+                        title: 'Date',
+                        type: 'date',
+                        range: [boardStartDate.toISOString(), boardEndDate.toISOString()],
+                        gridcolor: 'rgba(255, 255, 255, 0.1)', // Faint white grid lines
+                        linecolor: 'rgba(255, 255, 255, 0.2)'
+                    },
+                    yaxis: {
+                        title: 'Tasks', automargin: true,
+                        gridcolor: 'rgba(255, 255, 255, 0.1)',
+                        linecolor: 'rgba(255, 255, 255, 0.2)'
+                    },
+                    legend: {
+                        bgcolor: 'rgba(0,0,0,0)',
+                        bordercolor: 'rgba(0,0,0,0)'
+                    }
+                };
+                layout = { ...layout, ...plotlyDarkLayout };
+            }
+            Plotly.newPlot(elementId, data, layout);
+        }
+
+        // ========== BURNDOWN CHART ==========
+
+        function renderBurndownChart(elementId, rawData, totalTasks, dakrMode=false) {
+            const dates = rawData.map(item => item.date);
+            const remaining = rawData.map(item => item.remaining);
+
+            // Ideal burndown line
+            const ideal = [];
+            const step = totalTasks / (dates.length - 1);
+            for (let i = 0; i < dates.length; i++) {
+                ideal.push(totalTasks - i * step);
+            }
+
+            const trace_actual = {
+                x: dates,
+                y: remaining,
+                name: 'Actual Remaining Tasks',
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: 'red', shape: 'linear' }
+            };
+
+            const trace_ideal = {
+                x: dates,
+                y: ideal,
+                name: 'Ideal Progress',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: 'green', dash: 'dot' }
+            };
+
+            let layout = {
+                title: 'Task Burndown Chart From {{ sprint_start }} to {{ sprint_end }}',
+                xaxis: { title: 'Date' },
+                yaxis: { title: 'Remaining Tasks', rangemode: 'tozero' },
+            };
+
+            if (darkMode) {
+                plotlyDarkLayout = {
+                    paper_bgcolor: 'rgba(0,0,0,0)', // Transparent outer background
+                    plot_bgcolor: 'rgba(0,0,0,0)',  // Transparent plotting area
+                    font: {
+                        color: '#f0f0f0' // Light text for titles, labels, etc.
+                    },
+                    xaxis: {
+                        title: 'Date',
+                        gridcolor: 'rgba(255, 255, 255, 0.1)', // Faint white grid lines
+                        linecolor: 'rgba(255, 255, 255, 0.2)'
+                    },
+                    yaxis: {
+                        title: 'Remaining Tasks', rangemode: 'tozero',
+                        gridcolor: 'rgba(255, 255, 255, 0.1)',
+                        linecolor: 'rgba(255, 255, 255, 0.2)'
+                    },
+                    legend: {
+                        bgcolor: 'rgba(0,0,0,0)',
+                        bordercolor: 'rgba(0,0,0,0)'
+                    }
+                };
+                layout = { ...layout, ...plotlyDarkLayout };
+            }
+        
+            Plotly.newPlot(elementId, [trace_actual, trace_ideal], layout);
+        }
+
+        // ========== INIT CHARTS ==========
+
+        // Context-safe data from Django
+        const priorityLabels = {{ priority_labels|safe }};
+        const priorityValues = {{ priority_values|safe }};
+        const columnLabels = {{ column_labels|safe }};
+        const columnValues = {{ column_values|safe }};
+        const ganttTasks = {{ tasks|safe }};
+        const burndownData = {{ data|safe }};
+        const totalTasks = {{ total_tasks }};
+        let darkMode = false;
+
+        function renderAllCharts(darkMode=false){
+            
+            renderPieChart("priorityChart", priorityLabels, priorityValues, "Tasks by Priority", darkMode);
+            renderPieChart("columnChart", columnLabels, columnValues, "Tasks by Column", darkMode);
+            renderGanttChart("ganttChart", ganttTasks, darkMode);
+            renderBurndownChart("chart", burndownData, totalTasks, darkMode);
+        }
+        
+        window.addEventListener("DOMContentLoaded", () => {
+            // Render each chart
+            if (localStorage.getItem("theme") === "dark") {
+                darkMode=true;
+            }
+
+            renderAllCharts(darkMode)
+
+            document.getElementById('darkModeToggle').addEventListener('click', function(evt){
+                console.log(evt)
+                darkMode = darkMode == false ? true : false
+                console.log({darkMode})
+                renderAllCharts(!darkMode)
+            })
+        });
+
+
     </script>
-
 </html>

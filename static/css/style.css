@@ -474,3 +474,17 @@ form input[type="checkbox"] {
     box-shadow: 0.2em -0.2em 0 0 currentcolor;
   }
 }
+
+body.dark-mode .sidebar .board_link:hover,
+body.dark-mode .sidebar .board_link.hover\:bg-gray-100:hover {
+  background-color: var(--dark-bg-tertiary);
+}
+body.dark-mode .sidebar .board_link {
+  background-color: rgb(50 53 80) !important;
+}
+body.dark-mode .sidebar .board_link.active_board {
+  background-color: var(--dark-accent-primary) !important;
+}
+body.dark-mode .sidebar .board_link a {
+  color: #fff !important;
+}

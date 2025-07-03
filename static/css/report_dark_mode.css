@@ -1,0 +1,106 @@
+/*
+  Dark Mode Stylesheet for Reports/Dashboard Page
+*/
+
+/* --- THEME COLOR PALETTE --- */
+:root {
+  --dark-bg-primary: #1e1e2d;     /* Main background */
+  --dark-bg-secondary: #27293d;  /* Nav, sidebars, cards */
+  --dark-bg-tertiary: #3a3c53;   /* Modals, hover states */
+  --dark-border-color: #4a4c68;
+  --dark-text-primary: #f0f0f0;
+  --dark-text-secondary: #a0a0a0;
+  --dark-accent-primary: #7986cb;
+}
+
+/* --- GENERAL & BODY --- */
+body.dark-mode {
+  background-color: var(--dark-bg-primary);
+  color: var(--dark-text-primary);
+}
+body.dark-mode .text-muted {
+  color: var(--dark-text-secondary) !important;
+}
+body.dark-mode h1 {
+  color: var(--dark-text-primary);
+}
+
+/* --- NAVBAR & NOTIFICATIONS (Standard) --- */
+body.dark-mode .navbar.bg-white {
+  background-color: var(--dark-bg-secondary) !important;
+  border-bottom: 1px solid var(--dark-border-color);
+  box-shadow: none !important;
+}
+body.dark-mode .navbar-brand .text-primary,
+body.dark-mode .btn-light .text-primary {
+  color: var(--dark-accent-primary) !important;
+}
+body.dark-mode .btn-light {
+  background-color: var(--dark-bg-tertiary);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color);
+  box-shadow: none !important;
+}
+body.dark-mode .notification-dropdown {
+  background-color: var(--dark-bg-secondary);
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode .notification-item {
+  border-bottom: 1px solid var(--dark-border-color);
+}
+body.dark-mode .notification-item.unread {
+  background-color: var(--dark-bg-tertiary);
+}
+body.dark-mode .notification-item:hover {
+  background-color: var(--dark-accent-primary) !important;
+  color: #fff;
+}
+
+/* --- SIDEBAR --- */
+body.dark-mode #boards-sidebar {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border-color) !important;
+  box-shadow: none !important;
+}
+body.dark-mode #boards-sidebar a.text-black {
+  color: var(--dark-text-primary) !important;
+}
+body.dark-mode #boards-sidebar div:hover,
+body.dark-mode #boards-sidebar .hover\:bg-gray-100:hover {
+  background-color: var(--dark-bg-tertiary);
+}
+body.dark-mode #boards-sidebar .active_board {
+  background-color: var(--dark-accent-primary) !important;
+  color: #fff !important;
+}
+
+/* --- STAT CARDS --- */
+body.dark-mode .main-content .card {
+  background-color: var(--dark-bg-secondary);
+  box-shadow: none;
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode .main-content .card:hover {
+    transform: translateY(-5px);
+    box-shadow: none;
+    border-color: var(--dark-accent-primary);
+}
+body.dark-mode .main-content .card h2 {
+  color: var(--dark-text-primary);
+}
+body.dark-mode .main-content .card p {
+  color: var(--dark-text-secondary);
+}
+
+/* --- PLOTLY CHART CONTAINER --- */
+/* This just styles the container, not the chart itself */
+body.dark-mode .chart-box,
+body.dark-mode #ganttChart,
+body.dark-mode #chart {
+    border-radius: 8px;
+}
+
+
+/* body.dark-mode .plotly .main-svg{
+  background: rgb(40 41 60) !important;
+} */

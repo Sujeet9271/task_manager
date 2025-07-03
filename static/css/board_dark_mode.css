@@ -1,0 +1,319 @@
+/*
+  Complete Dark Mode Stylesheet
+  FINAL VERSION 3: Tones down the bright red delete icon in column headers.
+*/
+
+:root {
+  --dark-bg-primary: #1e1e2d; /* Main background */
+  --dark-bg-secondary: #27293d; /* Nav, sidebars, cards */
+  --dark-bg-tertiary: #3a3c53; /* Task cards, modals, hover states */
+  --dark-border-color: #4a4c68;
+  --dark-text-primary: #f0f0f0;
+  --dark-text-secondary: #a0a0a0;
+  --dark-accent-primary: #7986cb;
+  --dark-accent-secondary: #4f5b93;
+  --dark-input-bg: #3a3c53;
+}
+
+/* --- GENERAL & BODY --- */
+body.dark-mode {
+  background-color: var(--dark-bg-primary);
+  color: var(--dark-text-primary);
+}
+body.dark-mode .text-muted {
+  color: var(--dark-text-secondary) !important;
+}
+body.dark-mode .text-secondary {
+  color: var(--dark-text-secondary) !important;
+}
+body.dark-mode hr {
+  border-top-color: var(--dark-border-color);
+}
+
+/* --- NAVBAR --- */
+body.dark-mode .navbar.bg-white {
+  background-color: var(--dark-bg-secondary) !important;
+  border-bottom: 1px solid var(--dark-border-color);
+  box-shadow: none !important;
+}
+body.dark-mode .navbar-brand .text-primary,
+body.dark-mode .btn-light .text-primary {
+  color: var(--dark-accent-primary) !important;
+}
+body.dark-mode .btn-light {
+  background-color: var(--dark-bg-tertiary);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color);
+  box-shadow: none !important;
+}
+body.dark-mode #darkModeToggle {
+  background: var(--dark-bg-tertiary);
+  border: 1px solid var(--dark-border-color);
+  border-radius: 5px;
+}
+
+/* --- NOTIFICATIONS --- */
+body.dark-mode .notification-dropdown {
+  background-color: var(--dark-bg-secondary);
+  border: 1px solid var(--dark-border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+body.dark-mode .notification-item {
+  border-bottom: 1px solid var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+body.dark-mode .notification-item.unread {
+  background-color: var(--dark-bg-tertiary);
+}
+body.dark-mode .notification-item:hover {
+  background-color: var(--dark-accent-primary) !important;
+  color: #fff;
+}
+
+/* --- SIDEBAR --- */
+body.dark-mode .sidebar.bg-white {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border-color) !important;
+}
+body.dark-mode .sidebar .text-black {
+  color: var(--dark-text-primary) !important;
+}
+
+body.dark-mode .sidebar .board_link:hover,
+body.dark-mode .sidebar .board_link.hover\:bg-gray-100:hover {
+  background-color: var(--dark-bg-tertiary);
+}
+body.dark-mode .sidebar .board_link {
+  background-color: rgb(50 53 80) !important;
+}
+body.dark-mode .sidebar .board_link.active_board {
+  background-color: var(--dark-accent-primary) !important;
+}
+body.dark-mode .sidebar .board_link a {
+  color: #fff !important;
+}
+
+body.dark-mode .sidebar .dropdown-menu {
+  background-color: var(--dark-bg-tertiary);
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode .sidebar .dropdown-item {
+  color: var(--dark-text-primary);
+}
+body.dark-mode .sidebar .dropdown-item:hover {
+  background-color: var(--dark-accent-primary);
+  color: #fff;
+}
+body.dark-mode .sidebar .dropdown-item.text-danger:hover {
+  color: #fff !important;
+}
+
+/* --- COLUMNS & BOARDS --- */
+body.dark-mode .column .card {
+  background-color: var(--dark-bg-secondary);
+  border: none;
+}
+body.dark-mode .column .card-header input.form-control {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+body.dark-mode .column .card-header .btn.btn-light {
+  background-color: var(--dark-bg-tertiary);
+  border: 1px solid var(--dark-border-color);
+}
+/* *** FIX: Toned down the bright red delete icon *** */
+body.dark-mode .column .card-header .btn .fa-trash-alt {
+  color: #f87171 !important; /* A softer, less jarring red for dark mode */
+}
+body.dark-mode .card-body.bg-white {
+  background-color: var(--dark-bg-secondary) !important;
+}
+body.dark-mode .add-column {
+  background-color: rgba(58, 60, 83, 0.5);
+  border-radius: 8px;
+  border: 1px dashed var(--dark-border-color);
+}
+
+/* --- TASK CARDS --- */
+body.dark-mode .task-card {
+  background-color: var(--dark-bg-tertiary) !important;
+  border: 1px solid var(--dark-border-color) !important;
+  box-shadow: none !important;
+}
+body.dark-mode .task-card,
+body.dark-mode .task-card .task-title {
+  color: var(--dark-text-primary);
+}
+body.dark-mode .task-card.bg-light {
+  background-color: #2b2d42 !important;
+}
+body.dark-mode .task-card .task-title.text-decoration-line-through {
+  color: var(--dark-text-secondary) !important;
+}
+body.dark-mode .assigned_user {
+  background-color: var(--dark-accent-primary);
+  color: #fff;
+}
+body.dark-mode .dropzone.bg-light {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+/* --- MODALS --- */
+body.dark-mode .modal-content {
+  background-color: var(--dark-bg-secondary);
+  color: var(--dark-text-primary);
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode .modal-header {
+  border-bottom: 1px solid var(--dark-border-color);
+}
+body.dark-mode .modal-footer {
+  border-top: 1px solid var(--dark-border-color);
+}
+body.dark-mode .btn-close {
+  filter: invert(1) grayscale(100) brightness(200%);
+}
+body.dark-mode .modal-backdrop.show {
+  opacity: 0.7;
+  background-color: #000;
+}
+body.dark-mode .modal-content h1,
+body.dark-mode .modal-content h2,
+body.dark-mode .modal-content h3,
+body.dark-mode .modal-content h4,
+body.dark-mode .modal-content h5,
+body.dark-mode .modal-content h6 {
+  color: var(--dark-text-primary);
+}
+body.dark-mode .modal-body .card {
+  background-color: var(--dark-bg-tertiary);
+  box-shadow: none !important;
+  border: 1px solid var(--dark-border-color) !important;
+}
+body.dark-mode .modal-body .list-group-item {
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color) !important;
+}
+body.dark-mode .modal-body .list-group-item:hover {
+  background-color: var(--dark-accent-secondary) !important;
+}
+
+/* --- FORMS & BUTTONS --- */
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode .searchInput {
+  background-color: var(--dark-input-bg);
+  color: var(--dark-text-primary);
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  background-color: var(--dark-input-bg);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-accent-primary);
+  box-shadow: 0 0 0 0.25rem rgba(121, 134, 203, 0.25);
+}
+body.dark-mode label,
+body.dark-mode .form-check-label,
+body.dark-mode .form-label {
+  color: var(--dark-text-primary);
+}
+body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+body.dark-mode .btn-outline-primary {
+  color: var(--dark-accent-primary);
+  border-color: var(--dark-accent-primary);
+}
+body.dark-mode .btn-outline-primary:hover {
+  background-color: var(--dark-accent-primary);
+  color: #fff;
+}
+body.dark-mode #checkboxselectmultiple > div {
+  background-color: var(--dark-input-bg) !important;
+  border-color: var(--dark-border-color) !important;
+}
+
+/* --- TASK DETAIL MODAL SPECIFICS --- */
+body.dark-mode .attachment-card .card.bg-light {
+  background-color: var(--dark-bg-secondary) !important;
+}
+body.dark-mode .chat-messages {
+  background-color: var(--dark-bg-primary);
+  border-radius: 8px;
+  padding: 10px;
+}
+body.dark-mode .chat-message.from-me {
+  background-color: var(--dark-accent-secondary);
+  color: #ffffff;
+}
+body.dark-mode .chat-message .timestamp {
+  color: rgba(255, 255, 255, 0.7);
+}
+body.dark-mode .mention {
+  color: #2949c8;
+  font-weight: bold;
+}
+body.dark-mode #mentionSuggestions {
+  background-color: var(--dark-bg-tertiary);
+  border: 1px solid var(--dark-border-color);
+}
+body.dark-mode #mentionSuggestions .list-group-item {
+  background-color: transparent;
+}
+body.dark-mode #mentionSuggestions .list-group-item:hover {
+  background-color: var(--dark-accent-primary) !important;
+}
+
+
+/* --- SUB-TASK STYLES --- */
+
+/* The main container for a single sub-task row */
+body.dark-mode .sub-task-card {
+  background-color: var(--dark-bg-tertiary);
+  border: 1px solid var(--dark-border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.2s;
+}
+
+/* Add a hover effect for better user feedback */
+body.dark-mode .sub-task-card:hover {
+  background-color: var(--dark-accent-secondary);
+}
+
+/* Style the sub-task title text */
+body.dark-mode .sub-task-card .task-title {
+  color: var(--dark-text-primary);
+  margin-bottom: 0; /* Remove default paragraph margin */
+  flex-grow: 1;     /* Allow title to take up available space */
+}
+
+/* Style for completed sub-task text */
+body.dark-mode .sub-task-card .completed-text {
+  color: var(--dark-text-secondary);
+  text-decoration: line-through;
+}
+
+/* Style the transparent button containing the icon */
+body.dark-mode .sub-task-card .task-actions {
+  background: transparent;
+  border: none;
+}
+
+/* Style the trash icon within the sub-task */
+body.dark-mode .sub-task-card .fa-trash-alt {
+  color: #f87171 !important; /* Override inline style with a softer red */
+}
+
+/* Style the checkbox for a modern look */
+body.dark-mode .sub-task-card input[type="checkbox"] {
+  accent-color: var(--dark-accent-primary);
+  width: 1.1em;
+  height: 1.1em;
+}

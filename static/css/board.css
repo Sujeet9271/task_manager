@@ -579,3 +579,16 @@
 .priority.high {
   color: red;
 }
+
+.del_column {
+  background-color: var(--custom-primary-color);
+  color: white;
+  border-radius: 50%;
+  /* height: 40px; */
+  width: 40px;
+  /* display: flex
+; */
+  /* justify-content: center; */
+  /* align-items: center; */
+  border: 1px solid white;
+}

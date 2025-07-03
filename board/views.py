@@ -604,6 +604,12 @@ def create_task(request, board_id,):
 @login_required
 def detail_task(request, board_id, column_id, task_id):
     task = Task.objects.prefetch_related('tags','assigned_to','comments').filter(pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user,).first()
+    if not task:
+        response = HttpResponse(content='Something went wrong',status=404)
+        triggers = {}
+        triggers["showToast"] = {"message":"No Task Found", "level":"warning"}
+        response['HX-Trigger'] = json.dumps(triggers)
+        return response
     context = {'task':task,'board_id':board_id,'column_id':column_id}
     context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
     return render(request,'boards/components/task_detail.html',context)
@@ -797,7 +803,7 @@ def move_task(request, task_id):
         }
         urls = {
             f'task_toggle_{task_id}':{'post':reverse('board:task-status-toggle', kwargs=kwargs)},
-            f'task_title_{task_id}':{'get':reverse('board:task-edit', kwargs=kwargs)},
+            f'task_title_{task_id}':{'get':reverse('board:task-detail', kwargs=kwargs)},
             f'task_delete_{task_id}':{'delete':reverse('board:task-delete', kwargs=kwargs)},
         }
         if task.column == column:
@@ -805,6 +811,10 @@ def move_task(request, task_id):
         
         task.column = column
         task.save()
+
+        if task.total_sub_tasks > 0:
+            task.sub_tasks.all().update(column=task.column)
+
         response = JsonResponse({'success': True,'urls':urls})
         triggers["showToast"] = {"message":"Task moved successfully", "level":"success"}
         response['HX-Trigger'] = json.dumps(triggers)
