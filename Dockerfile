@@ -24,7 +24,7 @@ COPY requirements.txt .
 
 COPY requirements.lock .
 
-RUN uv pip sync requirements.lock
+RUN uv pip sync requirements.lock --system
 
 # Copy the rest of the application files into the container
 COPY . /app/
