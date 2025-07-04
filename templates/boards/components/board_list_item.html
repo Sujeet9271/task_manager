@@ -1,12 +1,10 @@
 {% load board_tags %}
                     <div class="d-flex justify-content-between align-items-center p-2 rounded hover:bg-gray-100 board_link {% if board.id == active_board.id %}active_board{% endif %}" id="board-{{ board.id }}" title="Board: {{board.name}}" data-board-id="{{board.id}}">
-                        <a href="{% url 'board:board-view' board.id %}" hx-get="{% url 'board:board-view' board.id %}" hx-target="#main-content" hx-swap="innerHTML" class="text-decoration-none fw-bold text-black">
+                        <a class="flex-grow-1 text-decoration-none" href="{% url 'board:board-view' board.id %}" hx-get="{% url 'board:board-view' board.id %}" hx-target="#main-content" hx-swap="innerHTML" class="text-decoration-none fw-bold text-black">
                           {{ board.name }}
                         </a>
                         
                         <div class="d-flex gap-2">
-                          
-
                           <button class="btn btn-sm btn-outline-primary filter_board d-none" id="filter_board_{{board.id}}_btn"
                                   title="Filters"
                                   data-bs-toggle="modal"

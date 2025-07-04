@@ -78,7 +78,7 @@
 			<div id="boards-sidebar" class="sidebar bg-white border-end shadow-sm">
 
 				<!-- Boards List -->
-				<div class="d-flex flex-column gap-2 board_list horizontal-scroll-wrapper auto-hide-scrollbar" id="boards">
+				<div class="d-flex flex-column gap-2 board_list horizontal-scroll-wrapper auto-hide-scrollbar" id="boards-sidebar">
 					{% for board in boards %}
                     <a href="{% url 'board:board-reports' board.id %}" class="text-decoration-none fw-bold text-black">
                         <div class="d-flex justify-content-between align-items-center p-2 rounded hover:bg-gray-100 {% if board.id == active_board.id %}active_board{% endif %}" id="board-{{ board.id }}" title="Board: {{board.name}}">

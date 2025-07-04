@@ -13,7 +13,7 @@
     
     <!-- Title Row -->
     <div class="d-flex align-items-center justify-content-between mb-2">
-      <div class="d-flex">
+      <div class="d-flex flex-grow-1">
         <input type="checkbox"
              class="form-check-input me-2 complete_task d-none"
              id="task_toggle_{{task.id}}"
@@ -23,7 +23,7 @@
              hx-swap="outerHTML"
              title="Mark as complete" />
         <p id="task_title_{{task.id}}"
-          class="mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
+          class="flex-grow-1 mb-0 fw-semibold task-title {% if task.is_complete %}text-decoration-line-through text-muted{% endif %}"
           hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}"
           hx-target="#edit_task_modal"
           hx-swap="innerHTML"

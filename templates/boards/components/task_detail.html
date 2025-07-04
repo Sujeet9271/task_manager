@@ -52,7 +52,7 @@
           </div>
           <hr>
 
-          <div id="task_detail">
+          <div class="task-detail-container auto-hide-scrollbar overflow-scroll" id="task_detail">
             <div class="row mb-4">
               <div class="col-md-6 small text-secondary">
                 <p><strong>📅 Due:</strong> {{ task.due_date|date:"M d, Y" }}</p>
@@ -155,7 +155,7 @@
 
           <div class="d-flex flex-column">
             <!-- Scrollable Messages Section -->
-            <div id="chatMessages" class="chat-messages mb-3 overflow-scroll d-flex flex-column">
+            <div id="chatMessages" class="auto-hide-scrollbar chat-messages mb-3 overflow-scroll d-flex flex-column">
               {% for comment in task.comments.all %}
                 {% include 'boards/components/comment.html' with comment=comment %}
               {% endfor %}

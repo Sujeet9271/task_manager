@@ -80,29 +80,29 @@ def initials(user:Users):
 
 
 ICON_MAP = {
-    'application/pdf': 'fa-file-pdf text-danger',
-    'application/msword': 'fa-file-word text-primary',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word text-primary',
-    'application/vnd.ms-excel': 'fa-file-excel text-success',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel text-success',
-    'application/vnd.ms-powerpoint': 'fa-file-powerpoint text-warning',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'fa-file-powerpoint text-warning',
+    'application/pdf': 'fa-file-pdf text-muted',
+    'application/msword': 'fa-file-word text-muted',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word text-muted',
+    'application/vnd.ms-excel': 'fa-file-excel text-muted',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel text-muted',
+    'application/vnd.ms-powerpoint': 'fa-file-powerpoint text-muted',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'fa-file-powerpoint text-muted',
     'text/plain': 'fa-file-lines text-muted',
-    'text/csv': 'fa-file-csv text-success',
-    'application/zip': 'fa-file-zipper text-secondary',
-    'application/x-rar-compressed': 'fa-file-zipper text-secondary',
-    'audio/mpeg': 'fa-file-audio text-info',
-    'video/mp4': 'fa-file-video text-info',
-    'image/jpeg': 'fa-file-image text-info',
-    'image/png': 'fa-file-image text-info',
-    'image/gif': 'fa-file-image text-info',
-    'text/html': 'fa-brands fa-html5',
+    'text/csv': 'fa-file-csv text-muted',
+    'application/zip': 'fa-file-zipper text-muted',
+    'application/x-rar-compressed': 'fa-file-zipper text-muted',
+    'audio/mpeg': 'fa-file-audio text-muted',
+    'video/mp4': 'fa-file-video text-muted',
+    'image/jpeg': 'fa-file-image text-muted',
+    'image/png': 'fa-file-image text-muted',
+    'image/gif': 'fa-file-image text-muted',
+    'text/html': 'fa-brands fa-html5 text-muted',
     # Default
-    'default': 'fa-file text-secondary',
+    'default': 'fa-file text-muted',
 }
 
 @register.filter
 def fa_icon_from_type(attachment:Attachment):
     if attachment.type == 'file':
         return ICON_MAP.get(attachment.file_type, ICON_MAP['default'])
-    return 'fa-solid fa-link'
+    return 'fa-solid fa-link text-muted'

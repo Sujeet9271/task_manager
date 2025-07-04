@@ -39,7 +39,7 @@
     <div class="container py-3" id="comment_div" style="width:50%">
         <div class="chat-container">
             <!-- Scrollable Messages Section -->
-            <div id="chatMessages" class="chat-messages mb-3 d-flex flex-column">
+            <div id="chatMessages" class="auto-hide-scrollbar chat-messages mb-3 overflow-scroll d-flex flex-column">
                 {% for comment in comments %}
                 {% include 'boards/components/comment.html' with comment=comment %}
                 {% endfor %}

@@ -23,6 +23,9 @@ body.dark-mode {
 body.dark-mode .text-muted {
   color: var(--dark-text-secondary) !important;
 }
+body.dark-mode .text-primary {
+  color: var(--dark-text-primary) !important;
+}
 body.dark-mode .text-secondary {
   color: var(--dark-text-secondary) !important;
 }
@@ -198,6 +201,9 @@ body.dark-mode .modal-body .list-group-item {
 body.dark-mode .modal-body .list-group-item:hover {
   background-color: var(--dark-accent-secondary) !important;
 }
+body.dark-mode .modal-body .form-text{
+  color: var(--dark-text-secondary) !important;
+}
 
 /* --- FORMS & BUTTONS --- */
 body.dark-mode .form-control,
@@ -322,26 +328,76 @@ body.dark-mode .sub-task-card input[type="checkbox"] {
 /* --- SUB-TASK STYLES --- */
 
 /* The main container for a single sub-task row */
-body.dark-mode .history-task-card {
-  background-color: var(--dark-accent-secondary);
+body.dark-mode .history-card {
+  background-color: var(--dark-accent-primary);
   border: 1px solid var(--dark-border-color);
+  transition: background-color 0.2s;
   border-radius: 6px;
   padding: 8px 12px;
   margin-bottom: 8px;
-  transition: background-color 0.2s;
+  border-left: 3px solid var(--dark-accent-primary);
 }
 
 
 /* Style the sub-task title text */
-body.dark-mode .history-task-card .task-title {
+body.dark-mode .history-card .task-title {
   color: var(--dark-text-primary);
   margin-bottom: 0; /* Remove default paragraph margin */
   flex-grow: 1;     /* Allow title to take up available space */
 }
 /* Style the sub-task title text */
-body.dark-mode .history-task-card ul li {
+body.dark-mode .history-card ul li {
+  color: var(--dark-text-primary);
+  flex-grow: 1;     /* Allow title to take up available space */
+}
+
+body.dark-mode .history-card ul li strong {
+  color: var(--dark-text-primary);
+}
+
+
+
+body.dark-mode .history-meta {
+  color: var(--dark-text-primary);;
+}
+
+
+body.dark-mode .tooltip-inner {
+  background-color: var(--dark-bg-tertiary);
+  color: var(--dark-text-primary);
+}
+
+body.dark-mode .dropdown-menu {
+  background-color: var(--dark-bg-tertiary);
+  color: var(--dark-text-primary);
+}
+
+
+/* --- SCROLLBAR FOR DARK MODE --- */
+body.dark-mode ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+  background: var(--dark-bg-secondary);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background-color: var(--dark-accent-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--dark-bg-secondary);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
   background-color: var(--dark-accent-primary);
-  color: var(--dark-text-primary);
-  margin-bottom: 0; /* Remove default paragraph margin */
-  flex-grow: 1;     /* Allow title to take up available space */
+}
+
+
+body.dark-mode ::-webkit-scrollbar-corner {
+  background-color: var(--dark-bg-secondary);
+}
+
+body.dark-mode .task-detail-container{
+  background: var(--dark-bg-primary);
 }

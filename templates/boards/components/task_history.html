@@ -1,26 +1,33 @@
-<div id="histories" style="overflow:scroll; max-height:80vh;" >
+
+
+<div id="histories" style="overflow-y:auto; max-height:80vh;">
   {% for history in histories %}
-    <div class="card history-task-card mb-3 shadow-sm">
-      <div class="card-body">
-        <h6 class="card-title">
-          <strong>Change by:</strong> {{ history.updated_by.name|default:history.updated_by.username }}
-          <span class="text-muted float-end">{{ history.created_at|date:"Y-m-d H:i" }}</span>
-        </h6>
-        <ul class="list-group list-group-flush mt-2">
-          {% for key, value in history.changes.items %}
-            <li class="list-group-item">
-              <strong>{{ key|capfirst }}:</strong>
-              
-                <code class="text-warning">{{ value }}</code>
-            </li>
-          {% endfor %}
-        </ul>
+  {% if not forloop.last %}
+    <div class="card history-card mb-2 shadow-sm p-2">
+      <div class="d-flex justify-content-between mb-1 px-1">
+        <span class="history-meta">By {{ history.updated_by.name|default:history.updated_by.username }}</span>
+        <small class="text-muted">{{ history.created_at|date:"Y-m-d H:i" }}</small>
       </div>
+      <ul class="list-unstyled mb-1 px-2">
+        {% for key, value in history.changes.items %}
+          <li class="change-line mb-1">
+            <strong>{{ key|capfirst }}</strong>:
+            {% if value.from or value.to %}
+              <span class="text-muted">from</span> <code class="text-danger">{{ value.from }}</code>
+              <span class="text-muted">to</span> <code class="text-success">{{ value.to }}</code>
+            {% else %}
+              <code class="text-danger">{{ value }}</code>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
     </div>
+  {% endif %}
   {% empty %}
-    <p class="text-muted">No history available for this task.</p>
+    <p class="text-muted">No history available.</p>
   {% endfor %}
 </div>
+
 
 
 <button class="btn btn-outline-warning btn-sm" id="task_history"
