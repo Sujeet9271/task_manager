@@ -64,9 +64,10 @@ def split(value, key):
 
 @register.filter(name="assigned_users")
 def assigned_users(task:Task):
-    return task.assigned_to.all()[0:2] if task.assigned_to.exists() else [task.created_by]
+    # return task.assigned_to.all()[0:2] if task.assigned_to.exists() else [task.created_by]
+    return task.assigned_to.all() if task.assigned_to.exists() else [task.created_by]
 
-@register.filter
+@register.filter(name="initials")
 def initials(user:Users):
     short_name = []
     value = user.name if user.name else user.username

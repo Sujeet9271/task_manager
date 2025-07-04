@@ -44,6 +44,8 @@ def task_lists(board_id:int, user:Users):
             filters &= Q(priority=cd['priority'])
         if cd.get('is_complete') in ['true', 'false']:
             filters &= Q(is_complete=(cd['is_complete'] == 'true'))
+        else:
+            filters &= Q(is_complete=False)
         if cd.get('due_after'):
             filters &= Q(due_date__gte=cd['due_after'])
         if cd.get('due_before'):
@@ -59,9 +61,10 @@ def task_lists(board_id:int, user:Users):
         else:
             tasks = user.assigned_tasks.prefetch_related('tags','assigned_to').filter(filters)
     elif user.is_staff:
-        tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters)
+        tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters).exclude(is_complete=True)
     else:
-        tasks = user.assigned_tasks.prefetch_related('tags','assigned_to').filter(filters)
+        logger.debug(f'{filters=}')
+        tasks = user.assigned_tasks.prefetch_related('tags','assigned_to').filter(filters).exclude(is_complete=True)
     return tasks
 
 def normalize_querydict(querydict: QueryDict) -> dict:
@@ -586,7 +589,7 @@ def create_task(request, board_id,):
             assigned_to.append(instance.parent_task.created_by)
         instance.assigned_to.add(*assigned_to)
 
-        response = render(request, 'boards/components/task_card.html', {'board_id': board_id, 'task': instance})
+        response = render(request, 'boards/components/task_card_new.html', {'board_id': board_id, 'task': instance})
         triggers = {}
         triggers["reloadTaskList"] = {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column.id}),'column_id':column.id,'board_id':board_id, "level": "info"}
         triggers["closeModal"] = {"modal_id": "close_addTaskModal", "level": "info"}
@@ -764,12 +767,19 @@ def task_status_toggle(request, board_id, column_id, task_id):
         task.is_complete = True
     task.save(update_fields=['is_complete','updated_at'])
     if task.parent_task:
+        if task.is_complete:
+            task.parent_task.completed_sub_tasks += 1
+        elif task.parent_task.completed_sub_tasks > 0:
+            task.parent_task.completed_sub_tasks -= 1
+        task.parent_task.save(update_fields=['completed_sub_tasks'])
         response = render(request,'boards/components/sub_task_card.html',{'sub_task':task,"board_id":board_id,"column_id":column_id})
         triggers["showToast"] = {"message":"Sub-Task marked as complete" if task.is_complete else "Sub-Task marked as incomplete", "level":"success" if task.is_complete else "danger"}
     else:
-        response = render(request,'boards/components/task_card.html',{'task':task,"board_id":board_id,"column_id":column_id})
+        response = render(request,'boards/components/task_card_new.html',{'task':task,"board_id":board_id,"column_id":column_id})
         triggers["showToast"] = {"message":"Task marked as complete" if task.is_complete else "Task marked as incomplete", "level":"success" if task.is_complete else "danger"}
     response['HX-Trigger'] = json.dumps(triggers)
+    if not task.is_complete:
+        response['HX-Reswap'] = 'outerHTML'
     return response
 
 @require_http_methods(['DELETE'])

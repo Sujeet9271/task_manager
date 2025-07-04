@@ -9,12 +9,8 @@
             <!-- Title, Description, Priority Badge -->
             <div class="flex-grow-1">
               <div class="d-flex align-items-center gap-2 mb-1">
-                <h2 class="card-title mb-0 fw-semibold">{{ task.title }}</h2>
-                {% if task.priority %}
-                  <span class="badge fs-6 {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                    {{ task.priority }}
-                  </span>
-                {% endif %}
+                <h4 class="card-title mb-0 fw-semibold">{{ task.title }}</h4>
+                
               </div>
               <p class="text-muted mb-0">{{ task.description|linebreaksbr }}</p>
             </div>
@@ -55,6 +51,11 @@
           <div class="task-detail-container auto-hide-scrollbar overflow-scroll" id="task_detail">
             <div class="row mb-4">
               <div class="col-md-6 small text-secondary">
+                <p><strong> Priority:</strong>
+                  <span class="badge fs-6 {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                    {{ task.priority }}
+                  </span>
+                </p>
                 <p><strong>📅 Due:</strong> {{ task.due_date|date:"M d, Y" }}</p>
                 <p><strong>📌 Status:</strong> {{ task.is_complete|yesno:"✅ Completed,❌ Incomplete" }}</p>
                 {% if task.parent_task %}

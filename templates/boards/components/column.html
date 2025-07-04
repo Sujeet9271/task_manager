@@ -2,6 +2,6 @@
 
     <div class="task-list">
         {% for task in tasks %}
-            {% include 'boards/components/task_card.html' with board_id=column.board_id task=task %}
+            {% include 'boards/components/task_card_new.html' with board_id=column.board_id task=task %}
         {% endfor %}
     </div>

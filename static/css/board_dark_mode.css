@@ -201,7 +201,7 @@ body.dark-mode .modal-body .list-group-item {
 body.dark-mode .modal-body .list-group-item:hover {
   background-color: var(--dark-accent-secondary) !important;
 }
-body.dark-mode .modal-body .form-text{
+body.dark-mode .modal-body .form-text {
   color: var(--dark-text-secondary) !important;
 }
 
@@ -358,7 +358,7 @@ body.dark-mode .history-card ul li strong {
 
 
 body.dark-mode .history-meta {
-  color: var(--dark-text-primary);;
+  color: var(--dark-text-primary);
 }
 
 
@@ -400,4 +400,52 @@ body.dark-mode ::-webkit-scrollbar-corner {
 
 body.dark-mode .task-detail-container{
   background: var(--dark-bg-primary);
+}
+
+/* --- Task Card New Minimal Styling --- */
+
+body.dark-mode .task-card {
+  border-left-width: 2px !important;
+}
+body.dark-mode .task-card.priority-high {
+  border-left-color: #dc3545 !important;
+}
+body.dark-mode .task-card.priority-medium {
+  border-left-color: #ffc107 !important;
+}
+
+body.dark-mode .task-card.priority-low {
+  border-left-color: #6c757d !important;
+}
+
+body.dark-mode .task-card.priority- {
+  border-left-color: #dee2e6 !important;
+}
+
+/* 2. Truncate long task titles with an ellipsis */
+body.dark-mode .task-title-truncated {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 4px;
+}
+
+/* 3. Styling for assigned user avatars in the footer */
+body.dark-mode .assigned_users .assigned_user {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: #6951e4; /* Example color */
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 50%;
+  border: 2px solid white;
+  /* Overlap avatars */
+  margin-left: -8px;
+}
+body.dark-mode .assigned_users .assigned_user:first-child {
+  margin-left: 0;
 }
