@@ -86,7 +86,9 @@ def search_boards(request):
     q = request.GET.get("board_search", "")
     boards:list[Board] = []
     if q:
-        boards = request.user.board_memberships.select_related("workspace").filter(name__icontains=q)
+        ids= Column.objects.select_related('board').filter(board__name__icontains=q, board__members=request.user).exclude(draft_column=True).values_list('board_id',flat=True)
+        logger.debug(f'{ids=}')
+        boards = request.user.board_memberships.select_related("workspace").filter(id__in=set(ids))
     return render(request, "boards/components/board_card_list.html", {"boards": boards})
 
 @login_required
@@ -644,6 +646,7 @@ def task_move(request, board_id, column_id, task_id):
         triggers["showToast"] = {"message":"No Task Found", "level":"warning"}
         response['HX-Trigger'] = json.dumps(triggers)
         return response
+    
     triggers = {}
     if request.method=='POST':
         new_board_id = request.POST.get("board")

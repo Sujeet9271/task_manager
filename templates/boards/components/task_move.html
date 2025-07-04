@@ -8,45 +8,46 @@
           <input type="hidden" name="board" value="{{task.column.board_id}}">
 
           <!-- Searchable Board -->
-          <label>Board</label>
+          <div class="m-3">
+            <label for="board_search">Board</label>
 
-          <!-- Search input -->
-          <input 
-            type="text" 
-            class="form-control mb-2"
-            placeholder="Search boards..." 
-            hx-get="{% url 'board:board-search' %}" 
-            hx-target="#board-search-list"
-            hx-trigger="keyup changed delay:500ms"
-            hx-swap="innerHTML"
-            name="board_search"
-            onfocus="document.getElementById('board-search-list').classList.remove('d-none')"
-            {% comment %} onblur="document.getElementById('board-search-list').classList.add('d-none')" {% endcomment %}
-          >
+            <!-- Search input -->
+            <input 
+              type="text" 
+              class="form-control mb-2"
+              placeholder="Search boards..." 
+              hx-get="{% url 'board:board-search' %}" 
+              hx-target="#board-search-list"
+              hx-trigger="keyup changed delay:500ms"
+              hx-swap="innerHTML"
+              id="board_search"
+              name="board_search"
+              onfocus="document.getElementById('board-search-list').classList.remove('d-none')"
+            >
+          </div>
 
           <!-- Selected board preview -->
-          <div id="selected-board-wrapper">
+          <div id="selected-board-wrapper" class="m-3">
             <div class="card p-2 mb-2" style="border: 1px solid #ccc;">
               <strong>{{ task.column.board.name }}</strong><br>
               <small class="text-muted">{{ task.column.board.workspace.name }}</small>
             </div>
-
           </div>
 
           <!-- Board search result list -->
-          <div id="board-search-list" class="d-none">
+          <div id="board-search-list" class="m-3 d-none">
             {% include "boards/components/board_card_list.html" with boards=boards current_board=task.column.board %}
           </div>
 
 
           <!-- Selected Column -->
-          <div id="column-select">
+          <div id="column-select" class="m-3">
             {% include "boards/components/column_dropdown.html" with columns=columns current_column=task.column %}
           </div>
           
           <!-- Move to Column -->
           {% if task.parent_task %}
-          <div id="move-to-column">
+          <div id="move-to-column" class="m-3" style="height:15px;">
             <input type="checkbox" class="form-check-input" id="convertCheckbox" name="convert_to_main_task">
             <label class="form-check-label" for="convertCheckbox">Convert to Task Card</label>
           </div>
