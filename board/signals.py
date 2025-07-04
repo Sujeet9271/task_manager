@@ -18,8 +18,8 @@ def m2m_changes_board_members(sender, instance: Board, action, reverse, model, p
     """Signal handler to create notifications when users are added or removed from a board."""
     logger.info(f'm2m_changes_board_members, {action=}')
     
-    if instance.created_by_id in pk_set:
-        pk_set.remove(instance.created_by_id)
+    # if instance.created_by_id in pk_set:
+        # pk_set.remove(instance.created_by_id)
     
     if action == 'post_add':  # Users are added
         message = f"Welcome! You've been added to the board: '{instance.name}' of the workspace: '{instance.workspace.name}'. Stay tuned for updates and tasks."
@@ -35,8 +35,8 @@ def m2m_changes_task_assigned_to(sender, instance: Task, action, reverse, model,
     """Signal handler to create notifications when users are added or removed from a task."""
     logger.debug(f' m2m_changes_task_assigned_to, {action=}')
     if action == 'post_add':  # Users are added        
-        if instance.created_by in pk_set:    
-            pk_set.remove(instance.created_by_id)
+        # if instance.created_by in pk_set:    
+        #     pk_set.remove(instance.created_by_id)
 
         if instance.due_date:
             message = f"You've been assigned to the task: '{instance.title}' (ID: {instance.id}) in the board: '{instance.column.board.name}'. The task is due on {instance.due_date}. Please make sure to complete it on time."
