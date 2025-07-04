@@ -44,7 +44,7 @@ def task_lists(board_id:int, user:Users):
             filters &= Q(priority=cd['priority'])
         if cd.get('is_complete') in ['true', 'false']:
             filters &= Q(is_complete=(cd['is_complete'] == 'true'))
-        else:
+        elif cd.get('is_complete')!='all':
             filters &= Q(is_complete=False)
         if cd.get('due_after'):
             filters &= Q(due_date__gte=cd['due_after'])
@@ -58,6 +58,8 @@ def task_lists(board_id:int, user:Users):
         if user_filter:
             logger.debug(f'{user_filter=}')
             tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters, user_filter).distinct()
+        elif user.is_staff:
+            tasks = Task.objects.prefetch_related('tags','assigned_to').filter(filters).distinct()
         else:
             tasks = user.assigned_tasks.prefetch_related('tags','assigned_to').filter(filters)
     elif user.is_staff:

@@ -201,7 +201,7 @@ class TaskFilterForm(forms.Form):
     )
 
     is_complete = forms.ChoiceField(
-        choices=[('', 'Select Task Status'), ('true', 'Completed'), ('false', 'Incomplete')],
+        choices=[('', 'Select Task Status'), ('all', 'All'), ('true', 'Completed'), ('false', 'Incomplete')],
         required=False
     )
 
