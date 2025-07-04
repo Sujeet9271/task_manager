@@ -317,3 +317,31 @@ body.dark-mode .sub-task-card input[type="checkbox"] {
   width: 1.1em;
   height: 1.1em;
 }
+
+
+/* --- SUB-TASK STYLES --- */
+
+/* The main container for a single sub-task row */
+body.dark-mode .history-task-card {
+  background-color: var(--dark-accent-secondary);
+  border: 1px solid var(--dark-border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s;
+}
+
+
+/* Style the sub-task title text */
+body.dark-mode .history-task-card .task-title {
+  color: var(--dark-text-primary);
+  margin-bottom: 0; /* Remove default paragraph margin */
+  flex-grow: 1;     /* Allow title to take up available space */
+}
+/* Style the sub-task title text */
+body.dark-mode .history-task-card ul li {
+  background-color: var(--dark-accent-primary);
+  color: var(--dark-text-primary);
+  margin-bottom: 0; /* Remove default paragraph margin */
+  flex-grow: 1;     /* Allow title to take up available space */
+}

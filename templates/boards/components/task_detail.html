@@ -39,99 +39,110 @@
                 title="Delete Task">
                 <i class="fa-regular fa-trash-can"></i>
               </button>
+              
+              <!-- History -->
+              <button class="btn btn-outline-warning btn-sm" id="task_history"
+                hx-get="{% url 'board:task-history' board_id=board_id column_id=task.column_id task_id=task.id %}?from=task_detail"
+                hx-target="#task_detail"
+                hx-swap="innerHTML"
+                title="Task History">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </button>
             </div>
           </div>
           <hr>
 
-          <div class="row mb-4">
-            <div class="col-md-6 small text-secondary">
-              <p><strong>📅 Due:</strong> {{ task.due_date|date:"M d, Y" }}</p>
-              <p><strong>📌 Status:</strong> {{ task.is_complete|yesno:"✅ Completed,❌ Incomplete" }}</p>
-              {% if task.parent_task %}
-              <p class="cursor pointer"
-                hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.parent_task_id %}"
-                hx-target="#edit_task_modal"
-                hx-swap="innerHTML">
-                <strong>🧩 Parent Task:</strong> {{ task.parent_task.title }}
-              </p>
-              {% endif %}
-              <p><strong>🗂️ Column:</strong> {{ task.column.name }}</p>
-            </div>
-            <div class="col-md-6 small text-secondary">
-              <p><strong>👤 Created by:</strong> {{ task.created_by.name|default:task.created_by.username }} ({{ task.created_by.email }})</p>
-              <p><strong>🛠️ Updated by:</strong> {{ task.updated_by.name|default:task.updated_by.username }} ({{ task.updated_by.email }})</p>
-              <p><strong>🕓 Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
-              <p><strong>🔄 Updated:</strong> {{ task.updated_at|date:"M d, Y H:i" }}</p>
-            </div>
-          </div>
-
-          {% if task.assigned_to.exists %}
-          <hr>
-          <div class="mb-4">
-            <h5 class="fw-semibold">👥 Assigned Users</h5>
-            <ul class="list-group list-group-flush">
-              {% for user in task.assigned_to.all %}
-                <li class="list-group-item bg-transparent px-0 py-1">
-                  <i class="bi bi-person me-1"></i> {{ user.name|default:user.username }} <small class="text-muted">({{ user.email }})</small>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-          {% endif %}
-
-          {% if task.tags.exists %}
-          <hr>
-          <div class="mb-4">
-            <h5 class="fw-semibold">🏷️ Tags</h5>
-            <div class="d-flex flex-wrap gap-2 mt-2">
-              {% for tag in task.tags.all %}
-                <span class="badge rounded-pill px-3 py-2 text-white" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
-
-          {% if task.total_sub_tasks > 0 %}
-          <hr>
-          <div class="mb-4">
-            <h5 class="fw-semibold">🧾 Subtasks <small class="text-muted">({{ task.completed_sub_tasks }}/{{ task.total_sub_tasks }})</small></h5>
-            <ul class="list-group list-group-flush">
-              {% for sub_task in task.sub_tasks.all %}
-                <li class="list-group-item cursor pointer bg-transparent px-2 py-1" title="{{ sub_task.description }}"
-                  hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=sub_task.id %}"
+          <div id="task_detail">
+            <div class="row mb-4">
+              <div class="col-md-6 small text-secondary">
+                <p><strong>📅 Due:</strong> {{ task.due_date|date:"M d, Y" }}</p>
+                <p><strong>📌 Status:</strong> {{ task.is_complete|yesno:"✅ Completed,❌ Incomplete" }}</p>
+                {% if task.parent_task %}
+                <p class="cursor pointer"
+                  hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.parent_task_id %}"
                   hx-target="#edit_task_modal"
                   hx-swap="innerHTML">
-                  {% if sub_task.is_complete %}
-                  <i class="fa-regular fa-square-check"></i>
-                  {% else %}
-                  <i class="fa-regular fa-square"></i> 
-                  {% endif %}
-                  {{ sub_task.title }}
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-          {% endif %}
-
-          {% if task.attachments.exists %}
-          <hr>
-          <div class="mb-2">
-            <h5 class="fw-semibold">📎 Attachments</h5>
-            <div class="d-flex flex-wrap gap-3 mt-3">
-              {% for a in task.attachments.all %}
-                <a href="{{ a.attachment_url }}" target="_blank" class="text-decoration-none attachment-card position-relative">
-                  <div class="card shadow-sm border-0 rounded-3 bg-light text-center p-3">
-                    <i class="fa-solid {{ a|fa_icon_from_type }} fa-2x"></i>
-                  </div>
-                  <div class="attachment-hover-text">
-                    {{ a.attachment_name }}
-                  </div>
-                </a>
-              {% endfor %}
+                  <strong>🧩 Parent Task:</strong> {{ task.parent_task.title }}
+                </p>
+                {% endif %}
+                <p><strong>🗂️ Column:</strong> {{ task.column.name }}</p>
+              </div>
+              <div class="col-md-6 small text-secondary">
+                <p><strong>👤 Created by:</strong> {{ task.created_by.name|default:task.created_by.username }} ({{ task.created_by.email }})</p>
+                <p><strong>🛠️ Updated by:</strong> {{ task.updated_by.name|default:task.updated_by.username }} ({{ task.updated_by.email }})</p>
+                <p><strong>🕓 Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>🔄 Updated:</strong> {{ task.updated_at|date:"M d, Y H:i" }}</p>
+              </div>
             </div>
-          </div>
 
-          {% endif %}
+            {% if task.assigned_to.exists %}
+            <hr>
+            <div class="mb-4">
+              <h5 class="fw-semibold">👥 Assigned Users</h5>
+              <ul class="list-group list-group-flush">
+                {% for user in task.assigned_to.all %}
+                  <li class="list-group-item bg-transparent px-0 py-1">
+                    <i class="bi bi-person me-1"></i> {{ user.name|default:user.username }} <small class="text-muted">({{ user.email }})</small>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            {% if task.tags.exists %}
+            <hr>
+            <div class="mb-4">
+              <h5 class="fw-semibold">🏷️ Tags</h5>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                {% for tag in task.tags.all %}
+                  <span class="badge rounded-pill px-3 py-2 text-white" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if task.total_sub_tasks > 0 %}
+            <hr>
+            <div class="mb-4">
+              <h5 class="fw-semibold">🧾 Subtasks <small class="text-muted">({{ task.completed_sub_tasks }}/{{ task.total_sub_tasks }})</small></h5>
+              <ul class="list-group list-group-flush">
+                {% for sub_task in task.sub_tasks.all %}
+                  <li class="list-group-item cursor pointer bg-transparent px-2 py-1" title="{{ sub_task.description }}"
+                    hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=sub_task.id %}"
+                    hx-target="#edit_task_modal"
+                    hx-swap="innerHTML">
+                    {% if sub_task.is_complete %}
+                    <i class="fa-regular fa-square-check"></i>
+                    {% else %}
+                    <i class="fa-regular fa-square"></i> 
+                    {% endif %}
+                    {{ sub_task.title }}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            {% if task.attachments.exists %}
+            <hr>
+            <div class="mb-2">
+              <h5 class="fw-semibold">📎 Attachments</h5>
+              <div class="d-flex flex-wrap gap-3 mt-3">
+                {% for a in task.attachments.all %}
+                  <a href="{{ a.attachment_url }}" target="_blank" class="text-decoration-none attachment-card position-relative">
+                    <div class="card shadow-sm border-0 rounded-3 bg-light text-center p-3">
+                      <i class="fa-solid {{ a|fa_icon_from_type }} fa-2x"></i>
+                    </div>
+                    <div class="attachment-hover-text">
+                      {{ a.attachment_name }}
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>

@@ -615,6 +615,21 @@ def detail_task(request, board_id, column_id, task_id):
     return render(request,'boards/components/task_detail.html',context)
 
 
+@require_http_methods(['GET'])
+@login_required
+def history_task(request, board_id, column_id, task_id):
+    task = Task.objects.prefetch_related('tags','assigned_to','comments').filter(pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user,).first()
+    if not task:
+        response = HttpResponse(content='Something went wrong',status=404)
+        triggers = {}
+        triggers["showToast"] = {"message":"No Task Found", "level":"warning"}
+        response['HX-Trigger'] = json.dumps(triggers)
+        return response
+    context = {'task':task, 'histories':task.history.all(),'board_id':board_id,'column_id':column_id}
+    context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
+    return render(request,'boards/components/task_history.html',context)
+
+
 @require_http_methods(['GET','POST'])
 @login_required
 def edit_task(request, board_id, column_id, task_id):

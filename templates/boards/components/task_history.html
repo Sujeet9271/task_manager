@@ -1,0 +1,33 @@
+<div id="histories" style="overflow:scroll; max-height:80vh;" >
+  {% for history in histories %}
+    <div class="card history-task-card mb-3 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title">
+          <strong>Change by:</strong> {{ history.updated_by.name|default:history.updated_by.username }}
+          <span class="text-muted float-end">{{ history.created_at|date:"Y-m-d H:i" }}</span>
+        </h6>
+        <ul class="list-group list-group-flush mt-2">
+          {% for key, value in history.changes.items %}
+            <li class="list-group-item">
+              <strong>{{ key|capfirst }}:</strong>
+              
+                <code class="text-warning">{{ value }}</code>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% empty %}
+    <p class="text-muted">No history available for this task.</p>
+  {% endfor %}
+</div>
+
+
+<button class="btn btn-outline-warning btn-sm" id="task_history"
+  hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}?from=task_detail"
+  hx-target="#edit_task_modal"
+  hx-swap="innerHTML"
+  title="Task Detail"
+  hx-swap-oob="true">
+  <i class="fa-solid fa-clock-rotate-left"></i>
+</button>
