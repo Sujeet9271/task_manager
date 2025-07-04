@@ -80,6 +80,21 @@ def normalize_querydict(querydict: QueryDict) -> dict:
         for key, values in querydict.lists()
     }
 
+
+@login_required
+def search_boards(request):
+    q = request.GET.get("board_search", "")
+    boards:list[Board] = []
+    if q:
+        boards = request.user.board_memberships.select_related("workspace").filter(name__icontains=q)
+    return render(request, "boards/components/board_card_list.html", {"boards": boards})
+
+@login_required
+def load_columns(request, board_id):
+    columns = Column.objects.filter(board_id=board_id).exclude(draft_column=True)
+    return render(request, "boards/components/column_dropdown.html", {"columns": columns})
+
+
 @login_required
 def board_view(request, board_id):
     context:dict = {}
@@ -619,6 +634,57 @@ def detail_task(request, board_id, column_id, task_id):
     context['mentionable_users'] = ",".join(task.assigned_to.all().values_list('username',flat=True))
     return render(request,'boards/components/task_detail.html',context)
 
+@require_http_methods(['GET','POST'])
+@login_required
+def task_move(request, board_id, column_id, task_id):
+    task = Task.objects.select_related('column','column__board').prefetch_related('tags','assigned_to','comments').filter(pk=task_id, column_id=column_id, column__board_id=board_id, column__board__members=request.user, created_by=request.user).first()
+    if not task:
+        response = HttpResponse(content='Something went wrong',status=404)
+        triggers = {}
+        triggers["showToast"] = {"message":"No Task Found", "level":"warning"}
+        response['HX-Trigger'] = json.dumps(triggers)
+        return response
+    triggers = {}
+    if request.method=='POST':
+        new_board_id = request.POST.get("board")
+        new_column_id = request.POST.get("column")
+        convert = request.POST.get("convert_to_main_task")
+
+        if new_board_id and new_column_id:
+            old_column = task.column
+            task.column_id = new_column_id
+            if task.parent_task and convert == "on":
+                task.parent_task.total_sub_tasks -= 1
+                if task.parent_task.completed_sub_tasks>0:
+                    task.parent_task.completed_sub_tasks -= 1
+                task.parent_task.save()
+                task.parent_task = None
+            task.save()
+            if task.column.board == old_column.board:
+                response = render(request,'boards/components/task_card_new.html',{'task':task,'board_id':board_id})
+                triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
+                triggers["showToast"] = {"message":"Task Moved", "level":"success"}
+                triggers["taskEdited"] = {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}
+                response['HX-Trigger'] = json.dumps(triggers)
+                response['HX-Retarget'] = f'#tasks_list_{new_column_id}'
+                response['HX-Reswap'] = 'beforeend'
+                return response
+            if task.column.board.workspace_id:
+                url = f"{reverse('workspace:get_workspace_boards', kwargs={'workspace_id':task.column.board.workspace_id})}?active_board={new_board_id}"
+            else:
+                url = reverse('board:board-view', kwargs={'board_id':new_board_id})
+            return HttpResponseClientRedirect(url)
+        triggers["showToast"] = {"message":"Couldn't move task", "level":"danger"}
+    context = {'task':task,'board_id':board_id,'column_id':column_id}
+    context['boards'] = request.user.board_memberships.all().order_by('workspace')
+    context['columns'] = task.column.board.columns.all().exclude(draft_column=True)
+    response = render(request,'boards/components/task_move.html',context)
+    if triggers:
+        response['HX-Trigger'] = json.dumps(triggers)
+    return response
+
+
+
 
 @require_http_methods(['GET'])
 @login_required
@@ -699,13 +765,15 @@ def edit_task(request, board_id, column_id, task_id):
                 Attachment.objects.bulk_create(attachment_list)
             if request.htmx:
                 context['form'] = form
-                response = render(request,'boards/components/edit_form.html',context)
+                response = render(request,'boards/components/task_detail.html',context)
                 triggers = {"taskEdited": {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}}
                 triggers["showToast"] = {"message":"Sub Task Saved", "level":"success"}
                 if not task.parent_task:
-                    triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
+                    # triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
                     triggers["showToast"] = {"message":"Task Saved", "level":"success"}
                 response['HX-Trigger'] = json.dumps(triggers)
+                response['HX-Reswap'] = 'innerHTML'
+                response['HX-Retarget'] ='#edit_task_modal'
                 return response
     
         logger.info(f'{form.errors.as_json()=}')
@@ -854,6 +922,8 @@ def move_task(request, task_id):
         triggers["showToast"] = {"message":"Something went wrong", "level":"success"}
         response['HX-Trigger'] = json.dumps(triggers)
         return response
+
+
 
 class BoardViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()

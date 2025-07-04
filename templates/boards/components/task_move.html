@@ -1,0 +1,71 @@
+    <div id="task_move">
+      <form id="task_move_form" name="task_move_form" hx-post="{% url 'board:task-move' board_id=board_id column_id=task.column_id task_id=task.id %}" hx-swap="none">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Move Task: {{ task.title }}</h5>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="board" value="{{task.column.board_id}}">
+
+          <!-- Searchable Board -->
+          <label>Board</label>
+
+          <!-- Search input -->
+          <input 
+            type="text" 
+            class="form-control mb-2"
+            placeholder="Search boards..." 
+            hx-get="{% url 'board:board-search' %}" 
+            hx-target="#board-search-list"
+            hx-trigger="keyup changed delay:500ms"
+            hx-swap="innerHTML"
+            name="board_search"
+            onfocus="document.getElementById('board-search-list').classList.remove('d-none')"
+            {% comment %} onblur="document.getElementById('board-search-list').classList.add('d-none')" {% endcomment %}
+          >
+
+          <!-- Selected board preview -->
+          <div id="selected-board-wrapper">
+            <div class="card p-2 mb-2" style="border: 1px solid #ccc;">
+              <strong>{{ task.column.board.name }}</strong><br>
+              <small class="text-muted">{{ task.column.board.workspace.name }}</small>
+            </div>
+
+          </div>
+
+          <!-- Board search result list -->
+          <div id="board-search-list" class="d-none">
+            {% include "boards/components/board_card_list.html" with boards=boards current_board=task.column.board %}
+          </div>
+
+
+          <!-- Selected Column -->
+          <div id="column-select">
+            {% include "boards/components/column_dropdown.html" with columns=columns current_column=task.column %}
+          </div>
+          
+          <!-- Move to Column -->
+          {% if task.parent_task %}
+          <div id="move-to-column">
+            <input type="checkbox" class="form-check-input" id="convertCheckbox" name="convert_to_main_task">
+            <label class="form-check-label" for="convertCheckbox">Convert to Task Card</label>
+          </div>
+          {% endif %}
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Move</button>
+        </div>
+      </form>
+    </div>
+
+
+<button class="btn btn-outline-danger btn-sm" id="task_move"
+  hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}?from=task_detail"
+  hx-target="#edit_task_modal"
+  hx-swap="innerHTML"
+  title="Task Detail"
+  hx-swap-oob="true">
+  <i class="fa-solid fa-xmark"></i>
+</button>

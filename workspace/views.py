@@ -56,6 +56,8 @@ def get_workspace_boards(request,workspace_id):
         context['users'] = workspace.members.all()
         context['view_name'] = 'Board'
         context['board_create_form'] = BoardCreateForm(user=request.user)
+        if request.GET.get('active_board'):
+            context['active_board'] = request.user.board_memberships.filter(id=request.GET.get('active_board')).first()
         context:dict = get_notifications(user=request.user, page_number=1, context=context)
         return render(request,'boards/index.html',context)
     except Workspace.DoesNotExist:

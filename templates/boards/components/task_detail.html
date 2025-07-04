@@ -27,6 +27,7 @@
               </button>
 
               <!-- Delete -->
+               {% if task.created_by == request.user %}
               <button class="btn btn-outline-danger btn-sm"
                 hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}?from=task_detail"
                 hx-confirm="Are you sure you want to delete this task?"
@@ -35,6 +36,7 @@
                 title="Delete Task">
                 <i class="fa-regular fa-trash-can"></i>
               </button>
+              {% endif %}
               
               <!-- History -->
               <button class="btn btn-outline-warning btn-sm" id="task_history"
@@ -44,6 +46,17 @@
                 title="Task History">
                 <i class="fa-solid fa-clock-rotate-left"></i>
               </button>
+
+              <!-- Move Task -->
+              {% if task.created_by == request.user %}
+              <button class="btn btn-outline-info btn-sm" id="task_move"
+                hx-get="{% url 'board:task-move' board_id=board_id column_id=task.column_id task_id=task.id %}?from=task_detail"
+                hx-target="#task_detail"
+                hx-swap="innerHTML"
+                title="Task History">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </button>
+              {% endif %}
             </div>
           </div>
           <hr>

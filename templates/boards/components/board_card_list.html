@@ -1,0 +1,35 @@
+<script>
+function selectBoard(boardId, boardName, workspaceName) {
+  // Update selected board preview
+  document.getElementById('selected-board-wrapper').innerHTML = `
+    <div class="card p-2 mb-2" style="border: 1px solid #ccc;">
+      <strong>${boardName}</strong><br>
+      <small class="text-muted">${workspaceName}</small>
+    </div>
+  `;
+  // Hide board list
+  document.getElementById('board-search-list').classList.add('d-none');
+  // Update hidden input
+  let existing = document.querySelector('input[name="board"]');
+  if (existing) existing.remove();
+
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'board';
+  input.value = boardId;
+  document.querySelector('#task_move_form').appendChild(input);
+}
+</script>
+
+{% for board in boards %}
+  <div 
+    class="list-group-item card mb-2 p-2 cursor-pointer"
+    onclick="selectBoard('{{ board.id }}', '{{ board.name }}', '{{ board.workspace.name }}')"
+    hx-get="{% url 'board:board-columns' board.id %}"
+    hx-target="#column-select"
+    hx-swap="innerHTML"
+  >
+    <strong>{{ board.name }}</strong><br>
+    <small class="text-muted">{{ board.workspace.name }}</small>
+  </div>
+{% endfor %}

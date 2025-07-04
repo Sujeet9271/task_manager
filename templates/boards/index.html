@@ -30,7 +30,7 @@
 			
 			<div id="boards-sidebar" class="sidebar bg-white border-end shadow-sm">
 				<!-- Add Board Button -->
-				{% if not active_board %}
+				{% if active_board and active_board.workspace %}
 				 <div class="mb-4">
 					 <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
 					 data-bs-toggle="modal"
@@ -335,7 +335,12 @@
 		}
 		  
 		// Call on initial page load too
-		document.addEventListener('DOMContentLoaded', initDragAndDrop);
+		document.addEventListener('DOMContentLoaded', function(){
+			{% if active_board %}
+			document.querySelector('.active_board_link').click()
+			{% endif %}
+			initDragAndDrop()
+		});
 	
 	</script>
 	

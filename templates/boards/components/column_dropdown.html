@@ -1,0 +1,9 @@
+<label>Column</label>
+<select name="column" class="form-select">
+  {% for col in columns %}
+    <option value="{{ col.id }}"
+      {% if current_column and current_column.id == col.id %}selected{% endif %}>
+      {{ col.name }}
+    </option>
+  {% endfor %}
+</select>
