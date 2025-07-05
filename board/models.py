@@ -378,6 +378,7 @@ class BoardFilter(models.Model):
     board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='filters')
     user = models.ForeignKey('accounts.Users', on_delete=models.CASCADE, related_name='filters')
     filter = models.JSONField(default=dict)
+    board_view = models.CharField(max_length=5, choices=[('card','Card'),('table','Table')], default='card')
 
     class Meta:
         db_table = 'board_filter'

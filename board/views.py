@@ -101,13 +101,14 @@ def load_columns(request, board_id):
 def board_view(request, board_id):
     context:dict = {}
     board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
+    board_filter, _ = BoardFilter.objects.get_or_create(board=board, user=request.user)
     context['active_board'] = board
+    context['board_filter'] = board_filter
     if request.htmx:
         context['board'] = board
         context['task_form'] = TaskForm(workspace=board.workspace, user=request.user,)
         triggers = {}
         triggers["boardLoaded"] = {"board_id":  board_id, "level": "info"}
-        board_filter, _ = BoardFilter.objects.get_or_create(board=board, user=request.user)
         if request.method=='POST':
             logger.debug(f'{request.POST=}')
             if not request.POST.get('clear'):
@@ -155,62 +156,11 @@ def board_view(request, board_id):
 
 @login_required
 def board_change_view(request, board_id, view):
-    context:dict = {}
     board:Board = get_object_or_404(Board, pk=board_id, members=request.user)
-    context['active_board'] = board
-    context['view'] = view
-    if request.htmx:
-        context['board'] = board
-        context['task_form'] = TaskForm(workspace=board.workspace, user=request.user,)
-        triggers = {}
-        triggers["boardLoaded"] = {"board_id":  board_id, "level": "info"}
-        board_filter, _ = BoardFilter.objects.get_or_create(board=board, user=request.user)
-        if request.method=='POST':
-            logger.debug(f'{request.POST=}')
-            if not request.POST.get('clear'):
-                filter_form = TaskFilterForm(board=board, data=request.POST)
-                q = QueryDict('', mutable=True)
-                q.update(filter_form.data)
-                logger.debug(f'{q=}')
-                data = normalize_querydict(q)
-
-                logger.debug(f'{data=}')
-                board_filter.filter = data
-                triggers["showToast"] = {"message":"Task Filtered", "level":"success"}
-            else:
-                board_filter.filter = {}
-                board_filter.filter.pop('csrfmiddlewaretoken',None)
-                triggers["showToast"] = {"message":"Task Filter Cleared", "level":"danger"}
-            
-            board_filter.save()
-            triggers["filterSubmitted"] = {"board_id":  board_id, "level": "info"}
-            triggers["closeModal"] = {"modal_id": "close_filterBoard", "level": "info"}
-        context['filter_form'] = TaskFilterForm(board=board, initial=board_filter.filter)
-        tasks = task_lists(board_id=board_id, user=request.user)
-        column_map:dict[Column,list[Task]] = {column:[] for column in board.columns.all()}
-        for task in tasks:
-            if task.column not in column_map:
-                column_map[task.column]=[]
-            column_map[task.column].append(task)
-        logger.debug(f'{column_map=}')
-        context['column_map'] = column_map
-        context['tasks'] = tasks
-        context['view'] = view
-        response = render(request, 'boards/components/board.html', context)
-        response['HX-Trigger'] = json.dumps(triggers)
-    else:
-        context['active_board'] = board
-        context['boards'] = [board]
-        context['workspace_id'] = board.workspace_id
-        context['users'] = board.members.all()
-        context['unread_notification_count'] = request.user.notifications.filter(read=False).count()
-        context:dict = get_notifications(user=request.user, page_number=1, context=context)
-        context['view_name'] = 'Board'
-        context['board_create_form'] = BoardCreateForm(user=request.user)
-        logger.debug(context)
-        response = render(request, 'boards/index.html', context)
-    return response
-
+    board_filter = BoardFilter.objects.filter(user=request.user, board=board).first()
+    board_filter.board_view = view
+    board_filter.save(update_fields=['board_view'])
+    return redirect('board:board-view',board_id=board_id)
 
 
 @login_required
@@ -669,12 +619,19 @@ def create_task(request, board_id,):
             assigned_to.append(instance.parent_task.created_by)
         instance.assigned_to.add(*assigned_to)
 
-        # response = render(request, 'boards/components/task_card_new.html', {'board_id': board_id, 'task': instance})
-        
-        response = render(request, 'boards/components/task_row.html', {'board_id': board_id, 'task': instance})
-        response['HX-Reswap'] = "afterbegin"
-        response['HX-Retarget'] = '#task_table'
-        
+        board_filter  = BoardFilter.objects.filter(user=request.user, board=column.board).first()
+        if not board_filter:
+            board_filter = BoardFilter(user=request.user, board_id=board_id).save()
+
+        if board_filter.board_view=='table':
+            response = render(request, 'boards/components/task_row.html', {'board_id': board_id, 'task': instance})
+            response['HX-Reswap'] = "afterbegin"
+            response['HX-Retarget'] = '#task_table'
+        else:
+            response = render(request, 'boards/components/task_card_new.html', {'board_id': board_id, 'task': instance})
+            response['HX-Reswap'] = "beforeend"
+            response['HX-Retarget'] = '#draft_tasks_list'
+    
         triggers = {}
         triggers["reloadTaskList"] = {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': board_id,'column_id':column.id}),'column_id':column.id,'board_id':board_id, "level": "info"}
         triggers["closeModal"] = {"modal_id": "close_addTaskModal", "level": "info"}
@@ -730,7 +687,14 @@ def task_move(request, board_id, column_id, task_id):
                 task.parent_task = None
             task.save()
             if task.column.board == old_column.board:
-                response = render(request,'boards/components/task_card_new.html',{'task':task,'board_id':board_id})
+                board_filter = BoardFilter.objects.filter(user=request.user, board_id=board_id).first()
+                if not board_filter:
+                    board_filter = BoardFilter(user=request.user, board_id=board_id).save()
+                    
+                if board_filter.board_view == 'card':
+                    response = render(request,'boards/components/task_card_new.html',{'task':task,'board_id':board_id})
+                else:
+                    response = render(request,'boards/components/task_row.html',{'task':task,'board_id':board_id})
                 triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
                 triggers["showToast"] = {"message":"Task Moved", "level":"success"}
                 triggers["taskEdited"] = {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}
@@ -914,8 +878,14 @@ def task_status_toggle(request, board_id, column_id, task_id):
         response = render(request,'boards/components/sub_task_card.html',{'sub_task':task,"board_id":board_id,"column_id":column_id})
         triggers["showToast"] = {"message":"Sub-Task marked as complete" if task.is_complete else "Sub-Task marked as incomplete", "level":"success" if task.is_complete else "danger"}
     else:
-        response = render(request,'boards/components/task_card_new.html',{'task':task,"board_id":board_id,"column_id":column_id})
-        response = render(request,'boards/components/task_row.html',{'task':task,"board_id":board_id,"column_id":column_id})
+        board_filter = BoardFilter.objects.filter(user=request.user, board_id=board_id).first()
+        if not board_filter:
+            board_filter = BoardFilter(user=request.user, board_id=board_id).save()
+        if board_filter.board_view == 'card':
+            response = render(request,'boards/components/task_card_new.html',{'task':task,"board_id":board_id,"column_id":column_id})
+        else:
+            response = render(request,'boards/components/task_row.html',{'task':task,"board_id":board_id,"column_id":column_id})
+
         triggers["showToast"] = {"message":"Task marked as complete" if task.is_complete else "Task marked as incomplete", "level":"success" if task.is_complete else "danger"}
     response['HX-Trigger'] = json.dumps(triggers)
     if not task.is_complete:
