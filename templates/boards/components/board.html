@@ -1,10 +1,9 @@
 {% load static board_tags %}
 {% if board_filter.board_view == 'table' %}
-{% include "boards/components/table_view.html" with board=board tasks=tasks %}
+{% include "boards/components/table_view.html" with board=board tasks=tasks columns=columns %}
 {% else %}
 {% include "boards/components/card_view.html" with board=board column_map=column_map %}
 {% endif %}
-
 
 <button class="btn btn-sm btn-outline-primary {% if filter_form.initial %}active{% endif %}" id="filter_board_{{board.id}}_btn"
         title="Filters"
@@ -16,7 +15,7 @@
 
 
 <div class="modal-body" id="filter_board_modal" hx-swap-oob="true">
-    <form hx-post="{% url 'board:board-view' board.id %}" hx-target="#main-content" hx-swap="innerHTML" hx-indicator=".gif_loader">
+    <form hx-post="{% url 'board:board-view' board.id %}" hx-target="#main-content" hx-swap="innerHTML" hx-indicator="#loader">
         {% csrf_token %}
         {% include 'form.html' with form=filter_form %}
         <div class="modal-footer">

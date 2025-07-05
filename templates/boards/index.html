@@ -22,7 +22,7 @@
 
 	</head>
 
-	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='.gif_loader'>
+	<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator='#loader'>
 		
 		{% include "components/navbar.html" %}
 	
@@ -48,7 +48,6 @@
 				</div>
 			</div>
 			  
-		
 			<div class="main-content p-2 m-1" id="main-content">
 				{% if active_board %}
 				{% include "boards/components/board.html" with board=active_board %}
@@ -125,7 +124,6 @@
 			</div>
 		</div>
 		
-
 		<div class="modal fade" id="filterBoard" tabindex="-1" role="dialog" aria-labelledby="filterBoardLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">

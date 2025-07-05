@@ -1,5 +1,5 @@
     <div id="task_move">
-      <form id="task_move_form" name="task_move_form" hx-post="{% url 'board:task-move' board_id=board_id column_id=task.column_id task_id=task.id %}" hx-swap="none">
+      <form id="task_move_form" name="task_move_form" hx-post="{% url 'board:task-move' board_id=board_id column_id=task.column_id task_id=task.id %}" hx-swap="none" hx-indicator="#loader">
         {% csrf_token %}
         <div class="modal-header">
           <h5 class="modal-title">Move Task: {{ task.title }}</h5>

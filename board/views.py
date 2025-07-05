@@ -104,6 +104,7 @@ def board_view(request, board_id):
     board_filter, _ = BoardFilter.objects.get_or_create(board=board, user=request.user)
     context['active_board'] = board
     context['board_filter'] = board_filter
+    context['columns'] = board.columns.all()
     if request.htmx:
         context['board'] = board
         context['task_form'] = TaskForm(workspace=board.workspace, user=request.user,)
@@ -624,7 +625,7 @@ def create_task(request, board_id,):
             board_filter = BoardFilter(user=request.user, board_id=board_id).save()
 
         if board_filter.board_view=='table':
-            response = render(request, 'boards/components/task_row.html', {'board_id': board_id, 'task': instance})
+            response = render(request, 'boards/components/task_row.html', {'board_id': board_id, 'task': instance, 'columns':board_filter.board.columns.all()})
             response['HX-Reswap'] = "afterbegin"
             response['HX-Retarget'] = '#task_table'
         else:
@@ -693,14 +694,15 @@ def task_move(request, board_id, column_id, task_id):
                     
                 if board_filter.board_view == 'card':
                     response = render(request,'boards/components/task_card_new.html',{'task':task,'board_id':board_id})
+                    response['HX-Retarget'] = f'#tasks_list_{new_column_id}'
+                    response['HX-Reswap'] = 'beforeend'
                 else:
-                    response = render(request,'boards/components/task_row.html',{'task':task,'board_id':board_id})
+                    response = render(request,'boards/components/task_row.html',{'task':task,'board_id':board_id, 'columns':board_filter.board.columns.all()})
+
                 triggers["closeModal"] = {"modal_id": "close_editTaskModal", "level": "info"}
                 triggers["showToast"] = {"message":"Task Moved", "level":"success"}
                 triggers["taskEdited"] = {"message": reverse('board:board-view', kwargs={'board_id': board_id}), "level": "info"}
                 response['HX-Trigger'] = json.dumps(triggers)
-                response['HX-Retarget'] = f'#tasks_list_{new_column_id}'
-                response['HX-Reswap'] = 'beforeend'
                 return response
             if task.column.board.workspace_id:
                 url = f"{reverse('workspace:get_workspace_boards', kwargs={'workspace_id':task.column.board.workspace_id})}?active_board={new_board_id}"
@@ -881,10 +883,11 @@ def task_status_toggle(request, board_id, column_id, task_id):
         board_filter = BoardFilter.objects.filter(user=request.user, board_id=board_id).first()
         if not board_filter:
             board_filter = BoardFilter(user=request.user, board_id=board_id).save()
+        
         if board_filter.board_view == 'card':
             response = render(request,'boards/components/task_card_new.html',{'task':task,"board_id":board_id,"column_id":column_id})
         else:
-            response = render(request,'boards/components/task_row.html',{'task':task,"board_id":board_id,"column_id":column_id})
+            response = render(request,'boards/components/task_row.html',{'task':task,"board_id":board_id,"column_id":column_id, 'columns':board_filter.board.columns.all()})
 
         triggers["showToast"] = {"message":"Task marked as complete" if task.is_complete else "Task marked as incomplete", "level":"success" if task.is_complete else "danger"}
     response['HX-Trigger'] = json.dumps(triggers)
@@ -929,7 +932,6 @@ def move_task(request, task_id):
             response['HX-Trigger'] = json.dumps(triggers)
             return response
         
-        old_column_id = task.column_id
         column = Column.objects.get(id=new_column_id)
         kwargs = {
             'board_id':column.board_id,
@@ -950,7 +952,18 @@ def move_task(request, task_id):
         if task.total_sub_tasks > 0:
             task.sub_tasks.all().update(column=task.column)
 
-        response = JsonResponse({'success': True,'urls':urls})
+
+        board_filter = BoardFilter.objects.filter(user=request.user, board_id=column.board_id).first()
+        if not board_filter:
+            board_filter = BoardFilter(user=request.user, board=column.board).save()
+
+        if board_filter.board_view == 'table':
+            response = render(request, 'boards/components/task_row.html', {'board_id': column.board_id, 'task': task, 'columns':board_filter.board.columns.all()})
+            response['HX-Reswap'] = "outerHTML"
+            response['HX-Retarget'] = f'#task_{task_id}'
+        else:
+            response = JsonResponse({'success': True,'urls':urls})
+        
         triggers["showToast"] = {"message":"Task moved successfully", "level":"success"}
         response['HX-Trigger'] = json.dumps(triggers)
         # triggers = {"reloadTaskList": {"get_task_lists": reverse('board:get_task_lists', kwargs={'board_id': column.board_id,'column_id':old_column_id}),'column_id':old_column_id,'board_id':column.board_id, "level": "info"}}

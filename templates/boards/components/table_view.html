@@ -1,30 +1,29 @@
 {% load static board_tags %}
-<button class="btn btn-sm btn-outline-primary mb-1" style="color:white;position:relative;left:91%;" 
+<button class="btn btn-primary mb-1 add_draft_task" style="color:white;position:absolute;bottom:3%;right:2%;z-index:1000;" 
         data-bs-toggle="modal"
         data-bs-target="#addTaskModal"
         title="Add Task"
         >
-        Add Task
-    {% comment %} <i class="fa fa-plus"></i> {% endcomment %}
     <i class="fa-solid fa-plus"></i>
 </button>
-<div class="table-responsive bg-white rounded-3 shadow-sm border">
+<div class="table-responsive bg-white rounded-3 shadow-sm border h-100 overflow scroll">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
             <tr>
                 {# Widths are set for better layout control #}
                 <th scope="col" style="width: 5%;"></th> {# Actions Column #}
-                <th scope="col" style="width: 30%;" class="text-uppercase small text-muted">Task</th>
-                <th scope="col" style="width: 10%;" class="text-uppercase small text-muted">Priority</th>
+                <th scope="col" style="width: 5%;" class="text-uppercase small text-muted">ID</th>
+                <th scope="col" style="width: 25%;" class="text-uppercase small text-muted">Task</th>
                 <th scope="col" style="width: 10%;" class="text-uppercase small text-muted">Column</th>
+                <th scope="col" style="width: 10%;" class="text-uppercase small text-muted">Priority</th>
                 <th scope="col" style="width: 10%;" class="text-uppercase small text-muted">Assignees</th>
+                <th scope="col" style="width: 15%;" class="text-uppercase small text-muted">Details</th>
                 <th scope="col" style="width: 20%;" class="text-uppercase small text-muted">Tags</th>
-                <th scope="col" style="width: 15%;" class="text-uppercase small text-muted">Last Updated</th>
             </tr>
         </thead>
         <tbody id="task_table">
             {% for task in tasks %}
-                {% include 'boards/components/task_row.html' with board_id=board.id task=task %}
+                {% include 'boards/components/task_row.html' with board_id=board.id task=task columns=columns %}
             {% empty %}
                 <tr>
                     <td colspan="5" class="text-center text-muted p-4">No tasks found on this board.</td>
@@ -42,7 +41,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_addTaskModal"></button>
             </div>
             <div class="modal-body" id="add_task_modal">
-                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#task_table" hx-swap="afterbegin" hx-indicator=".gif_loader" id="create_task_form">
+                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#task_table" hx-swap="afterbegin" hx-indicator="#loader" id="create_task_form">
                     {% csrf_token %}
                     {% include 'form.html' with form=task_form %}
                     <div class="modal-footer">

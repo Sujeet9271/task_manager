@@ -3,8 +3,8 @@
                 <tr id="task_{{ task.id }}"
                     onmouseover="showCompleteTaskCheckBox(this)"
                     onmouseout="hideCompleteTaskCheckBox(this)"
-                    class="{% if task.is_complete %}task-completed{% endif %}">
-
+                    class="{% if task.is_complete %}task-completed{% endif %}"
+                >
                     {# 1. Actions: Checkbox & Delete Button #}
                     <td class="ps-3">
                         <div class="d-flex align-items-center gap-2">
@@ -29,8 +29,9 @@
                             {% endif %}
                         </div>
                     </td>
-
-                    {# 2. Task Title & Priority #}
+                    {# 2. Task Title #}
+                    <td>#{{task.id}}</td>
+                    {# 3. Task Title #}
                     <td class="cursor pointer" 
                         hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}"
                         hx-target="#edit_task_modal"
@@ -39,7 +40,7 @@
                         data-bs-target="#editTaskModal"
                         >
                         <span id="task_title_{{task.id}}"
-                                class="fw-semibold text-dark {% if task.is_complete %}text-muted text-decoration-line-through{% endif %}"
+                                class="fw-semibold text-dark text-wrap text-break {% if task.is_complete %}text-muted text-decoration-line-through{% endif %}"
                                 hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}"
                                 hx-target="#edit_task_modal"
                                 data-bs-toggle="modal"
@@ -48,7 +49,15 @@
                             {{ task.title }}
                         </span>
                     </td>
-
+                    {# 4. Column #}
+                    <td>
+                        <select class="form-control" name="column_id" hx-post="{% url 'board:task-move' task.id %}" hx-trigger="change" hx-confirm="Are you sure?" hx-target="#task_{{task.id}}" hx-swap="outerHTML">
+                            {% for column in columns %}
+                            <option value="{{column.id}}" {% if task.column == column %}selected{% endif %} {% if column.draft_column %}disabled{% endif %}>{{column.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    {# 5. Priority #}
                     <td>
                         <span class="me-2" title="Priority: {{task.priority}}">
                             {% if task.priority == 'High' %}<i class="fa-regular fa-flag text-danger"></i>
@@ -57,9 +66,7 @@
                         </span>
                         {{task.priority}}
                     </td>
-                    <td>{{task.column.name}}</td>
-
-                    {# 3. Assignees #}
+                    {# 6. Assignees #}
                     <td>
                         <div class="d-flex align-items-center">
                             {% with task|assigned_users as users %}
@@ -72,26 +79,28 @@
                             {% endwith %}
                         </div>
                     </td>
-                    <td>
-                        <div class="d-flex flex-wrap gap-1">
-                            {% for tag in task.tags.all %}
-                               <span class="badge" style="background-color: {{ tag.color }}; color: #000;">{{ tag.name }}</span>
-                            {% endfor %}
-                        </div>
-                    </td>
-                    {# 4. Details: Subtasks and Date #}
+                    {# 7. Details #}
                     <td class="text-muted small">
-                        <div class="d-flex align-items-center gap-3">
-                            {% if task.total_sub_tasks > 0 %}
-                            <span title="Sub-tasks: {{task.completed_sub_tasks}} of {{task.total_sub_tasks}} complete">
-                              <i class="far fa-square-check"></i> {{task.completed_sub_tasks}}/{{task.total_sub_tasks}}
-                            </span>
-                            {% endif %}
+                        <div class="d-flex flex-column">
                             {% if task.due_date %}
                             <span title="Due Date">
                                 <i class="fa-regular fa-calendar"></i> {{ task.due_date|date:"M d" }}
                             </span>
                             {% endif %}
+                            {% if task.total_sub_tasks > 0 %}
+                            <span title="Sub-tasks: {{task.completed_sub_tasks}} of {{task.total_sub_tasks}} complete">
+                              <i class="far fa-square-check"></i> {{task.completed_sub_tasks}}/{{task.total_sub_tasks}}
+                            </span>
+                            {% endif %}
+                            
                         </div>
-                    </td>                    
+                    </td> 
+                    {# 8. Tags #}
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for tag in task.tags.all %}
+                               <span class="badge" style="background-color: {{ tag.color }};">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>                   
                 </tr>

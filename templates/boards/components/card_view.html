@@ -84,7 +84,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_addTaskModal"></button>
             </div>
             <div class="modal-body" id="add_task_modal">
-                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#draft_tasks_list" hx-swap="beforeend" hx-indicator=".gif_loader" id="create_task_form">
+                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#draft_tasks_list" hx-swap="beforeend" hx-indicator="#loader" id="create_task_form">
                     {% csrf_token %}
                     {% include 'form.html' with form=task_form %}
                     <div class="modal-footer">
