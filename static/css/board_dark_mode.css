@@ -449,3 +449,111 @@ body.dark-mode .assigned_users .assigned_user {
 body.dark-mode .assigned_users .assigned_user:first-child {
   margin-left: 0;
 }
+
+
+
+/* --- LIST VIEW / TABLE STYLES --- */
+
+/* Main container for the table view */
+body.dark-mode .table-responsive.bg-white {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border-color) !important;
+  box-shadow: none !important;
+}
+
+/* Table header styling */
+body.dark-mode .table thead.table-light {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-secondary);
+}
+body.dark-mode .table > thead > tr > th {
+  color: var(--dark-text-secondary);
+  border-color: var(--dark-border-color);
+}
+
+/* Table body rows and borders */
+body.dark-mode .table {
+  border-color: var(--dark-border-color);
+}
+body.dark-mode .table > :not(caption) > * > * {
+  /* This targets all cells (th, td) and resets Bootstrap's default coloring */
+  background-color: transparent;
+  border-color: var(--dark-border-color);
+  color: var(--dark-text-primary);
+  box-shadow: none;
+}
+
+/* Table row hover effect */
+body.dark-mode .table-hover > tbody > tr:hover > * {
+  background-color: var(--dark-bg-tertiary);
+  color: var(--dark-text-primary);
+}
+
+/* Override specific text color utilities used in the table */
+body.dark-mode .table .text-dark {
+  color: var(--dark-text-primary) !important;
+}
+body.dark-mode .table .text-muted {
+  color: var(--dark-text-secondary) !important;
+}
+body.dark-mode .table td.text-muted {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Styling for completed task rows */
+body.dark-mode tr.task-completed {
+  opacity: 0.7;
+}
+body.dark-mode tr.task-completed > * {
+  background-color: rgba(30, 30, 45, 0.5) !important; /* Dark, slightly transparent overlay */
+}
+body.dark-mode tr.task-completed .text-decoration-line-through {
+  color: var(--dark-text-secondary) !important;
+}
+body.dark-mode tr.task-completed td,
+body.dark-mode tr.task-completed td span {
+  color: var(--dark-text-secondary) !important;
+}
+
+
+/* Row actions: checkbox and delete icon */
+body.dark-mode .table .form-check-input {
+  accent-color: var(--dark-accent-primary);
+  background-color: var(--dark-input-bg);
+  border-color: var(--dark-border-color);
+}
+body.dark-mode .table .delete_task .fa-trash-alt {
+  color: #f87171 !important; /* Softer red, matches column header delete icon */
+}
+
+/* Assigned user avatars in the table */
+body.dark-mode .table .assigned_user {
+  background-color: var(--dark-accent-primary);
+  color: #fff;
+  border: 2px solid var(--dark-bg-secondary);
+}
+
+/* Tags / Badges in the table */
+body.dark-mode .table .badge {
+  color: #fff; /* Good default for dark backgrounds */
+  opacity: 0.9;
+}
+/* This specifically targets the light-red badge from your example to make text readable */
+body.dark-mode .table .badge[style*="#dd8888"] {
+  color: #1e1e2d !important;
+  font-weight: 500;
+}
+
+/* --- FLOATING ACTION BUTTON --- */
+/* --- Dark Theme Overrides --- */
+body.dark-mode .floating-add-button {
+  background-color: var(--dark-accent-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Darker shadow for dark bg */
+}
+
+body.dark-mode .floating-add-button:hover {
+  background-color: var(--dark-accent-secondary);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  /* The transform: translateY(-2px) from the light theme hover still applies here */
+}

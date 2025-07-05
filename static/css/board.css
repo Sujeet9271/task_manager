@@ -659,3 +659,42 @@
 .assigned_users .assigned_user:first-child {
   margin-left: 0;
 }
+
+
+
+/* --- FLOATING ACTION BUTTON (FAB) --- */
+
+/* 
+  Base styles for the button, common to both themes.
+  We make it a perfect circle and center the icon inside.
+*/
+.floating-add-button {
+  position: fixed; /* Stays in the same place on the screen when scrolling */
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;   /* Standard FAB size */
+  height: 56px;
+  border-radius: 50%; /* Makes it a circle */
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem; /* Makes the '+' icon a bit bigger */
+  padding: 0;
+  border: none;
+  /* Smooth transitions for all animated properties */
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+/* --- Light Theme Styles (Default) --- */
+.floating-add-button {
+  background-color: #0d6efd; /* Standard Bootstrap primary blue */
+  color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.floating-add-button:hover {
+  background-color: #0b5ed7; /* Darker blue on hover */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px); /* Lifts the button slightly */
+}
