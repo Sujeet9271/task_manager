@@ -1,0 +1,97 @@
+{% load static board_tags %}
+{# The entire row is the target for HTMX and hover effects #}
+                <tr id="task_{{ task.id }}"
+                    onmouseover="showCompleteTaskCheckBox(this)"
+                    onmouseout="hideCompleteTaskCheckBox(this)"
+                    class="{% if task.is_complete %}task-completed{% endif %}">
+
+                    {# 1. Actions: Checkbox & Delete Button #}
+                    <td class="ps-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="checkbox"
+                                   class="form-check-input complete_task d-none"
+                                   id="task_toggle_{{task.id}}"
+                                   {% if task.is_complete %}checked{% endif %}
+                                   hx-post="{% url 'board:task-status-toggle' board_id=board_id column_id=task.column_id task_id=task.id %}"
+                                   hx-target="#task_{{ task.id }}"
+                                   hx-swap="outerHTML" {# Replace the whole row #}
+                                   title="Mark as complete" />
+                            {% if task.created_by == request.user %}
+                            <button class="btn p-0 border-0 delete_task d-none"
+                                    id="task_delete_{{task.id}}"
+                                    hx-delete="{% url 'board:task-delete' board_id=board_id column_id=task.column_id task_id=task.id %}"
+                                    hx-target="#task_{{ task.id }}"
+                                    hx-swap="delete"
+                                    hx-confirm="Are you sure?"
+                                    title="Delete Task">
+                                <i class="fas fa-trash-alt text-danger"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+
+                    {# 2. Task Title & Priority #}
+                    <td class="cursor pointer" 
+                        hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}"
+                        hx-target="#edit_task_modal"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editTaskModal"
+                        >
+                        <span id="task_title_{{task.id}}"
+                                class="fw-semibold text-dark {% if task.is_complete %}text-muted text-decoration-line-through{% endif %}"
+                                hx-get="{% url 'board:task-detail' board_id=board_id column_id=task.column_id task_id=task.id %}"
+                                hx-target="#edit_task_modal"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editTaskModal"
+                                title="{{ task.title }}">
+                            {{ task.title }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="me-2" title="Priority: {{task.priority}}">
+                            {% if task.priority == 'High' %}<i class="fa-regular fa-flag text-danger"></i>
+                            {% elif task.priority == 'Medium' %}<i class="fa-regular fa-flag text-warning"></i>
+                            {% else %}<i class="fa-regular fa-flag text-secondary"></i>{% endif %}
+                        </span>
+                        {{task.priority}}
+                    </td>
+                    <td>{{task.column.name}}</td>
+
+                    {# 3. Assignees #}
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% with task|assigned_users as users %}
+                            {% for user in users|slice:":2" %}
+                                <div class="p-1 assigned_user {% if not forloop.first %}second{% endif %}" title="{{user.name|default:user.username}} ({{user.email}})">{{user|initials}}</div>
+                            {% endfor %}
+                            {% if users|length > 2 %}
+                                <div class="p-1 assigned_user second" title="{{ users|length|add:"-2" }} more users assigned">+{{ users|length|add:"-2" }}</div>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for tag in task.tags.all %}
+                               <span class="badge" style="background-color: {{ tag.color }}; color: #000;">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    {# 4. Details: Subtasks and Date #}
+                    <td class="text-muted small">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if task.total_sub_tasks > 0 %}
+                            <span title="Sub-tasks: {{task.completed_sub_tasks}} of {{task.total_sub_tasks}} complete">
+                              <i class="far fa-square-check"></i> {{task.completed_sub_tasks}}/{{task.total_sub_tasks}}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span title="Due Date">
+                                <i class="fa-regular fa-calendar"></i> {{ task.due_date|date:"M d" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>                    
+                </tr>

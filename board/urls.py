@@ -4,6 +4,7 @@ from board import views
 urlpatterns = [
     path('create/', views.create_board, name='board-create'),
     path('<int:board_id>/', views.board_view, name='board-view'),
+    path('<int:board_id>/view/<str:view>/', views.board_change_view, name='board-change-view'),
     path('invite/<uuid:board_uuid>/', views.board_invite_view, name='board-invite'),
     path('search/', views.search_boards, name='board-search'),
     path('<int:board_id>/reports/', views.board_reports, name='board-reports'),

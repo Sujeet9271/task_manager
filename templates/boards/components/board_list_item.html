@@ -21,6 +21,7 @@
                                   aria-expanded="false">
                             <i class="fa-solid fa-ellipsis-vertical"></i>
                           </button>
+
                           <div class="dropdown">
                             <ul class="dropdown-menu">
                               <li class="cursor pointer">
@@ -39,6 +40,28 @@
                                   target="_blank"
                                   href="{% url "board:board-reports" board.id %}">
                                   Reports
+                                </a>
+                              </li>
+
+                              <li class="cursor pointer">
+                                <a class="dropdown-item"
+                                  title="Switch to Table View"
+                                  hx-get="{% url "board:board-change-view" board_id=board.id view='table' %}"
+                                  hx-target="#main-content"
+                                  hx-swap="innerHTML"
+                                  >
+                                  Table-View
+                                </a>
+                              </li>
+
+                              <li class="cursor pointer">
+                                <a class="dropdown-item"
+                                  title="Switch to Card View"
+                                  hx-get="{% url "board:board-change-view" board_id=board.id view='card' %}"
+                                  hx-target="#main-content"
+                                  hx-swap="innerHTML"
+                                  >
+                                  Card-View
                                 </a>
                               </li>
                               

@@ -1,0 +1,77 @@
+{% load static board_tags %}
+<button class="btn btn-sm btn-outline-primary mb-1" style="color:white;position:relative;left:91%;" 
+        data-bs-toggle="modal"
+        data-bs-target="#addTaskModal"
+        title="Add Task"
+        >
+        Add Task
+    {% comment %} <i class="fa fa-plus"></i> {% endcomment %}
+    <i class="fa-solid fa-plus"></i>
+</button>
+<div class="table-responsive bg-white rounded-3 shadow-sm border">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                {# Widths are set for better layout control #}
+                <th scope="col" style="width: 5%;"></th> {# Actions Column #}
+                <th scope="col" style="width: 30%;" class="text-uppercase small text-muted">Task</th>
+                <th scope="col" style="width: 10%;" class="text-uppercase small text-muted">Priority</th>
+                <th scope="col" style="width: 10%;" class="text-uppercase small text-muted">Column</th>
+                <th scope="col" style="width: 10%;" class="text-uppercase small text-muted">Assignees</th>
+                <th scope="col" style="width: 20%;" class="text-uppercase small text-muted">Tags</th>
+                <th scope="col" style="width: 15%;" class="text-uppercase small text-muted">Last Updated</th>
+            </tr>
+        </thead>
+        <tbody id="task_table">
+            {% for task in tasks %}
+                {% include 'boards/components/task_row.html' with board_id=board.id task=task %}
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted p-4">No tasks found on this board.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="addTaskModalLabel">Add Task</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_addTaskModal"></button>
+            </div>
+            <div class="modal-body" id="add_task_modal">
+                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#task_table" hx-swap="afterbegin" hx-indicator=".gif_loader" id="create_task_form">
+                    {% csrf_token %}
+                    {% include 'form.html' with form=task_form %}
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Add this small CSS to your stylesheet for the completed effect and avatar stacking #}
+<style>
+.task-completed {
+    background-color: #f8f9fa; /* Bootstrap's bg-light */
+    opacity: 0.75;
+}
+.assigned_user {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
+    background-color: #e9ecef; /* Bootstrap's bg-secondary-subtle */
+    border: 2px solid #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #495057; /* Bootstrap's text-dark */
+}
+</style>

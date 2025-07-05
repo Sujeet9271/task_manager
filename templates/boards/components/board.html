@@ -1,77 +1,9 @@
 {% load static board_tags %}
-<div class="horizontal-scroll-wrapper auto-hide-scrollbar">
-    <input id="board_id" value="{{board.id}}" type="hidden">
-    <div class="row gx-2" id="columns">
-        {% if column_map %}
-        {% for column, tasks in column_map.items %}
-            <div class="m-1 column board_column col-md-3" id="column_{{ column.id }}">
-                <div class="card">
-                    <div class="card-header text-white px-3 py-2" style="background-color: rgb(73 101 230) !important;">
-                        <div class="d-flex mt-2 gap-3">
-                            <input id="column_name_{{column.id}}" name="column_name" value="{{ column.name }}"  class="form-control" 
-                            hx-post="{% url 'board:update_column_name' column.board_id column.id %}" 
-                            hx-trigger="keyup changed delay:500ms"
-                            />
-                            {% if column.draft_column %}
-                            <button class="btn btn-sm add_draft_task" style="color:white;" 
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#addTaskModal"
-                                    title="Add Task"
-                                    >
-                                {% comment %} <i class="fa fa-plus"></i> {% endcomment %}
-                                <i class="fa-solid fa-plus"></i>
-                            </button>
-                            {% elif request.user.is_staff or board.created_by == request.user or column.created_by == request.user %}
-                            <button class="btn btn-light fw-bold del_column" 
-                            hx-delete="{% url 'board:column-delete' column.board_id column.id %}" 
-                            hx-target="#column_{{ column.id }}" 
-                            hx-swap="delete" 
-                            hx-confirm="Are You Sure?"><i class="fas fa-trash-alt" style="color: red;"></i></button>
-                            {% endif %}
-                            
-                        </div>
-                    </div>
-
-                    <!-- Task List -->
-                    <div id="{% if column.draft_column %}draft_tasks_list{% else %}tasks_list_{{ column.id }}{% endif %}"
-                        class="card-body bg-white auto-hide-scrollbar {% if not column.draft_column %}dropzone{% endif %}" 
-                        data-column-id="{{ column.id }}"
-                        {% comment %} hx-target="this" 
-                        hx-swap="innerHTML" 
-                        hx-trigger="load" 
-                        hx-get="{% url 'board:get_task_lists' board.id column.id %}"{% endcomment %}>
-                        {% include 'boards/components/column.html' with column=column tasks=tasks %}
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-        <div class="m-1 add-column" id="add-column" title="Add Column"
-            hx-get="{% url 'board:column-create' board.id %}"
-            hx-target="#add-column-body"
-            hx-swap="innerHTML"
-            data-bs-toggle="modal"
-            data-bs-target="#createColumnModal"
-            onmouseover="this.classList.toggle('shadow-lg')" onmouseout="this.classList.toggle('shadow-lg')">
-            <span class="fw-bold text-white cursor pointer">+ Add new column</span>
-        </div>
-        {% else %}
-        <div class="col-md-12 text-center">
-            <div class="welcome-illustration">
-				<img src="{% static 'images/board.svg' %}" alt="board" />
-                <p>No columns available. Please create a column.</p>
-                <button class="btn btn-primary" 
-                hx-get="{% url 'board:column-create' board.id %}"
-                hx-target="#add-column-body"
-                hx-swap="innerHTML"
-                data-bs-toggle="modal" 
-                data-bs-target="#createColumnModal" 
-                id="createColumnButton"
-                >Create Column</button>
-			</div>
-        </div>
-        {% endif %}
-    </div>
-</div>
+{% if view == 'table' %}
+{% include "boards/components/table_view.html" with board=board tasks=tasks %}
+{% else %}
+{% include "boards/components/card_view.html" with board=board column_map=column_map %}
+{% endif %}
 
 
 <button class="btn btn-sm btn-outline-primary {% if filter_form.initial %}active{% endif %}" id="filter_board_{{board.id}}_btn"
@@ -97,25 +29,5 @@
 </div>
 
 
-<div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title" id="addTaskModalLabel">Add Task</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close_addTaskModal"></button>
-            </div>
-            <div class="modal-body" id="add_task_modal">
-                <form hx-post="{% url 'board:task-create' board.id %}" hx-target="#draft_tasks_list" hx-swap="beforeend" hx-indicator=".gif_loader" id="create_task_form">
-                    {% csrf_token %}
-                    {% include 'form.html' with form=task_form %}
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Add</button>
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 
