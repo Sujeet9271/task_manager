@@ -100,7 +100,7 @@ class TaskForm(forms.ModelForm):
         self.fields['assigned_to'].label_from_instance = lambda obj: f"{obj.name}" if obj.name else f"{obj.username}"
 
         self.fields['due_date'].widget.attrs.update({'min':f"{str(date.today())}"})
-        self.fields['due_date'].widget.attrs.update({'value':f"{str(date.today())}"})
+        # self.fields['due_date'].widget.attrs.update({'value':f"{str(date.today())}"})
         instance: Task = self.instance
         if instance and instance.pk: 
             self.fields['due_date'].widget.attrs.update({'min':f"{str(instance.created_at.date())}"})
@@ -126,13 +126,14 @@ class TaskForm(forms.ModelForm):
                     self.fields['assigned_to'].disabled = True
 
                 board = instance.column.board
-                sprint_end = (board.created_at + timedelta(days=board.sprint_days)).date()
-                logger.debug(f'{sprint_end=}')
-                
-                self.fields['due_date'].widget.attrs.update({
-                                                            "value":f"{str(sprint_end)}",
-                                                            "max":f"{str(sprint_end)}"
-                                                        })
+                if board.sprint_days:
+                    sprint_end = (board.created_at + timedelta(days=board.sprint_days)).date()
+                    logger.debug(f'{sprint_end=}')
+                    
+                    self.fields['due_date'].widget.attrs.update({
+                                                                "value":f"{str(sprint_end)}",
+                                                                "max":f"{str(sprint_end)}"
+                                                            })
         elif self.workspace:
             self.fields['assigned_to'].queryset = workspace.members.all().exclude(id=user.id)
 
