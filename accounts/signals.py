@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import smart_bytes
@@ -25,7 +25,7 @@ class EmailThread(threading.Thread):
         self.email.send()
 
 
-@receiver(post_save,sender=Users)
+@receiver(pre_save,sender=Users)
 def pre_save_user(sender, instance:Users, *args, **kwargs):
     logger.info('pre_save_user')
     try:
